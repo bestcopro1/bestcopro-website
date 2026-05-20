@@ -123,8 +123,8 @@ include_once(__DIR__.'/controllers/functions.php');
                         <div class="card">
                             <div class="card-header">
                                 <h4 class="card-title" id="stepName">Informations de la copropriété</h4>
-								<input type="hidden" name="id_copropriete" id="id_copropriete">
-								<input type="hidden" name="id_exercice" id="id_exercice">
+								<input type="hidden" name="id_copropriete" id="id_copropriete" value="">
+								<input type="hidden" name="id_exercice" id="id_exercice" value="">
                             </div>
                             <div class="card-body">
 								<div id="smartwizard" class="form-wizard">

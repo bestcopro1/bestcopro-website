@@ -1,7 +1,15 @@
 <?php
 include_once(__DIR__.'/../config/db.php');
 include_once(__DIR__.'/../controllers/functions.php');
-$connection = $GLOBALS["connection"];
+
+if (!isset($connection)) {
+    $connection = $GLOBALS["connection"];
+}
+
+if (!$connection) {
+    die("Database connection failed.");
+}
+
 if (isset(
 		$_POST['id_copropriete'],
 		$_POST['id_exercice'],
@@ -26,6 +34,11 @@ if (isset(
     $dateExercice = filter_input(INPUT_POST, 'dateExercice', FILTER_SANITIZE_STRING);
     $id_syndic = filter_input(INPUT_POST, 'id_syndic', FILTER_SANITIZE_STRING);
     $prefixe = filter_input(INPUT_POST, 'prefixe', FILTER_SANITIZE_STRING);
+
+    if (empty($id_syndic) && isset($_SESSION['id'])) {
+        $id_syndic = $_SESSION['id'];
+    }
+
 	if ($id_copropriete != "" && $id_exercice != "") {
 		$request = "UPDATE copropriete SET nom = ?, adresse = ?, ville = ?, codePostale = ?, rib = ?, nbrLot = ?, dateExercice = ?, id_syndic = ?, prefixe = ? WHERE id = ?";
 		$dateExercice = $dateExercice."-01";
