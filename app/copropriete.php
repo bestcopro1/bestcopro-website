@@ -878,6 +878,16 @@ include_once(__DIR__.'/controllers/functions.php');
 				return parseAmount($input.closest('tr').find('td:eq(3)').text());
 			}
 
+			function getLotLine($input, prefix) {
+				return String($input.attr('name') || '').replace(prefix, '');
+			}
+
+			function getInputTantieme($input, prefix) {
+				var lotLine = getLotLine($input, prefix);
+				var tantieme = parseAmount($('input[name="tantieme_'+lotLine+'"]').val());
+				return tantieme > 0 ? tantieme : getRowTantieme($input);
+			}
+
 			function getRepartitionMode($select) {
 				var value = String($select.val() || '');
 				var label = String($select.find('option:selected').text() || '').toLowerCase();
@@ -901,7 +911,7 @@ include_once(__DIR__.'/controllers/functions.php');
 						sommeTantieme += parseAmount($(this).val());
 					});
 					$('.partFonct').each(function() {
-						var lotLine = String($(this).attr('name') || '').replace('partFonct_', '');
+						var lotLine = getLotLine($(this), 'partFonct_');
 						var tantieme = parseAmount($('input[name="tantieme_'+lotLine+'"]').val());
 						$(this).val(sommeTantieme > 0 ? (totalBudgetFonct * tantieme / sommeTantieme).toFixed(2) : '0.00');
 					});
@@ -911,7 +921,7 @@ include_once(__DIR__.'/controllers/functions.php');
 					$('.partFonct').attr('readonly', true);
 				} else if (mode == 'manual') {
 					$('.partFonct').each(function() {
-						$(this).val(getRowTantieme($(this)).toFixed(2));
+						$(this).val(getInputTantieme($(this), 'partFonct_').toFixed(2));
 					});
 					$('.partFonct').attr('readonly', false);
 				}
@@ -928,7 +938,7 @@ include_once(__DIR__.'/controllers/functions.php');
 						sommeTantieme += parseAmount($(this).val());
 					});
 					$('.partInv').each(function() {
-						var lotLine = String($(this).attr('name') || '').replace('partInv_', '');
+						var lotLine = getLotLine($(this), 'partInv_');
 						var tantieme = parseAmount($('input[name="tantieme_'+lotLine+'"]').val());
 						$(this).val(sommeTantieme > 0 ? (totalBudgetInvest * tantieme / sommeTantieme).toFixed(2) : '0.00');
 					});
@@ -938,7 +948,7 @@ include_once(__DIR__.'/controllers/functions.php');
 					$('.partInv').attr('readonly', true);
 				} else if (mode == 'manual') {
 					$('.partInv').each(function() {
-						$(this).val(getRowTantieme($(this)).toFixed(2));
+						$(this).val(getInputTantieme($(this), 'partInv_').toFixed(2));
 					});
 					$('.partInv').attr('readonly', false);
 				}
