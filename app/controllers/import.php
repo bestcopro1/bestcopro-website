@@ -79,6 +79,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		echo $uploadErrors[$_FILES['file']['error']] ?? "Erreur inconnue pendant l'import du fichier.";
 		exit();
 	}
+	if ($_FILES['file']['name'] == "") {
+		echo "Aucun fichier CSV n'a ete selectionne ou le fichier depasse la limite d'upload du serveur.";
+		exit();
+	}
+	if ($_POST['id_copropriete'] == "") {
+		echo "La copropriete cible est introuvable pour cet import.";
+		exit();
+	}
 	if ($_FILES['file']['name'] != "" && $_POST['id_copropriete'] != "") {
 		$id_copropriete = filter_input(INPUT_POST, 'id_copropriete', FILTER_SANITIZE_STRING);
 		$importFileType = pathinfo($_FILES['file']['name'],PATHINFO_EXTENSION);
@@ -279,7 +287,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 			exit();
 		}
 	} else {
-		echo "Un problème est survenu lors de l'importation du fichier"; 
+		echo "Import impossible: fichier CSV ou copropriete manquant."; 
 		exit();
 	}
 }
