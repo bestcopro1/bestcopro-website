@@ -1,13 +1,12 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 include_once(__DIR__.'/../config/db.php');
 include_once(__DIR__.'/../controllers/functions.php');
 
-if (!isset($connection)) {
-    $connection = $GLOBALS["connection"];
-}
-
 if (!$connection) {
-    die("Database connection failed.");
+    echo "done|Error: Connection failed: " . mysqli_connect_error();
+    exit();
 }
 
 if (isset(
@@ -23,17 +22,17 @@ if (isset(
         $_POST['id_syndic'],
         $_POST['prefixe']
 	)) {
-	$id_copropriete = filter_input(INPUT_POST, 'id_copropriete', FILTER_SANITIZE_STRING);
-    $id_exercice = filter_input(INPUT_POST, 'id_exercice', FILTER_SANITIZE_STRING);
-    $nom = filter_input(INPUT_POST, 'nom', FILTER_SANITIZE_STRING);
-    $adresse = filter_input(INPUT_POST, 'adresse', FILTER_SANITIZE_STRING);
-    $ville = filter_input(INPUT_POST, 'ville', FILTER_SANITIZE_STRING);
-    $codePostale = filter_input(INPUT_POST, 'codePostale', FILTER_SANITIZE_STRING);
-    $rib = filter_input(INPUT_POST, 'rib', FILTER_SANITIZE_STRING);
-    $nbrLot = filter_input(INPUT_POST, 'nbrLot', FILTER_SANITIZE_STRING);
-    $dateExercice = filter_input(INPUT_POST, 'dateExercice', FILTER_SANITIZE_STRING);
-    $id_syndic = filter_input(INPUT_POST, 'id_syndic', FILTER_SANITIZE_STRING);
-    $prefixe = filter_input(INPUT_POST, 'prefixe', FILTER_SANITIZE_STRING);
+	$id_copropriete = $_POST['id_copropriete'] ?? "";
+    $id_exercice = $_POST['id_exercice'] ?? "";
+    $nom = $_POST['nom'] ?? "";
+    $adresse = $_POST['adresse'] ?? "";
+    $ville = $_POST['ville'] ?? "";
+    $codePostale = $_POST['codePostale'] ?? "";
+    $rib = $_POST['rib'] ?? "";
+    $nbrLot = $_POST['nbrLot'] ?? "";
+    $dateExercice = $_POST['dateExercice'] ?? "";
+    $id_syndic = $_POST['id_syndic'] ?? "";
+    $prefixe = $_POST['prefixe'] ?? "";
 
     if (empty($id_syndic) && isset($_SESSION['id'])) {
         $id_syndic = $_SESSION['id'];
