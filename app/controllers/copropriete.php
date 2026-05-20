@@ -1,11 +1,8 @@
 <?php
-die("CONTROLLER REACHED");
-error_reporting(E_ALL);
 include_once(__DIR__.'/../config/db.php');
 include_once(__DIR__.'/../controllers/functions.php');
 
 if (!$connection) {
-    echo "done|Error: Connection failed: " . mysqli_connect_error();
     exit();
 }
 
