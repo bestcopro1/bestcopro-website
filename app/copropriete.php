@@ -1029,8 +1029,7 @@ include_once(__DIR__.'/controllers/functions.php');
 						$('.partFonct').val((totalBudgetFonct/nbrLot).toFixed(2));
 					} else if ($('#id_repartitionFonct').val() == 3) {
 						$('.partFonct').each(function() {
-							var idx = $(this).attr('name').split('_')[1];
-							var valTantieme = $('input[name="tantieme_'+idx+'"]').val() || $('#tdTantieme2_'+idx).text() || "0";
+							var valTantieme = $(this).closest('tr').find('td:eq(3)').text() || "0";
 							valTantieme = String(valTantieme).replace(/[^0-9.,]/g, '').replace(',', '.');
 							$(this).val(parseFloat(valTantieme || 0).toFixed(2));
 						});
@@ -1048,8 +1047,7 @@ include_once(__DIR__.'/controllers/functions.php');
 						$('.partInv').val((totalBudgetInvest/nbrLot).toFixed(2));
 					} else if ($('#id_repartitionInvest').val() == 3) {
 						$('.partInv').each(function() {
-							var idx = $(this).attr('name').split('_')[1];
-							var valTantieme = $('input[name="tantieme_'+idx+'"]').val() || $('#tdTantieme2_'+idx).text() || "0";
+							var valTantieme = $(this).closest('tr').find('td:eq(3)').text() || "0";
 							valTantieme = String(valTantieme).replace(/[^0-9.,]/g, '').replace(',', '.');
 							$(this).val(parseFloat(valTantieme || 0).toFixed(2));
 						});
@@ -1553,10 +1551,10 @@ include_once(__DIR__.'/controllers/functions.php');
 								var widthProgress = (parseInt($('#lotCounter').text()) * 100)/parseInt($('#nbrLot').text());
 								$('.progress-bar').css('width', widthProgress+'%');
 								codeHtml = '<tr>';
-								codeHtml += '<td><span id="tdCode2_'+currentLot+'">'+$('input[name="prefixe"]').val()+$('input[name="numeroImm"]').val()+$('input[name="numero"]').val();
-								codeHtml += '<input type="hidden" name="id_lot2_'+currentLot+'" value="'+newID+'"></td>+';
-								codeHtml += '<td><span id="tdType2_'+currentLot+'">'+$('select[name="id_typeLot"]').find(":selected").text()+'</td>';
-								codeHtml += '<td><span id="tdProprio2_'+currentLot+'">'+$('select[name="id_proprietaire"]').find(":selected").text()+'</td>';
+								codeHtml += '<td><span id="tdCode2_'+currentLot+'">'+$('input[name="prefixe"]').val()+$('input[name="numeroImm"]').val()+$('input[name="numero"]').val()+'</span>';
+								codeHtml += '<input type="hidden" name="id_lot2_'+currentLot+'" value="'+newID+'"></td>';
+								codeHtml += '<td><span id="tdType2_'+currentLot+'">'+$('select[name="id_typeLot"]').find(":selected").text()+'</span></td>';
+								codeHtml += '<td><span id="tdProprio2_'+currentLot+'">'+$('select[name="id_proprietaire"]').find(":selected").text()+'</span></td>';
 								codeHtml += '<td><span id="tdTantieme2_'+currentLot+'">'+$('input[name="tantieme"]').val()+'</span></td>';
 								codeHtml += '<td><input type="number" class="form-control input-rounded input-defaultmb-3 partFonct" name="partFonct_'+currentLot+'" placeholder="0.00" readonly></td>';
 								codeHtml += '<td><input type="number" class="form-control input-rounded input-defaultmb-3 partInv" name="partInv_'+currentLot+'" placeholder="0.00" readonly></td>';
@@ -1620,10 +1618,9 @@ include_once(__DIR__.'/controllers/functions.php');
 					$('.partFonct').attr("readonly", true);
 				} else if($(this).val() == 3){
 					$('.partFonct').each(function() {
-						var idx = $(this).attr('name').split('_')[1];
-						var valTantieme = $('input[name="tantieme_'+idx+'"]').val() || $('#tdTantieme2_'+idx).text() || "0";
+						var valTantieme = $(this).closest('tr').find('td:eq(3)').text() || "0";
 						valTantieme = String(valTantieme).replace(/[^0-9.,]/g, '').replace(',', '.');
-						$(this).val(parseFloat(valTantieme || 0).toFixed(2));
+						$(this).val(parseFloat(valTantieme).toFixed(2));
 					});
 					$('.partFonct').attr("readonly", false);
 				}
@@ -1644,10 +1641,9 @@ include_once(__DIR__.'/controllers/functions.php');
 					$('.partInv').attr("readonly", true);
 				} else if($(this).val() == 3){
 					$('.partInv').each(function() {
-						var idx = $(this).attr('name').split('_')[1];
-						var valTantieme = $('input[name="tantieme_'+idx+'"]').val() || $('#tdTantieme2_'+idx).text() || "0";
+						var valTantieme = $(this).closest('tr').find('td:eq(3)').text() || "0";
 						valTantieme = String(valTantieme).replace(/[^0-9.,]/g, '').replace(',', '.');
-						$(this).val(parseFloat(valTantieme || 0).toFixed(2));
+						$(this).val(parseFloat(valTantieme).toFixed(2));
 					});
 					$('.partInv').attr("readonly", false);
 				} 
