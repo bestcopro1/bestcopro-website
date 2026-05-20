@@ -28,7 +28,7 @@ function id_typeLot($typelot, $connection) {
 function id_typeProprietaire($typeProprietaire, $connection) {
 	$request = "SELECT id FROM typeproprietaire WHERE libelle LIKE ? LIMIT 1";
 	if ($stmt = $connection->prepare($request)) {
-		$stmt->bind_param('s', $typelot);
+		$stmt->bind_param('s', $typeProprietaire);
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($id);
@@ -61,13 +61,46 @@ function getPassword( $length = 8 ) {
     $password = substr( str_shuffle( $chars ), 0, $length );
     return $password;
 }
-if(isset($_FILES['file']['name'], $_POST['id_copropriete'])){
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+	if (!isset($_FILES['file'], $_POST['id_copropriete'])) {
+		echo "Aucun fichier n'a ete recu. Verifiez la taille du fichier CSV et les limites PHP upload_max_filesize/post_max_size.";
+		exit();
+	}
+	if ($_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+		$uploadErrors = [
+			UPLOAD_ERR_INI_SIZE => "Le fichier depasse la limite upload_max_filesize du serveur.",
+			UPLOAD_ERR_FORM_SIZE => "Le fichier depasse la limite autorisee par le formulaire.",
+			UPLOAD_ERR_PARTIAL => "Le fichier a ete envoye partiellement.",
+			UPLOAD_ERR_NO_FILE => "Aucun fichier n'a ete selectionne.",
+			UPLOAD_ERR_NO_TMP_DIR => "Le dossier temporaire PHP est manquant.",
+			UPLOAD_ERR_CANT_WRITE => "Le serveur n'a pas pu ecrire le fichier importe.",
+			UPLOAD_ERR_EXTENSION => "Une extension PHP a bloque l'import du fichier.",
+		];
+		echo $uploadErrors[$_FILES['file']['error']] ?? "Erreur inconnue pendant l'import du fichier.";
+		exit();
+	}
 	if ($_FILES['file']['name'] != "" && $_POST['id_copropriete'] != "") {
 		$id_copropriete = filter_input(INPUT_POST, 'id_copropriete', FILTER_SANITIZE_STRING);
 		$importFileType = pathinfo($_FILES['file']['name'],PATHINFO_EXTENSION);
 		$importFileType = strtolower($importFileType);
+		if ($importFileType !== "csv") {
+			echo "Veuillez importer un fichier CSV.";
+			exit();
+		}
+		$uploadDir = __DIR__."/../upload";
+		if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true)) {
+			echo "Le dossier d'import est introuvable et n'a pas pu etre cree.";
+			exit();
+		}
+		if (!is_writable($uploadDir)) {
+			echo "Le dossier d'import n'est pas accessible en ecriture.";
+			exit();
+		}
 		$location = __DIR__."/../upload/import-lots_".date('Y-m-d-H-i-s').".".$importFileType;
-		move_uploaded_file($_FILES['file']['tmp_name'],$location);
+		if (!move_uploaded_file($_FILES['file']['tmp_name'],$location)) {
+			echo "Le fichier CSV n'a pas pu etre enregistre sur le serveur.";
+			exit();
+		}
 		if (($handle = fopen($location, "r")) !== FALSE) {
 			fgetcsv($handle);
 			$counter = 1;
