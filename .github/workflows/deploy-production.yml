@@ -26,9 +26,11 @@ jobs:
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
             "mkdir -p /var/www/bestcopro/app"
 
-          rsync -az --delete \
+          rsync -rz --links --times --delete \
+            --no-owner --no-group --no-perms --omit-dir-times \
             --exclude ".git/" \
-            --exclude "config/db.php" \
+            --filter "protect /config/db.php" \
+            --filter "hide /config/db.php" \
             --exclude "upload/" \
             --exclude "justificatifs/" \
             --exclude "*.apk" \
