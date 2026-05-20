@@ -1,0 +1,45 @@
+# Secrets
+wp-config.php
+app/config/db.php
+.env
+
+# Databases and archives
+*.sql
+*.sql.gz
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# Logs
+*.log
+error_log
+
+# WordPress runtime files
+wp-admin/
+wp-includes/
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/languages/
+
+# Application runtime files
+app/upload/
+app/justificatifs/
+app/*.apk
+bestcopr_failures.txt
+
+# Historical or non-production folders
+old/
+dev/
+demo/
+gestionnaires.bestcopro.ma/
+.quarantine/
+.tmb/
+
+# Local OS/editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/

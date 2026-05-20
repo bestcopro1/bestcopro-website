@@ -1,0 +1,15 @@
+# Changelog
+
+## 2026-05-20
+
+### Added
+
+- Initialisation du depot GitHub pour la passation BestCopro.
+- Ajout du `.gitignore` pour exclure secrets, bases SQL, logs, archives, uploads et caches.
+- Ajout de la documentation de passation et des workflows de deploiement staging/production.
+
+### Notes
+
+- Le code devient versionne dans GitHub.
+- Les donnees de production restent dans MySQL sur le VPS.
+- Les fichiers `wp-config.php` et `app/config/db.php` restent uniquement sur le serveur.
