@@ -20,22 +20,19 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Deploy to production
+      - name: Deploy app to production
         run: |
+          ssh -i ~/.ssh/deploy_key -p "${{ secrets.VPS_PORT }}" \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "mkdir -p /var/www/bestcopro/app"
+
           rsync -az --delete \
             --exclude ".git/" \
-            --exclude ".github/" \
-            --exclude "wp-config.php" \
-            --exclude "wp-admin/" \
-            --exclude "wp-includes/" \
-            --exclude "app/config/db.php" \
-            --exclude "wp-content/plugins/" \
-            --exclude "wp-content/themes/woodmart/" \
-            --exclude "wp-content/themes/twentytwenty*/" \
-            --exclude "wp-content/uploads/" \
-            --exclude "wp-content/cache/" \
+            --exclude "config/db.php" \
+            --exclude "upload/" \
+            --exclude "justificatifs/" \
             --exclude "*.sql" \
             --exclude "*.log" \
             --exclude "error_log" \
             -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.VPS_PORT }}" \
-            ./ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/bestcopro/
+            ./app/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/bestcopro/app/

@@ -16,8 +16,17 @@ app/config/db.php
 error_log
 
 # WordPress runtime files
+index.php
+license.txt
+readme.html
+tcpdf.php
+xmlrpc.php
+.htaccess
+.htaccess.bk
+wp-*.php
 wp-admin/
 wp-includes/
+wp-content/
 wp-content/uploads/
 wp-content/cache/
 wp-content/upgrade/

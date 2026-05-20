@@ -1,11 +1,12 @@
 # BestCopro Website And Application
 
-Depot de passation pour le site WordPress BestCopro et l'application metier PHP situee dans `app/`.
+Depot de passation pour l'application metier PHP BestCopro situee dans `app/`.
+
+Le site WordPress historique reste present sur le VPS, mais il n'est pas le perimetre principal de ce depot. Le depot est volontairement limite a l'application metier, a la documentation et aux workflows de deploiement.
 
 ## Architecture
 
 ```text
-WordPress public site: racine du projet
 Application metier:   app/
 Production VPS:       /var/www/bestcopro
 Staging VPS:          /var/www/bestcopro-staging
@@ -21,7 +22,6 @@ Production app:       bestcopr_app
 Les fichiers de configuration contenant les mots de passe ne sont pas versionnes:
 
 ```text
-wp-config.php
 app/config/db.php
 ```
 
@@ -59,10 +59,8 @@ La branche `main` deploie vers la production.
 - Ne jamais committer `wp-config.php`.
 - Ne jamais committer `app/config/db.php`.
 - Ne jamais committer les exports SQL ou les logs.
-- Ne pas versionner `wp-content/uploads/`.
-- Ne pas versionner `wp-admin/` et `wp-includes/`; WordPress core reste gere sur le serveur.
-- Ne pas versionner les plugins/themes tiers lourds; ils restent sur le VPS et sont exclus du `rsync --delete`.
-- Versionner seulement le code custom, notamment `app/` et `wp-content/themes/woodmart-child/`.
+- Ne pas versionner WordPress dans ce depot; WordPress reste gere separement sur le VPS.
+- Versionner seulement le code de l'application metier `app/` et la documentation.
 - Ne pas ecraser la base de donnees de production avec la base staging.
 - Les changements de schema DB doivent etre faits avec des migrations SQL ciblees.
 
