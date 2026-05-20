@@ -876,6 +876,7 @@ include_once(__DIR__.'/controllers/functions.php');
 				}
 			}); 
 			$("#smartwizard").on("leaveStep", function(e, anchorObject, currentStepIndex, nextStepIndex, stepDirection) {
+				var isStepValid = true;
 				if(currentStepIndex == 0){
 					if($('input[name="nom"]').val() == ""){
 						$('#erreurMessage').text("Le champs \"Nom de la copropriété\" est obligatoire");
@@ -909,6 +910,7 @@ include_once(__DIR__.'/controllers/functions.php');
 						$.ajax({
 							url: './controllers/copropriete.php',
 							method: "POST",
+							async: false,
 							data: {
 								id_copropriete: $('#id_copropriete').val(),
 								id_exercice: $('#id_exercice').val(),
@@ -929,14 +931,24 @@ include_once(__DIR__.'/controllers/functions.php');
 									$('#id_copropriete').val(id_copropriete);
 									$('#id_exercice').val(id_exercice);
 								} else {
-									$('#erreurMessage').html(response.split('|')[1]);
+									$('#erreurMessage').html(response.includes('|') ? response.split('|')[1] : response);
 									$('#SuccessErreurAlert').modal('toggle');
-									return false;
+									isStepValid = false;
 								}
+							},
+							error:function() {
+								$('#erreurMessage').text("Impossible d'enregistrer la copropriété. Veuillez réessayer.");
+								$('#SuccessErreurAlert').modal('toggle');
+								isStepValid = false;
 							}
 						});
 					}
 				} else if(currentStepIndex == 1){
+					if($('#id_exercice').val() == ""){
+						$('#erreurMessage').text("Veuillez d'abord enregistrer les informations de la copropriété.");
+						$('#SuccessErreurAlert').modal('toggle');
+						return false;
+					}
 					var totalBudget = $('#totalBudget').text();
 					if (parseFloat(totalBudget) <= 0) {
 						$('#erreurMessage').text("Budget est invalide");
@@ -958,6 +970,7 @@ include_once(__DIR__.'/controllers/functions.php');
 					$.ajax({
 						url : './controllers/copropriete.php',
 						type : 'POST',
+						async: false,
 						dataType: 'HTML',
 						cache: false,
 						contentType: false,
@@ -965,12 +978,17 @@ include_once(__DIR__.'/controllers/functions.php');
 						data: form_data,
 						success:function(response) {
 							if (response.includes('done|')) {
-								return true;
+								isStepValid = true;
 							} else {
-								$('#erreurMessage').html(response.split('|')[1]);
+								$('#erreurMessage').html(response.includes('|') ? response.split('|')[1] : response);
 								$('#SuccessErreurAlert').modal('toggle');
-								return false;
+								isStepValid = false;
 							}
+						},
+						error:function() {
+							$('#erreurMessage').text("Impossible d'enregistrer le budget. Veuillez réessayer.");
+							$('#SuccessErreurAlert').modal('toggle');
+							isStepValid = false;
 						}
 					});
 				} else if(currentStepIndex == 2){
@@ -980,6 +998,8 @@ include_once(__DIR__.'/controllers/functions.php');
 						return false;
 					}
 				}
+				if(!isStepValid)
+					return false;
 				if(nextStepIndex == 3)
 					$('.sw .toolbar').append('<button id="finish" class="btn btn-primary" type="button">Terminer</button>');
 				else
@@ -1294,6 +1314,11 @@ include_once(__DIR__.'/controllers/functions.php');
 				});
 			});
 			$("#import_csv").on("click", function(event) {
+				if($('#id_copropriete').val() == ""){
+					$('#erreurMessage').text("Veuillez d'abord enregistrer les informations de la copropriété avant d'importer les lots.");
+					$('#SuccessErreurAlert').modal('toggle');
+					return false;
+				}
 				$('#list_lots .list_lots_empty').html('<td colspan="8" class="text-center"><div class="lds-dual-ring"></div></td>');
 				var form_data = formDataImport;
 				form_data.append('id_copropriete', $('#id_copropriete').val());
