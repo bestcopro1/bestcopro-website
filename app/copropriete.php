@@ -1015,20 +1015,37 @@ include_once(__DIR__.'/controllers/functions.php');
 					$('#stepName').text('Répartition des charges');
 					var nbrLot = parseInt($('#nbrLot_bis').text());
 					var totalBudgetFonct = parseFloat($('#totalBudgetFonct').text());
-					var sommeTantieme = 0;
-					$('.tantieme').each(function(i) {
-						sommeTantieme += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-					});
-					for(var i = 1; i <= nbrLot; i++)
-						$('input[name="partFonct_'+i+'"]').val((totalBudgetFonct * parseFloat($('input[name="tantieme_'+i+'"]').val()) / sommeTantieme).toFixed(2));
-					var nbrLot = parseInt($('#nbrLot_bis').text());
-					totalBudgetInvest = parseFloat($('#totalBudgetInvest').text());
-					var sommeTantieme = 0;
-					$('.tantieme').each(function(i) {
-						sommeTantieme += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-					});
-					for(var i = 1; i <= nbrLot; i++)
-						$('input[name="partInv_'+i+'"]').val((totalBudgetInvest * parseFloat($('input[name="tantieme_'+i+'"]').val()) / sommeTantieme).toFixed(2));
+					var totalBudgetInvest = parseFloat($('#totalBudgetInvest').text());
+					
+					// Repartition Fonctionnement
+					if ($('#id_repartitionFonct').val() == 1) {
+						var sommeTantieme = 0;
+						$('.tantieme').each(function(i) {
+							sommeTantieme += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
+						});
+						for(var i = 1; i <= nbrLot; i++)
+							$('input[name="partFonct_'+i+'"]').val((totalBudgetFonct * parseFloat($('input[name="tantieme_'+i+'"]').val()) / sommeTantieme).toFixed(2));
+					} else if ($('#id_repartitionFonct').val() == 2) {
+						$('.partFonct').val((totalBudgetFonct/nbrLot).toFixed(2));
+					} else if ($('#id_repartitionFonct').val() == 3) {
+						for(var i = 1; i <= nbrLot; i++)
+							$('input[name="partFonct_'+i+'"]').val(parseFloat($('input[name="tantieme_'+i+'"]').val()).toFixed(2));
+					}
+
+					// Repartition Investissement
+					if ($('#id_repartitionInvest').val() == 1) {
+						var sommeTantieme = 0;
+						$('.tantieme').each(function(i) {
+							sommeTantieme += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
+						});
+						for(var i = 1; i <= nbrLot; i++)
+							$('input[name="partInv_'+i+'"]').val((totalBudgetInvest * parseFloat($('input[name="tantieme_'+i+'"]').val()) / sommeTantieme).toFixed(2));
+					} else if ($('#id_repartitionInvest').val() == 2) {
+						$('.partInv').val((totalBudgetInvest/nbrLot).toFixed(2));
+					} else if ($('#id_repartitionInvest').val() == 3) {
+						for(var i = 1; i <= nbrLot; i++)
+							$('input[name="partInv_'+i+'"]').val(parseFloat($('input[name="tantieme_'+i+'"]').val()).toFixed(2));
+					}
 				}
 			});
 			$('input[name="nbrLot"]').on("change", function(event) {
@@ -1594,7 +1611,8 @@ include_once(__DIR__.'/controllers/functions.php');
 					$('.partFonct').val((totalBudgetFonct/nbrLot).toFixed(2));
 					$('.partFonct').attr("readonly", true);
 				} else if($(this).val() == 3){
-					$('.partFonct').val("0.00");
+					for(var i = 1; i <= nbrLot; i++)
+						$('input[name="partFonct_'+i+'"]').val(parseFloat($('input[name="tantieme_'+i+'"]').val()).toFixed(2));
 					$('.partFonct').attr("readonly", false);
 				}
 			});
@@ -1613,7 +1631,8 @@ include_once(__DIR__.'/controllers/functions.php');
 					$('.partInv').val((totalBudgetInvest/nbrLot).toFixed(2));
 					$('.partInv').attr("readonly", true);
 				} else if($(this).val() == 3){
-					$('.partInv').val("0.00");
+					for(var i = 1; i <= nbrLot; i++)
+						$('input[name="partInv_'+i+'"]').val(parseFloat($('input[name="tantieme_'+i+'"]').val()).toFixed(2));
 					$('.partInv').attr("readonly", false);
 				} 
 			});
