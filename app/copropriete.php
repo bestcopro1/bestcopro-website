@@ -1028,8 +1028,11 @@ include_once(__DIR__.'/controllers/functions.php');
 					} else if ($('#id_repartitionFonct').val() == 2) {
 						$('.partFonct').val((totalBudgetFonct/nbrLot).toFixed(2));
 					} else if ($('#id_repartitionFonct').val() == 3) {
-						for(var i = 1; i <= nbrLot; i++)
-							$('input[name="partFonct_'+i+'"]').val(parseFloat($('input[name="tantieme_'+i+'"]').val()).toFixed(2));
+						for(var i = 1; i <= nbrLot; i++) {
+							var valTantieme = $('input[name="tantieme_'+i+'"]').val() || $('#tdTantieme2_'+i).text();
+							valTantieme = valTantieme.replace(/[^0-9.,]/g, '').replace(',', '.');
+							$('input[name="partFonct_'+i+'"]').val(parseFloat(valTantieme || 0).toFixed(2));
+						}
 					}
 
 					// Repartition Investissement
@@ -1043,8 +1046,11 @@ include_once(__DIR__.'/controllers/functions.php');
 					} else if ($('#id_repartitionInvest').val() == 2) {
 						$('.partInv').val((totalBudgetInvest/nbrLot).toFixed(2));
 					} else if ($('#id_repartitionInvest').val() == 3) {
-						for(var i = 1; i <= nbrLot; i++)
-							$('input[name="partInv_'+i+'"]').val(parseFloat($('input[name="tantieme_'+i+'"]').val()).toFixed(2));
+						for(var i = 1; i <= nbrLot; i++) {
+							var valTantieme = $('input[name="tantieme_'+i+'"]').val() || $('#tdTantieme2_'+i).text();
+							valTantieme = valTantieme.replace(/[^0-9.,]/g, '').replace(',', '.');
+							$('input[name="partInv_'+i+'"]').val(parseFloat(valTantieme || 0).toFixed(2));
+						}
 					}
 				}
 			});
@@ -1611,8 +1617,11 @@ include_once(__DIR__.'/controllers/functions.php');
 					$('.partFonct').val((totalBudgetFonct/nbrLot).toFixed(2));
 					$('.partFonct').attr("readonly", true);
 				} else if($(this).val() == 3){
-					for(var i = 1; i <= nbrLot; i++)
-						$('input[name="partFonct_'+i+'"]').val(parseFloat($('input[name="tantieme_'+i+'"]').val()).toFixed(2));
+					for(var i = 1; i <= nbrLot; i++) {
+						var valTantieme = $('input[name="tantieme_'+i+'"]').val() || $('#tdTantieme2_'+i).text();
+						valTantieme = valTantieme.replace(/[^0-9.,]/g, '').replace(',', '.');
+						$('input[name="partFonct_'+i+'"]').val(parseFloat(valTantieme || 0).toFixed(2));
+					}
 					$('.partFonct').attr("readonly", false);
 				}
 			});
@@ -1631,8 +1640,11 @@ include_once(__DIR__.'/controllers/functions.php');
 					$('.partInv').val((totalBudgetInvest/nbrLot).toFixed(2));
 					$('.partInv').attr("readonly", true);
 				} else if($(this).val() == 3){
-					for(var i = 1; i <= nbrLot; i++)
-						$('input[name="partInv_'+i+'"]').val(parseFloat($('input[name="tantieme_'+i+'"]').val()).toFixed(2));
+					for(var i = 1; i <= nbrLot; i++) {
+						var valTantieme = $('input[name="tantieme_'+i+'"]').val() || $('#tdTantieme2_'+i).text();
+						valTantieme = valTantieme.replace(/[^0-9.,]/g, '').replace(',', '.');
+						$('input[name="partInv_'+i+'"]').val(parseFloat(valTantieme || 0).toFixed(2));
+					}
 					$('.partInv').attr("readonly", false);
 				} 
 			});
