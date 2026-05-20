@@ -29,6 +29,9 @@ jobs:
             --exclude "wp-admin/" \
             --exclude "wp-includes/" \
             --exclude "app/config/db.php" \
+            --exclude "wp-content/plugins/" \
+            --exclude "wp-content/themes/woodmart/" \
+            --exclude "wp-content/themes/twentytwenty*/" \
             --exclude "wp-content/uploads/" \
             --exclude "wp-content/cache/" \
             --exclude "*.sql" \

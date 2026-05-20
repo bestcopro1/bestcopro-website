@@ -61,6 +61,8 @@ La branche `main` deploie vers la production.
 - Ne jamais committer les exports SQL ou les logs.
 - Ne pas versionner `wp-content/uploads/`.
 - Ne pas versionner `wp-admin/` et `wp-includes/`; WordPress core reste gere sur le serveur.
+- Ne pas versionner les plugins/themes tiers lourds; ils restent sur le VPS et sont exclus du `rsync --delete`.
+- Versionner seulement le code custom, notamment `app/` et `wp-content/themes/woodmart-child/`.
 - Ne pas ecraser la base de donnees de production avec la base staging.
 - Les changements de schema DB doivent etre faits avec des migrations SQL ciblees.
 

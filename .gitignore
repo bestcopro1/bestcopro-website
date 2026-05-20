@@ -22,6 +22,9 @@ wp-content/uploads/
 wp-content/cache/
 wp-content/upgrade/
 wp-content/languages/
+wp-content/plugins/
+wp-content/themes/twentytwenty*/
+wp-content/themes/woodmart/
 
 # Application runtime files
 app/upload/
