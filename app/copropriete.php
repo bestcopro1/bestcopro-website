@@ -868,6 +868,87 @@ include_once(__DIR__.'/controllers/functions.php');
 	<script src="js\demo.js"></script>
 	<script>
 		$(document).ready(function(){
+			function parseAmount(value) {
+				value = String(value || '').replace(/\s/g, '').replace(',', '.');
+				var amount = parseFloat(value);
+				return isNaN(amount) ? 0 : amount;
+			}
+
+			function getRowTantieme($input) {
+				return parseAmount($input.closest('tr').find('td:eq(3)').text());
+			}
+
+			function getRepartitionMode($select) {
+				var value = String($select.val() || '');
+				var label = String($select.find('option:selected').text() || '').toLowerCase();
+				if (value == '3' || label.indexOf('manuel') !== -1) {
+					return 'manual';
+				}
+				if (value == '2' || label.indexOf('egal') !== -1 || label.indexOf('égal') !== -1) {
+					return 'equal';
+				}
+				return 'tantieme';
+			}
+
+			function applyRepartitionFonct() {
+				var nbrLot = parseInt($('#nbrLot_bis').text()) || $('.partFonct').length;
+				var totalBudgetFonct = parseAmount($('#totalBudgetFonct').text());
+				var mode = getRepartitionMode($('#id_repartitionFonct'));
+
+				if (mode == 'tantieme') {
+					var sommeTantieme = 0;
+					$('.tantieme').each(function() {
+						sommeTantieme += parseAmount($(this).val());
+					});
+					$('.partFonct').each(function() {
+						var lotLine = String($(this).attr('name') || '').replace('partFonct_', '');
+						var tantieme = parseAmount($('input[name="tantieme_'+lotLine+'"]').val());
+						$(this).val(sommeTantieme > 0 ? (totalBudgetFonct * tantieme / sommeTantieme).toFixed(2) : '0.00');
+					});
+					$('.partFonct').attr('readonly', true);
+				} else if (mode == 'equal' && nbrLot != 0) {
+					$('.partFonct').val((totalBudgetFonct / nbrLot).toFixed(2));
+					$('.partFonct').attr('readonly', true);
+				} else if (mode == 'manual') {
+					$('.partFonct').each(function() {
+						$(this).val(getRowTantieme($(this)).toFixed(2));
+					});
+					$('.partFonct').attr('readonly', false);
+				}
+			}
+
+			function applyRepartitionInvest() {
+				var nbrLot = parseInt($('#nbrLot_bis').text()) || $('.partInv').length;
+				var totalBudgetInvest = parseAmount($('#totalBudgetInvest').text());
+				var mode = getRepartitionMode($('#id_repartitionInvest'));
+
+				if (mode == 'tantieme') {
+					var sommeTantieme = 0;
+					$('.tantieme').each(function() {
+						sommeTantieme += parseAmount($(this).val());
+					});
+					$('.partInv').each(function() {
+						var lotLine = String($(this).attr('name') || '').replace('partInv_', '');
+						var tantieme = parseAmount($('input[name="tantieme_'+lotLine+'"]').val());
+						$(this).val(sommeTantieme > 0 ? (totalBudgetInvest * tantieme / sommeTantieme).toFixed(2) : '0.00');
+					});
+					$('.partInv').attr('readonly', true);
+				} else if (mode == 'equal' && nbrLot != 0) {
+					$('.partInv').val((totalBudgetInvest / nbrLot).toFixed(2));
+					$('.partInv').attr('readonly', true);
+				} else if (mode == 'manual') {
+					$('.partInv').each(function() {
+						$(this).val(getRowTantieme($(this)).toFixed(2));
+					});
+					$('.partInv').attr('readonly', false);
+				}
+			}
+
+			function applyRepartitions() {
+				applyRepartitionFonct();
+				applyRepartitionInvest();
+			}
+
 			// SmartWizard initialize
 			$("#smartwizard").smartWizard({
 				lang: { // Language variables for button
@@ -1013,45 +1094,7 @@ include_once(__DIR__.'/controllers/functions.php');
 					$('#stepName').text('Informations relatives aux lots');
 				} else if(nextStepIndex == 3){ 
 					$('#stepName').text('Répartition des charges');
-					var nbrLot = parseInt($('#nbrLot_bis').text());
-					var totalBudgetFonct = parseFloat($('#totalBudgetFonct').text());
-					var totalBudgetInvest = parseFloat($('#totalBudgetInvest').text());
-					
-					// Repartition Fonctionnement
-					if ($('#id_repartitionFonct').val() == 1) {
-						var sommeTantieme = 0;
-						$('.tantieme').each(function(i) {
-							sommeTantieme += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-						});
-						for(var i = 1; i <= nbrLot; i++)
-							$('input[name="partFonct_'+i+'"]').val((totalBudgetFonct * parseFloat($('input[name="tantieme_'+i+'"]').val()) / sommeTantieme).toFixed(2));
-					} else if ($('#id_repartitionFonct').val() == 2) {
-						$('.partFonct').val((totalBudgetFonct/nbrLot).toFixed(2));
-					} else if ($('#id_repartitionFonct').val() == 3) {
-						$('.partFonct').each(function() {
-							var valTantieme = $(this).closest('tr').find('td:eq(3)').text() || "0";
-							valTantieme = String(valTantieme).replace(/[^0-9.,]/g, '').replace(',', '.');
-							$(this).val(parseFloat(valTantieme || 0).toFixed(2));
-						});
-					}
-
-					// Repartition Investissement
-					if ($('#id_repartitionInvest').val() == 1) {
-						var sommeTantieme = 0;
-						$('.tantieme').each(function(i) {
-							sommeTantieme += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-						});
-						for(var i = 1; i <= nbrLot; i++)
-							$('input[name="partInv_'+i+'"]').val((totalBudgetInvest * parseFloat($('input[name="tantieme_'+i+'"]').val()) / sommeTantieme).toFixed(2));
-					} else if ($('#id_repartitionInvest').val() == 2) {
-						$('.partInv').val((totalBudgetInvest/nbrLot).toFixed(2));
-					} else if ($('#id_repartitionInvest').val() == 3) {
-						$('.partInv').each(function() {
-							var valTantieme = $(this).closest('tr').find('td:eq(3)').text() || "0";
-							valTantieme = String(valTantieme).replace(/[^0-9.,]/g, '').replace(',', '.');
-							$(this).val(parseFloat(valTantieme || 0).toFixed(2));
-						});
-					}
+					applyRepartitions();
 				}
 			});
 			$('input[name="nbrLot"]').on("change", function(event) {
@@ -1376,6 +1419,7 @@ include_once(__DIR__.'/controllers/functions.php');
 							$('#lotCounter').text(words[3]);
 							var widthProgress = (parseInt($('#lotCounter').text()) * 100)/parseInt($('#nbrLot').text());
 							$('.progress-bar').css('width', widthProgress+'%');
+							applyRepartitions();
 						} else {
 							$('#list_lots .list_lots_empty').html('<td colspan="8" class="text-center"><p class="mt-3">Aucune donnée disponible dans le tableau</p></td>');
 							$('#erreurMessage').html(response);
@@ -1475,6 +1519,7 @@ include_once(__DIR__.'/controllers/functions.php');
 								$('#tdTantieme2_'+currentLot).text($('input[name="tantieme"]').val());
 								$('#tdAcqui_'+currentLot).text($('input[name="dateAcquisition"]').val());
 								$('#tdRemise_'+currentLot).text($('input[name="dateRemiseCle"]').val());
+								applyRepartitions();
 								
 								$('#update_lot').val("");
 								$('#update_lot').attr("data-lot-line", "");
@@ -1561,6 +1606,7 @@ include_once(__DIR__.'/controllers/functions.php');
 								codeHtml += '</tr>';
 								$('#list_lots_bis').append(codeHtml);
 								$('#tab-content').height($('#copropriete_Lots').height());
+								applyRepartitions();
 								
 								$('#add_lot').modal('toggle');
 							} else {
@@ -1603,50 +1649,10 @@ include_once(__DIR__.'/controllers/functions.php');
 				$('#add_lot').modal('toggle');
 			});
 			$('#id_repartitionFonct').on('change', function() {
-				var nbrLot = parseInt($('#nbrLot_bis').text());
-				var totalBudgetFonct = parseFloat($('#totalBudgetFonct').text());
-				if($(this).val() == 1){
-					var sommeTantieme = 0;
-					$('.tantieme').each(function(i) {
-						sommeTantieme += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-					});
-					for(var i = 1; i <= nbrLot; i++)
-						$('input[name="partFonct_'+i+'"]').val((totalBudgetFonct * parseFloat($('input[name="tantieme_'+i+'"]').val()) / sommeTantieme).toFixed(2));
-					$('.partFonct').attr("readonly", true);
-				} else if($(this).val() == 2 && nbrLot != 0){
-					$('.partFonct').val((totalBudgetFonct/nbrLot).toFixed(2));
-					$('.partFonct').attr("readonly", true);
-				} else if($(this).val() == 3){
-					$('.partFonct').each(function() {
-						var valTantieme = $(this).closest('tr').find('td:eq(3)').text() || "0";
-						valTantieme = String(valTantieme).replace(/[^0-9.,]/g, '').replace(',', '.');
-						$(this).val(parseFloat(valTantieme).toFixed(2));
-					});
-					$('.partFonct').attr("readonly", false);
-				}
+				applyRepartitionFonct();
 			});
 			$('#id_repartitionInvest').on('change', function() {
-				var nbrLot = parseInt($('#nbrLot_bis').text());
-				var totalBudgetInvest = parseFloat($('#totalBudgetInvest').text());
-				if($(this).val() == 1){
-					var sommeTantieme = 0;
-					$('.tantieme').each(function(i) {
-						sommeTantieme += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-					});
-					for(var i = 1; i <= nbrLot; i++)
-						$('input[name="partInv_'+i+'"]').val((totalBudgetInvest * parseFloat($('input[name="tantieme_'+i+'"]').val()) / sommeTantieme).toFixed(2));
-					$('.partInv').attr("readonly", true);
-				} else if($(this).val() == 2 && nbrLot != 0){
-					$('.partInv').val((totalBudgetInvest/nbrLot).toFixed(2));
-					$('.partInv').attr("readonly", true);
-				} else if($(this).val() == 3){
-					$('.partInv').each(function() {
-						var valTantieme = $(this).closest('tr').find('td:eq(3)').text() || "0";
-						valTantieme = String(valTantieme).replace(/[^0-9.,]/g, '').replace(',', '.');
-						$(this).val(parseFloat(valTantieme).toFixed(2));
-					});
-					$('.partInv').attr("readonly", false);
-				} 
+				applyRepartitionInvest();
 			});
 			$("body").on("click", '#finish', function(event) {
 				var form_data = new FormData();
