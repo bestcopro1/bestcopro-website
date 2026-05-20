@@ -277,7 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 				$codeHtml2 .= '<input type="hidden" name="id_lot2_'.$counter.'" value="'.$id_lot.'">'.'</td>';
 				$codeHtml2 .= '<td><span id="tdType2_'.$counter.'">'.trim($data[0]).'</td>';
 				$codeHtml2 .= '<td><span id="tdProprio2_'.$counter.'">'.$civilite.' '.trim($data[17]).' '.trim($data[16]).'</td>';
-				$codeHtml2 .= '<td><span id="tdTantieme2_'.$counter.'">'.trim($data[7]).'</td>';
+				$codeHtml2 .= '<td><span id="tdTantieme2_'.$counter.'">'.trim($data[7]).'</span></td>';
 				$codeHtml2 .= '<td><input type="number" class="form-control input-default partFonct" name="partFonct_'.$counter.'" placeholder="0.00" readonly></td>';
 				$codeHtml2 .= '<td><input type="number" class="form-control input-default partInv" name="partInv_'.$counter.'" placeholder="0.00" readonly></td>';
 				$codeHtml2 .= '</tr>';
