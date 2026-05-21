@@ -925,10 +925,7 @@ include_once(__DIR__.'/controllers/functions.php');
 					$('.partFonct').val((totalBudgetFonct / nbrLot).toFixed(2));
 					$('.partFonct').attr('readonly', true);
 				} else if (mode == 'manual') {
-					$('.partFonct').each(function() {
-						$(this).val(getInputTantieme($(this), 'partFonct_').toFixed(2));
-					});
-					$('.partFonct').attr('readonly', false);
+					copyTantiemeToFonct();
 				}
 			}
 
@@ -952,16 +949,27 @@ include_once(__DIR__.'/controllers/functions.php');
 					$('.partInv').val((totalBudgetInvest / nbrLot).toFixed(2));
 					$('.partInv').attr('readonly', true);
 				} else if (mode == 'manual') {
-					$('.partInv').each(function() {
-						$(this).val(getInputTantieme($(this), 'partInv_').toFixed(2));
-					});
-					$('.partInv').attr('readonly', false);
+					copyTantiemeToInvest();
 				}
 			}
 
 			function applyRepartitions() {
 				applyRepartitionFonct();
 				applyRepartitionInvest();
+			}
+
+			function copyTantiemeToFonct() {
+				$('.partFonct').each(function() {
+					$(this).val(getInputTantieme($(this), 'partFonct_').toFixed(2));
+				});
+				$('.partFonct').attr('readonly', false);
+			}
+
+			function copyTantiemeToInvest() {
+				$('.partInv').each(function() {
+					$(this).val(getInputTantieme($(this), 'partInv_').toFixed(2));
+				});
+				$('.partInv').attr('readonly', false);
 			}
 
 			// SmartWizard initialize
@@ -1669,11 +1677,43 @@ include_once(__DIR__.'/controllers/functions.php');
 			$('#id_repartitionInvest').on('change', function() {
 				applyRepartitionInvest();
 			});
-			$(document).on('click', '#id_repartitionFonct + .nice-select .option', function() {
-				setTimeout(applyRepartitionFonct, 0);
+			$(document).on('click', '.nice-select .option', function() {
+				var selectId = $(this).closest('.nice-select').prev('select').attr('id');
+				var fieldLabel = String($(this).closest('.form-group').find('label').text() || '').toLowerCase();
+				if (fieldLabel.normalize) {
+					fieldLabel = fieldLabel.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+				}
+				if (selectId != 'id_repartitionFonct' && fieldLabel.indexOf('fonctionnement') === -1) {
+					return;
+				}
+				var label = String($(this).text() || '').toLowerCase();
+				if (label.normalize) {
+					label = label.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+				}
+				if (label.indexOf('manuel') !== -1) {
+					copyTantiemeToFonct();
+				} else {
+					setTimeout(applyRepartitionFonct, 0);
+				}
 			});
-			$(document).on('click', '#id_repartitionInvest + .nice-select .option', function() {
-				setTimeout(applyRepartitionInvest, 0);
+			$(document).on('click', '.nice-select .option', function() {
+				var selectId = $(this).closest('.nice-select').prev('select').attr('id');
+				var fieldLabel = String($(this).closest('.form-group').find('label').text() || '').toLowerCase();
+				if (fieldLabel.normalize) {
+					fieldLabel = fieldLabel.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+				}
+				if (selectId != 'id_repartitionInvest' && fieldLabel.indexOf('investissement') === -1) {
+					return;
+				}
+				var label = String($(this).text() || '').toLowerCase();
+				if (label.normalize) {
+					label = label.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+				}
+				if (label.indexOf('manuel') !== -1) {
+					copyTantiemeToInvest();
+				} else {
+					setTimeout(applyRepartitionInvest, 0);
+				}
 			});
 			$("body").on("click", '#finish', function(event) {
 				var form_data = new FormData();
