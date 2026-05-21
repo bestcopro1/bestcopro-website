@@ -892,7 +892,9 @@ include_once(__DIR__.'/controllers/functions.php');
 				var value = String($select.val() || '');
 				var label = String($select.find('option:selected').text() || '');
 				var niceSelectLabel = String($select.next('.nice-select').find('.current').text() || '');
+				var groupNiceSelectLabel = String($select.closest('.form-group').find('.nice-select .current').text() || '');
 				label = (label + ' ' + niceSelectLabel).toLowerCase();
+				label = (label + ' ' + groupNiceSelectLabel).toLowerCase();
 				if (label.normalize) {
 					label = label.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 				}
@@ -956,6 +958,15 @@ include_once(__DIR__.'/controllers/functions.php');
 			function applyRepartitions() {
 				applyRepartitionFonct();
 				applyRepartitionInvest();
+			}
+
+			function syncManualVisibleRepartitions() {
+				if (getRepartitionMode($('#id_repartitionFonct')) == 'manual') {
+					copyTantiemeToFonct();
+				}
+				if (getRepartitionMode($('#id_repartitionInvest')) == 'manual') {
+					copyTantiemeToInvest();
+				}
 			}
 
 			function copyTantiemeToFonct() {
@@ -1443,6 +1454,7 @@ include_once(__DIR__.'/controllers/functions.php');
 							var widthProgress = (parseInt($('#lotCounter').text()) * 100)/parseInt($('#nbrLot').text());
 							$('.progress-bar').css('width', widthProgress+'%');
 							applyRepartitions();
+							syncManualVisibleRepartitions();
 						} else {
 							$('#list_lots .list_lots_empty').html('<td colspan="8" class="text-center"><p class="mt-3">Aucune donnée disponible dans le tableau</p></td>');
 							$('#erreurMessage').html(response);
@@ -1545,6 +1557,7 @@ include_once(__DIR__.'/controllers/functions.php');
 								$('#tdAcqui_'+currentLot).text($('input[name="dateAcquisition"]').val());
 								$('#tdRemise_'+currentLot).text($('input[name="dateRemiseCle"]').val());
 								applyRepartitions();
+								syncManualVisibleRepartitions();
 								
 								$('#update_lot').val("");
 								$('#update_lot').attr("data-lot-line", "");
@@ -1632,6 +1645,7 @@ include_once(__DIR__.'/controllers/functions.php');
 								$('#list_lots_bis').append(codeHtml);
 								$('#tab-content').height($('#copropriete_Lots').height());
 								applyRepartitions();
+								syncManualVisibleRepartitions();
 								
 								$('#add_lot').modal('toggle');
 							} else {
@@ -1718,6 +1732,7 @@ include_once(__DIR__.'/controllers/functions.php');
 				}
 			});
 			$("body").on("click", '#finish', function(event) {
+				syncManualVisibleRepartitions();
 				var form_data = new FormData();
 				$('#copropriete_Charges input, #copropriete_Charges select').each(
 					function(index){  
