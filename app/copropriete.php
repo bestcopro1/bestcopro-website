@@ -890,11 +890,16 @@ include_once(__DIR__.'/controllers/functions.php');
 
 			function getRepartitionMode($select) {
 				var value = String($select.val() || '');
-				var label = String($select.find('option:selected').text() || '').toLowerCase();
+				var label = String($select.find('option:selected').text() || '');
+				var niceSelectLabel = String($select.next('.nice-select').find('.current').text() || '');
+				label = (label + ' ' + niceSelectLabel).toLowerCase();
+				if (label.normalize) {
+					label = label.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+				}
 				if (value == '3' || label.indexOf('manuel') !== -1) {
 					return 'manual';
 				}
-				if (value == '2' || label.indexOf('egal') !== -1 || label.indexOf('égal') !== -1) {
+				if (value == '2' || label.indexOf('egal') !== -1) {
 					return 'equal';
 				}
 				return 'tantieme';
@@ -1663,6 +1668,12 @@ include_once(__DIR__.'/controllers/functions.php');
 			});
 			$('#id_repartitionInvest').on('change', function() {
 				applyRepartitionInvest();
+			});
+			$(document).on('click', '#id_repartitionFonct + .nice-select .option', function() {
+				setTimeout(applyRepartitionFonct, 0);
+			});
+			$(document).on('click', '#id_repartitionInvest + .nice-select .option', function() {
+				setTimeout(applyRepartitionInvest, 0);
 			});
 			$("body").on("click", '#finish', function(event) {
 				var form_data = new FormData();
