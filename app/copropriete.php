@@ -92,6 +92,10 @@ foreach($rubriquesInvestTemplates as $r) {
 		transform: rotate(360deg);
 	  }
 	}
+	.nice-select .list {
+		max-height: 250px;
+		overflow-y: auto !important;
+	}
 	-->
 	</style>
 
