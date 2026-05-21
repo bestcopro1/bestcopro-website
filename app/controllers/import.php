@@ -278,8 +278,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 				$codeHtml2 .= '<td><span id="tdType2_'.$counter.'">'.trim($data[0]).'</span></td>';
 				$codeHtml2 .= '<td><span id="tdProprio2_'.$counter.'">'.$civilite.' '.trim($data[17]).' '.trim($data[16]).'</span></td>';
 				$codeHtml2 .= '<td><span id="tdTantieme2_'.$counter.'">'.trim($data[7]).'</span></td>';
-				$codeHtml2 .= '<td><input type="number" class="form-control input-default partFonct" name="partFonct_'.$counter.'" placeholder="0.00" readonly></td>';
-				$codeHtml2 .= '<td><input type="number" class="form-control input-default partInv" name="partInv_'.$counter.'" placeholder="0.00" readonly></td>';
+				$codeHtml2 .= '<td><input type="number" class="form-control input-default partFonct" name="partFonct_'.$counter.'" value="'.trim($data[7]).'" placeholder="0.00" readonly></td>';
+				$codeHtml2 .= '<td><input type="number" class="form-control input-default partInv" name="partInv_'.$counter.'" value="'.trim($data[7]).'" placeholder="0.00" readonly></td>';
 				$codeHtml2 .= '</tr>';
 			}
 			fclose($handle);
