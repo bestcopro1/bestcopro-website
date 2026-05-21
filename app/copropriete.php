@@ -255,7 +255,7 @@ foreach($rubriquesInvestTemplates as $r) {
 													<div class="tab-pane fade show active" id="fonctionnement" role="tabpanel">
 														<div class="pt-4">
 															<div class="row mb-4 align-items-end">
-																<div class="col-xl-9 col-lg-8">
+																<div class="col-sm-8 col-lg-9 mb-3 mb-sm-0">
 																	<label class="form-label">Choisir une rubrique de fonctionnement</label>
 																	<select id="select_rubrique_fonct" class="form-control default-select wide">
 																		<option value="">-- Choisir une rubrique --</option>
@@ -265,7 +265,7 @@ foreach($rubriquesInvestTemplates as $r) {
 																		<option value="NEW">-- Autre (Nouvelle rubrique) --</option>
 																	</select>
 																</div>
-																<div class="col-xl-3 col-lg-4">
+																<div class="col-sm-4 col-lg-3">
 																	<button type="button" class="btn btn-primary btn-block" id="btn_add_rubrique_fonct">Ajouter</button>
 																</div>
 															</div>
@@ -278,7 +278,7 @@ foreach($rubriquesInvestTemplates as $r) {
 													<div class="tab-pane fade" id="investissement" role="tabpanel">
 														<div class="pt-4">
 															<div class="row mb-4 align-items-end">
-																<div class="col-xl-9 col-lg-8">
+																<div class="col-sm-8 col-lg-9 mb-3 mb-sm-0">
 																	<label class="form-label">Choisir une rubrique d'investissement</label>
 																	<select id="select_rubrique_invest" class="form-control default-select wide">
 																		<option value="">-- Choisir une rubrique --</option>
@@ -288,7 +288,7 @@ foreach($rubriquesInvestTemplates as $r) {
 																		<option value="NEW">-- Autre (Nouvelle rubrique) --</option>
 																	</select>
 																</div>
-																<div class="col-xl-3 col-lg-4">
+																<div class="col-sm-4 col-lg-3">
 																	<button type="button" class="btn btn-primary btn-block" id="btn_add_rubrique_invest">Ajouter</button>
 																</div>
 															</div>
@@ -742,11 +742,11 @@ foreach($rubriquesInvestTemplates as $r) {
 				var codeHtml = '<div class="basic-list-group ' + prefix + rubrique_count + ' mt-4">';
 				codeHtml += '<ul class="list-group">';
 				codeHtml += '<li class="list-group-item active">';
-				codeHtml += '<div class="row">';
-				codeHtml += '<div class="col-11">';
+				codeHtml += '<div class="row align-items-center">';
+				codeHtml += '<div class="col-10 col-md-11">';
 				codeHtml += '<input type="text" class="form-control input-rounded" name="' + prefix + rubrique_count + '" placeholder="Nouvelle rubrique" value="' + (name || '') + '">';
 				codeHtml += '</div>';
-				codeHtml += '<div class="col-1">';
+				codeHtml += '<div class="col-2 col-md-1 text-end">';
 				codeHtml += '<button type="button" class="btn btn-outline-secondary btn-rounded ' + del_rubrique_class + '" data-' + prefix.replace('_', '') + '="' + rubrique_count + '"><i class="fa fa-trash"></i></button>';
 				codeHtml += '</div>';
 				codeHtml += '</div>';
@@ -775,7 +775,7 @@ foreach($rubriquesInvestTemplates as $r) {
 				
 				$(container_selector).append(codeHtml);
 				$(rubrique_count_selector).val(rubrique_count + 1);
-				$('#tab-content').height($('#copropriete_Budget').height());
+				updateTabHeight();
 			}
 
 			function renderPosteHtml(type, rubrique_count, poste_count, pName) {
@@ -784,20 +784,38 @@ foreach($rubriquesInvestTemplates as $r) {
 				var del_poste_class = (type == 1) ? 'del_poste' : 'del_poste2';
 				
 				var codeHtml = '<li class="list-group-item ' + prefix + rubrique_count + poste_prefix + poste_count + '">';
-				codeHtml += '<div class="row">';
-				codeHtml += '<div class="col-6">';
+				codeHtml += '<div class="row align-items-center">';
+				codeHtml += '<div class="col-12 col-md-6 mb-2 mb-md-0">';
 				codeHtml += '<input type="text" class="form-control input-rounded" name="' + prefix + rubrique_count + poste_prefix + poste_count + '" placeholder="Nouveau poste" value="' + (pName || '') + '">';
 				codeHtml += '</div>';
-				codeHtml += '<div class="col-5">';
+				codeHtml += '<div class="col-10 col-md-5">';
 				codeHtml += '<input type="number" class="form-control input-rounded value" name="' + prefix + rubrique_count + poste_prefix + poste_count + '_value" placeholder="0.00" value="">';
 				codeHtml += '</div>';
-				codeHtml += '<div class="col-1">';
-				codeHtml += '<a href="#" class="ti-close fs-35 text-secondary las la-times-circle mt-2 ' + del_poste_class + '" data-' + prefix.replace('_', '') + '="' + rubrique_count + '" data-' + (type == 1 ? 'poste' : 'poste2') + '="' + poste_count + '"></a>';
+				codeHtml += '<div class="col-2 col-md-1 text-end">';
+				codeHtml += '<a href="#" class="ti-close fs-35 text-secondary las la-times-circle mt-1 ' + del_poste_class + '" data-' + prefix.replace('_', '') + '="' + rubrique_count + '" data-' + (type == 1 ? 'poste' : 'poste2') + '="' + poste_count + '"></a>';
 				codeHtml += '</div>';
 				codeHtml += '</div>';
 				codeHtml += '</li>';
 				return codeHtml;
 			}
+
+			function updateTabHeight() {
+				setTimeout(function() {
+					$('#tab-content').css('height', 'auto');
+					var currentTabId = $('.tab-pane.active').attr('id');
+					if (currentTabId === 'fonctionnement' || currentTabId === 'investissement') {
+						$('#tab-content').height($('#copropriete_Budget').outerHeight());
+					}
+				}, 100);
+			}
+
+			$(window).on('resize', function() {
+				updateTabHeight();
+			});
+
+			$('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+				updateTabHeight();
+			});
 
 			$('#btn_add_rubrique_fonct').on('click', function() {
 				var selected = $('#select_rubrique_fonct').val();
@@ -1096,7 +1114,7 @@ foreach($rubriquesInvestTemplates as $r) {
 				$(this).closest('li').before(codeHtml);
 				poste_count += 1;
 				$(this).attr('data-poste',poste_count);
-				$('#tab-content').height($('#copropriete_Budget').height());
+				updateTabHeight();
 				return false;
 			});
 			$("body").on("click", '.del_rubrique', function(event) {
@@ -1116,7 +1134,7 @@ foreach($rubriquesInvestTemplates as $r) {
 				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
 				totalBudget = totalBudgetFonct + totalBudgetInvest;
 				$('#totalBudget').text(totalBudget.toFixed(2));
-				$('#tab-content').height($('#copropriete_Budget').height());
+				updateTabHeight();
 				return false;
 			});
 			$("body").on("click", '.del_poste', function(event) {
@@ -1137,7 +1155,7 @@ foreach($rubriquesInvestTemplates as $r) {
 				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
 				totalBudget = totalBudgetFonct + totalBudgetInvest;
 				$('#totalBudget').text(totalBudget.toFixed(2));
-				$('#tab-content').height($('#copropriete_Budget').height());
+				updateTabHeight();
 				return false;
 			});
 			$("body").on("click", '.add_poste2', function(event) {
@@ -1148,7 +1166,7 @@ foreach($rubriquesInvestTemplates as $r) {
 				$(this).closest('li').before(codeHtml);
 				poste2_count += 1;
 				$(this).attr('data-poste2',poste2_count);
-				$('#tab-content').height($('#copropriete_Budget').height());
+				updateTabHeight();
 				return false;
 			});
 			$("body").on("click", '.del_rubrique2', function(event) {
@@ -1168,7 +1186,7 @@ foreach($rubriquesInvestTemplates as $r) {
 				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
 				totalBudget = totalBudgetFonct + totalBudgetInvest;
 				$('#totalBudget').text(totalBudget.toFixed(2));
-				$('#tab-content').height($('#copropriete_Budget').height());
+				updateTabHeight();
 				return false;
 			});
 			$("body").on("click", '.del_poste2', function(event) {
@@ -1189,7 +1207,7 @@ foreach($rubriquesInvestTemplates as $r) {
 				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
 				totalBudget = totalBudgetFonct + totalBudgetInvest;
 				$('#totalBudget').text(totalBudget.toFixed(2));
-				$('#tab-content').height($('#copropriete_Budget').height());
+				updateTabHeight();
 				return false;
 			});
 			$("body").on("change", '.value', function(event) {
