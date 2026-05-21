@@ -13,6 +13,21 @@ if ($_SESSION['id_usertype'] !== "1" && $_SESSION['id_usertype'] !== "2" && $_SE
 }
 include_once(__DIR__.'/config/db.php');
 include_once(__DIR__.'/controllers/functions.php');
+
+$rubriquesFonctTemplates = getRubrique(null, null, 1, $connection);
+$rubriquesInvestTemplates = getRubrique(null, null, 2, $connection);
+
+$allPostesTemplates = [];
+foreach($rubriquesFonctTemplates as $r) {
+	$postes = getPoste(null, null, $r['libelle'], $connection);
+	$allPostesTemplates[$r['libelle']] = array_column($postes, 'libelle');
+}
+foreach($rubriquesInvestTemplates as $r) {
+	if (!isset($allPostesTemplates[$r['libelle']])) {
+		$postes = getPoste(null, null, $r['libelle'], $connection);
+		$allPostesTemplates[$r['libelle']] = array_column($postes, 'libelle');
+	}
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -239,204 +254,48 @@ include_once(__DIR__.'/controllers/functions.php');
 												<div class="tab-content">
 													<div class="tab-pane fade show active" id="fonctionnement" role="tabpanel">
 														<div class="pt-4">
-															<?php
-															$rubriques = getRubrique(null, null, 1, $connection);
-															$i = 1;
-															if(count($rubriques) > 0):
-																foreach($rubriques as $rubrique):
-															?>
-															<div class="basic-list-group rubrique_<?=$i?> mt-4">
-																<ul class="list-group">
-																	<li class="list-group-item active">
-																		<div class="row">
-																			<div class="col-11">
-																				<input type="text" class="form-control input-rounded" name="rubrique_<?=$i?>" placeholder="Nouvelle rubrique" value="<?=$rubrique["libelle"]?>">
-																			</div>
-																			<div class="col-1">
-																				<button type="button" class="btn btn-outline-secondary btn-rounded del_rubrique" data-rubrique="<?=$i?>"><i class="fa fa-trash"></i></button>
-																			</div>
-																		</div>
-																	</li>
-																	<?php
-																	$postes = getPoste(null, null, $rubrique["libelle"], $connection);
-																	$j = 1;
-																	foreach($postes as $poste):
-																	?>
-																	<li class="list-group-item rubrique_<?=$i?>_poste_<?=$j?>">
-																		<div class="row">
-																			<div class="col-6">
-																				<input type="text" class="form-control input-rounded" name="rubrique_<?=$i?>_poste_<?=$j?>" placeholder="Nouveau poste" value="<?=$poste["libelle"]?>">
-																			</div>
-																			<div class="col-5">
-																				<input type="number" class="form-control input-rounded value" name="rubrique_<?=$i?>_poste_<?=$j?>_value" placeholder="0.00" value="">
-																			</div>
-																			<div class="col-1">
-																				<a href="#" class="ti-close fs-35 text-secondary las la-times-circle mt-2 del_poste" data-rubrique="<?=$i?>" data-poste="<?=$j?>"></a>
-																			</div>
-																		</div>
-																	</li>
-																	<?php
-																		$j += 1;
-																	endforeach;
-																	?>
-																	<li class="list-group-item">
-																		<div class="row">
-																			<div class="col-12">
-																				<a href="#" class="btn light btn-primary btn-block add_poste" data-rubrique="<?=$i?>" data-poste="<?=$j?>">Ajouter un poste</a>
-																			</div>
-																		</div>
-																	</li>
-																</ul>
-															</div>
-															<?php
-																	$i += 1;
-																endforeach;
-															else:
-																$i += 1;
-															?>
-															<div class="basic-list-group rubrique_1">
-																<ul class="list-group">
-																	<li class="list-group-item active">
-																		<div class="row">
-																			<div class="col-11">
-																				<input type="text" class="form-control input-rounded" name="rubrique_1" placeholder="Nouvelle rubrique" value="">
-																			</div>
-																			<div class="col-1">
-																				<button type="button" class="btn btn-outline-secondary btn-rounded del_rubrique" data-rubrique="1"><i class="fa fa-trash"></i></button>
-																			</div>
-																		</div>
-																	</li>
-																	<li class="list-group-item rubrique_1_poste_1">
-																		<div class="row">
-																			<div class="col-6">
-																				<input type="text" class="form-control input-rounded" name="rubrique_1_poste_1" placeholder="Nouveau poste" value="">
-																			</div>
-																			<div class="col-5">
-																				<input type="number" class="form-control input-rounded value" name="rubrique_1_poste_1_value" placeholder="0.00" value="">
-																			</div>
-																			<div class="col-1">
-																				<a href="#" class="ti-close fs-35 text-secondary las la-times-circle mt-2 del_poste" data-rubrique="1" data-poste="1"></a>
-																			</div>
-																		</div>
-																	</li>
-																	<li class="list-group-item">
-																		<div class="row">
-																			<div class="col-12">
-																				<a href="#" class="btn light btn-primary btn-block add_poste" data-rubrique="1" data-poste="2">Ajouter un poste</a>
-																			</div>
-																		</div>
-																	</li>
-																</ul>
-															</div>
-															<?php
-															endif;
-															?>
-															<div class="row mt-4 ">
-																<div class="col-12">
-																	<a href="#" class="btn btn-outline-primary btn-block add_rubrique" data-rubrique="<?=$i?>">Ajouter une rubrique</a>
+															<div class="row mb-4 align-items-end">
+																<div class="col-xl-9 col-lg-8">
+																	<label class="form-label">Choisir une rubrique de fonctionnement</label>
+																	<select id="select_rubrique_fonct" class="form-control default-select wide">
+																		<option value="">-- Choisir une rubrique --</option>
+																		<?php foreach($rubriquesFonctTemplates as $r): ?>
+																			<option value="<?=htmlspecialchars($r['libelle'])?>"><?=htmlspecialchars($r['libelle'])?></option>
+																		<?php endforeach; ?>
+																		<option value="NEW">-- Autre (Nouvelle rubrique) --</option>
+																	</select>
+																</div>
+																<div class="col-xl-3 col-lg-4">
+																	<button type="button" class="btn btn-primary btn-block" id="btn_add_rubrique_fonct">Ajouter</button>
 																</div>
 															</div>
+															<div id="container_rubriques_fonct">
+																<!-- Les rubriques seront ajoutées ici -->
+															</div>
+															<input type="hidden" id="rubrique_count_fonct" value="1">
 														</div>
 													</div>
-													<div class="tab-pane fade" id="investissement">
+													<div class="tab-pane fade" id="investissement" role="tabpanel">
 														<div class="pt-4">
-															<?php
-															$rubriques = getRubrique(null, null, 2, $connection);
-															$i = 1;
-															if(count($rubriques) > 0):
-																foreach($rubriques as $rubrique):
-															?>
-															<div class="basic-list-group rubrique2_<?=$i?>">
-																<ul class="list-group">
-																	<li class="list-group-item active">
-																		<div class="row">
-																			<div class="col-11">
-																				<input type="text" class="form-control input-rounded" name="rubrique2_<?=$i?>" placeholder="Nouvelle rubrique" value="<?=$rubrique["libelle"]?>">
-																			</div>
-																			<div class="col-1">
-																				<button type="button" class="btn btn-outline-secondary btn-rounded del_rubrique2" data-rubrique2="<?=$i?>"><i class="fa fa-trash"></i></button>
-																			</div>
-																		</div>
-																	</li>
-																	<?php
-																	$postes = getPoste(null, null, $rubrique["libelle"], $connection);
-																	$j = 1;
-																	foreach($postes as $poste):
-																	?>
-																	<li class="list-group-item rubrique2_<?=$i?>_poste2_<?=$j?>">
-																		<div class="row">
-																			<div class="col-6">
-																				<input type="text" class="form-control input-rounded" name="rubrique2_<?=$i?>_poste2_<?=$j?>" placeholder="Nouveau poste" value="<?=$poste["libelle"]?>">
-																			</div>
-																			<div class="col-5">
-																				<input type="number" class="form-control input-rounded value" name="rubrique2_<?=$i?>_poste2_<?=$j?>_value" placeholder="0.00" value="">
-																			</div>
-																			<div class="col-1">
-																				<a href="#" class="ti-close fs-35 text-secondary las la-times-circle mt-2 del_poste2" data-rubrique2="<?=$i?>" data-poste2="<?=$j?>"></a>
-																			</div>
-																		</div>
-																	</li>
-																	<?php
-																		$j += 1;
-																	endforeach;
-																	?>
-																	<li class="list-group-item">
-																		<div class="row">
-																			<div class="col-12">
-																				<a href="#" class="btn light btn-primary btn-block add_poste2" data-rubrique2="<?=$i?>" data-poste2="<?=$j?>">Ajouter un poste</a>
-																			</div>
-																		</div>
-																	</li>
-																</ul>
-															</div>
-															<?php
-																	$i += 1;
-																endforeach;
-															else:
-																$i += 1;
-															?>
-															<div class="basic-list-group rubrique2_1">
-																<ul class="list-group">
-																	<li class="list-group-item active">
-																		<div class="row">
-																			<div class="col-11">
-																				<input type="text" class="form-control input-rounded" name="rubrique2_1" placeholder="Nouvelle rubrique" value="">
-																			</div>
-																			<div class="col-1">
-																				<button type="button" class="btn btn-outline-secondary btn-rounded del_rubrique2" data-rubrique2="1"><i class="fa fa-trash"></i></button>
-																			</div>
-																		</div>
-																	</li>
-																	<li class="list-group-item rubrique2_1_poste2_1">
-																		<div class="row">
-																			<div class="col-6">
-																				<input type="text" class="form-control input-rounded" name="rubrique2_1_poste2_1" placeholder="Nouveau poste" value="">
-																			</div>
-																			<div class="col-5">
-																				<input type="number" class="form-control input-rounded value" name="rubrique2_1_poste2_1_value" placeholder="0.00" value="">
-																			</div>
-																			<div class="col-1">
-																				<a href="#" class="ti-close fs-35 text-secondary las la-times-circle mt-2 del_poste2" data-rubrique2="1" data-poste2="1"></a>
-																			</div>
-																		</div>
-																	</li>
-																	<li class="list-group-item">
-																		<div class="row">
-																			<div class="col-12">
-																				<a href="#" class="btn light btn-primary btn-block add_poste2" data-rubrique2="1" data-poste2="2">Ajouter un poste</a>
-																			</div>
-																		</div>
-																	</li>
-																</ul>
-															</div>
-															<?php
-															endif;
-															?>
-															<div class="row mt-4 ">
-																<div class="col-12">
-																	<a href="#" class="btn btn-outline-primary btn-block add_rubrique2" data-rubrique2="<?=$i?>">Ajouter une rubrique</a>
+															<div class="row mb-4 align-items-end">
+																<div class="col-xl-9 col-lg-8">
+																	<label class="form-label">Choisir une rubrique d'investissement</label>
+																	<select id="select_rubrique_invest" class="form-control default-select wide">
+																		<option value="">-- Choisir une rubrique --</option>
+																		<?php foreach($rubriquesInvestTemplates as $r): ?>
+																			<option value="<?=htmlspecialchars($r['libelle'])?>"><?=htmlspecialchars($r['libelle'])?></option>
+																		<?php endforeach; ?>
+																		<option value="NEW">-- Autre (Nouvelle rubrique) --</option>
+																	</select>
+																</div>
+																<div class="col-xl-3 col-lg-4">
+																	<button type="button" class="btn btn-primary btn-block" id="btn_add_rubrique_invest">Ajouter</button>
 																</div>
 															</div>
+															<div id="container_rubriques_invest">
+																<!-- Les rubriques seront ajoutées ici -->
+															</div>
+															<input type="hidden" id="rubrique_count_invest" value="1">
 														</div>
 													</div>
 												</div>
@@ -868,6 +727,100 @@ include_once(__DIR__.'/controllers/functions.php');
 	<script src="js\demo.js"></script>
 	<script>
 		$(document).ready(function(){
+			var budgetPostesTemplates = <?=json_encode($allPostesTemplates)?>;
+
+			function addRubriqueUI(type, name, templatePostes) {
+				var rubrique_count_selector = (type == 1) ? '#rubrique_count_fonct' : '#rubrique_count_invest';
+				var container_selector = (type == 1) ? '#container_rubriques_fonct' : '#container_rubriques_invest';
+				var prefix = (type == 1) ? 'rubrique_' : 'rubrique2_';
+				var poste_prefix = (type == 1) ? '_poste_' : '_poste2_';
+				var add_poste_class = (type == 1) ? 'add_poste' : 'add_poste2';
+				var del_rubrique_class = (type == 1) ? 'del_rubrique' : 'del_rubrique2';
+				
+				var rubrique_count = parseInt($(rubrique_count_selector).val());
+				
+				var codeHtml = '<div class="basic-list-group ' + prefix + rubrique_count + ' mt-4">';
+				codeHtml += '<ul class="list-group">';
+				codeHtml += '<li class="list-group-item active">';
+				codeHtml += '<div class="row">';
+				codeHtml += '<div class="col-11">';
+				codeHtml += '<input type="text" class="form-control input-rounded" name="' + prefix + rubrique_count + '" placeholder="Nouvelle rubrique" value="' + (name || '') + '">';
+				codeHtml += '</div>';
+				codeHtml += '<div class="col-1">';
+				codeHtml += '<button type="button" class="btn btn-outline-secondary btn-rounded ' + del_rubrique_class + '" data-' + prefix.replace('_', '') + '="' + rubrique_count + '"><i class="fa fa-trash"></i></button>';
+				codeHtml += '</div>';
+				codeHtml += '</div>';
+				codeHtml += '</li>';
+				
+				var poste_count = 1;
+				if (templatePostes && templatePostes.length > 0) {
+					templatePostes.forEach(function(pName) {
+						codeHtml += renderPosteHtml(type, rubrique_count, poste_count, pName);
+						poste_count++;
+					});
+				} else {
+					codeHtml += renderPosteHtml(type, rubrique_count, poste_count, '');
+					poste_count++;
+				}
+				
+				codeHtml += '<li class="list-group-item">';
+				codeHtml += '<div class="row">';
+				codeHtml += '<div class="col-12">';
+				codeHtml += '<a href="#" class="btn light btn-primary btn-block ' + add_poste_class + '" data-' + prefix.replace('_', '') + '="' + rubrique_count + '" data-' + (type == 1 ? 'poste' : 'poste2') + '="' + poste_count + '">Ajouter un poste</a>';
+				codeHtml += '</div>';
+				codeHtml += '</div>';
+				codeHtml += '</li>';
+				codeHtml += '</ul>';
+				codeHtml += '</div>';
+				
+				$(container_selector).append(codeHtml);
+				$(rubrique_count_selector).val(rubrique_count + 1);
+				$('#tab-content').height($('#copropriete_Budget').height());
+			}
+
+			function renderPosteHtml(type, rubrique_count, poste_count, pName) {
+				var prefix = (type == 1) ? 'rubrique_' : 'rubrique2_';
+				var poste_prefix = (type == 1) ? '_poste_' : '_poste2_';
+				var del_poste_class = (type == 1) ? 'del_poste' : 'del_poste2';
+				
+				var codeHtml = '<li class="list-group-item ' + prefix + rubrique_count + poste_prefix + poste_count + '">';
+				codeHtml += '<div class="row">';
+				codeHtml += '<div class="col-6">';
+				codeHtml += '<input type="text" class="form-control input-rounded" name="' + prefix + rubrique_count + poste_prefix + poste_count + '" placeholder="Nouveau poste" value="' + (pName || '') + '">';
+				codeHtml += '</div>';
+				codeHtml += '<div class="col-5">';
+				codeHtml += '<input type="number" class="form-control input-rounded value" name="' + prefix + rubrique_count + poste_prefix + poste_count + '_value" placeholder="0.00" value="">';
+				codeHtml += '</div>';
+				codeHtml += '<div class="col-1">';
+				codeHtml += '<a href="#" class="ti-close fs-35 text-secondary las la-times-circle mt-2 ' + del_poste_class + '" data-' + prefix.replace('_', '') + '="' + rubrique_count + '" data-' + (type == 1 ? 'poste' : 'poste2') + '="' + poste_count + '"></a>';
+				codeHtml += '</div>';
+				codeHtml += '</div>';
+				codeHtml += '</li>';
+				return codeHtml;
+			}
+
+			$('#btn_add_rubrique_fonct').on('click', function() {
+				var selected = $('#select_rubrique_fonct').val();
+				if (!selected) return;
+				if (selected === "NEW") {
+					addRubriqueUI(1, '', []);
+				} else {
+					addRubriqueUI(1, selected, budgetPostesTemplates[selected] || []);
+				}
+				$('#select_rubrique_fonct').val('').niceSelect('update');
+			});
+
+			$('#btn_add_rubrique_invest').on('click', function() {
+				var selected = $('#select_rubrique_invest').val();
+				if (!selected) return;
+				if (selected === "NEW") {
+					addRubriqueUI(2, '', []);
+				} else {
+					addRubriqueUI(2, selected, budgetPostesTemplates[selected] || []);
+				}
+				$('#select_rubrique_invest').val('').niceSelect('update');
+			});
+
 			function parseAmount(value) {
 				value = String(value || '').replace(/\s/g, '').replace(',', '.');
 				var amount = parseFloat(value);
@@ -1135,69 +1088,12 @@ include_once(__DIR__.'/controllers/functions.php');
 				$("#nbrLot").text($(this).val());
 				$("#nbrLot_bis").text($(this).val());
 			});
-			$(".add_rubrique").on("click", function(event) {
-				event.preventDefault();
-				var rubrique_count =  parseInt($(this).attr('data-rubrique'));
-				var codeHtml = '';
-				codeHtml += '<div class="basic-list-group rubrique_'+rubrique_count+' mt-4">';
-				codeHtml += '<ul class="list-group">';
-				codeHtml += '<li class="list-group-item active">';
-				codeHtml += '<div class="row">';
-				codeHtml += '<div class="col-11">';
-				codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique_'+rubrique_count+'" placeholder="Nouvelle rubrique" value="">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-1">';
-				codeHtml += '<button type="button" class="btn btn-outline-secondary btn-rounded del_rubrique" data-rubrique="'+rubrique_count+'"><i class="fa fa-trash"></i></button>';
-				codeHtml += '</div>';
-				codeHtml += '</div>';
-				codeHtml += '</li>';
-				codeHtml += '<li class="list-group-item rubrique_'+rubrique_count+'_poste_1">';
-				codeHtml += '<div class="row">';
-				codeHtml += '<div class="col-6">';
-				codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique_'+rubrique_count+'_poste_1" placeholder="Nouveau poste" value="">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-5">';
-				codeHtml += '<input type="number" class="form-control input-rounded value" name="rubrique_'+rubrique_count+'_poste_1_value" placeholder="0.00" value="">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-1">';
-				codeHtml += '<a href="#" class="ti-close fs-35 text-secondary las la-times-circle mt-2 del_poste" data-rubrique="'+rubrique_count+'" data-poste="1"></a>';
-				codeHtml += '</div>';
-				codeHtml += '</div>';
-				codeHtml += '</li>';
-				codeHtml += '<li class="list-group-item">';
-				codeHtml += '<div class="row">';
-				codeHtml += '<div class="col-12">';
-				codeHtml += '<a href="#" class="btn light btn-primary btn-block add_poste" data-rubrique="'+rubrique_count+'" data-poste="2">Ajouter un poste</a>';
-				codeHtml += '</div>';
-				codeHtml += '</div>';
-				codeHtml += '</li>';
-				codeHtml += '</ul>';
-				codeHtml += '</div>';
-				$('.rubrique_'+(rubrique_count - 1)).after(codeHtml);				
-				rubrique_count += 1;
-				$(this).attr('data-rubrique',rubrique_count);
-				$('#tab-content').height($('#copropriete_Budget').height());
-				return false;
-			});
 			$("body").on("click", '.add_poste', function(event) {
 				event.preventDefault();
 				var rubrique_count =  parseInt($(this).attr('data-rubrique'));
 				var poste_count =  parseInt($(this).attr('data-poste'));
-				var codeHtml = '';
-				codeHtml += '<li class="list-group-item rubrique_'+rubrique_count+'_poste_'+poste_count+'">';
-				codeHtml += '<div class="row">';
-				codeHtml += '<div class="col-6">';
-				codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique_'+rubrique_count+'_poste_'+poste_count+'" placeholder="Nouveau poste" value="">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-5">';
-				codeHtml += '<input type="number" class="form-control input-rounded value" name="rubrique_'+rubrique_count+'_poste_'+poste_count+'_value" placeholder="0.00" value="">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-1">';
-				codeHtml += '<a href="#" class="ti-close fs-35 text-secondary las la-times-circle mt-2 del_poste" data-rubrique="'+rubrique_count+'" data-poste="'+poste_count+'"></a>';
-				codeHtml += '</div>';
-				codeHtml += '</div>';
-				codeHtml += '</li>';
-				$('.rubrique_'+rubrique_count+'_poste_'+(poste_count - 1)).after(codeHtml);
+				var codeHtml = renderPosteHtml(1, rubrique_count, poste_count, '');
+				$(this).closest('li').before(codeHtml);
 				poste_count += 1;
 				$(this).attr('data-poste',poste_count);
 				$('#tab-content').height($('#copropriete_Budget').height());
@@ -1206,72 +1102,41 @@ include_once(__DIR__.'/controllers/functions.php');
 			$("body").on("click", '.del_rubrique', function(event) {
 				event.preventDefault();
 				var rubrique_count =  parseInt($(this).attr('data-rubrique'));
-				$('input[name="rubrique_'+rubrique_count+'"]').val("");
+				$('.rubrique_'+rubrique_count).remove();
 				var totalBudget = 0;
-				$('.value').each(function(i) {
-					totalBudget += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
+				var totalBudgetFonct = 0;
+				var totalBudgetInvest = 0;
+				$('#fonctionnement .value').each(function(i) {
+					totalBudgetFonct += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
 				});
+				$('#investissement .value').each(function(i) {
+					totalBudgetInvest += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
+				});
+				$('#totalBudgetFonct').text(totalBudgetFonct.toFixed(2));
+				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
+				totalBudget = totalBudgetFonct + totalBudgetInvest;
 				$('#totalBudget').text(totalBudget.toFixed(2));
-				$('.rubrique_'+rubrique_count).hide();
 				$('#tab-content').height($('#copropriete_Budget').height());
 				return false;
 			});
 			$("body").on("click", '.del_poste', function(event) {
 				event.preventDefault();
-				var rubrique_count =  parseInt($(this).attr('data-rubrique'));
-				var poste_count =  parseInt($(this).attr('data-poste'));
-				$('input[name="rubrique_'+rubrique_count+'_poste_'+poste_count+'"]').val("");
-				$('input[name="rubrique_'+rubrique_count+'_poste_'+poste_count+'_value"]').val("");
+				var rubrique_count =  $(this).attr('data-rubrique');
+				var poste_count =  $(this).attr('data-poste');
+				$('.rubrique_'+rubrique_count+'_poste_'+poste_count).remove();
 				var totalBudget = 0;
-				$('.value').each(function(i) {
-					totalBudget += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
+				var totalBudgetFonct = 0;
+				var totalBudgetInvest = 0;
+				$('#fonctionnement .value').each(function(i) {
+					totalBudgetFonct += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
 				});
+				$('#investissement .value').each(function(i) {
+					totalBudgetInvest += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
+				});
+				$('#totalBudgetFonct').text(totalBudgetFonct.toFixed(2));
+				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
+				totalBudget = totalBudgetFonct + totalBudgetInvest;
 				$('#totalBudget').text(totalBudget.toFixed(2));
-				$('.rubrique_'+rubrique_count+'_poste_'+poste_count).hide();
-				$('#tab-content').height($('#copropriete_Budget').height());
-				return false;
-			});
-			$(".add_rubrique2").on("click", function(event) {
-				event.preventDefault();
-				var rubrique2_count =  parseInt($(this).attr('data-rubrique2'));
-				var codeHtml = '';
-				codeHtml += '<div class="basic-list-group rubrique2_'+rubrique2_count+' mt-4">';
-				codeHtml += '<ul class="list-group">';
-				codeHtml += '<li class="list-group-item active">';
-				codeHtml += '<div class="row">';
-				codeHtml += '<div class="col-11">';
-				codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique2_'+rubrique2_count+'" placeholder="Nouvelle rubrique" value="">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-1">';
-				codeHtml += '<button type="button" class="btn btn-outline-secondary btn-rounded del_rubrique2" data-rubrique2="'+rubrique2_count+'"><i class="fa fa-trash"></i></button>';
-				codeHtml += '</div>';
-				codeHtml += '</div>';
-				codeHtml += '</li>';
-				codeHtml += '<li class="list-group-item rubrique2_'+rubrique2_count+'_poste2_1">';
-				codeHtml += '<div class="row">';
-				codeHtml += '<div class="col-6">';
-				codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique2_'+rubrique2_count+'_poste2_1" placeholder="Nouveau poste" value="">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-5">';
-				codeHtml += '<input type="text" class="form-control input-rounded value" name="rubrique2_'+rubrique2_count+'_poste2_1_value" placeholder="Budget annuel" value="0.00">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-1">';
-				codeHtml += '<a href="#" class="ti-close fs-35 text-secondary las la-times-circle mt-2 del_poste2" data-rubrique2="'+rubrique2_count+'" data-poste2="1"></a>';
-				codeHtml += '</div>';
-				codeHtml += '</div>';
-				codeHtml += '</li>';
-				codeHtml += '<li class="list-group-item">';
-				codeHtml += '<div class="row">';
-				codeHtml += '<div class="col-12">';
-				codeHtml += '<a href="#" class="btn light btn-primary btn-block add_poste2" data-rubrique2="'+rubrique2_count+'" data-poste2="2">Ajouter un poste</a>';
-				codeHtml += '</div>';
-				codeHtml += '</div>';
-				codeHtml += '</li>';
-				codeHtml += '</ul>';
-				codeHtml += '</div>';
-				$('.rubrique2_'+(rubrique2_count - 1)).after(codeHtml);				
-				rubrique2_count += 1;
-				$(this).attr('data-rubrique2',rubrique2_count);
 				$('#tab-content').height($('#copropriete_Budget').height());
 				return false;
 			});
@@ -1279,21 +1144,8 @@ include_once(__DIR__.'/controllers/functions.php');
 				event.preventDefault();
 				var rubrique2_count =  parseInt($(this).attr('data-rubrique2'));
 				var poste2_count =  parseInt($(this).attr('data-poste2'));
-				var codeHtml = '';
-				codeHtml += '<li class="list-group-item rubrique2_'+rubrique2_count+'_poste2_'+poste2_count+'">';
-				codeHtml += '<div class="row">';
-				codeHtml += '<div class="col-6">';
-				codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique2_'+rubrique2_count+'_poste2_'+poste2_count+'" placeholder="Nouveau poste" value="">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-5">';
-				codeHtml += '<input type="text" class="form-control input-rounded value" name="rubrique2_'+rubrique2_count+'_poste2_'+poste2_count+'_value" placeholder="Budget annuel" value="0.00">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-1">';
-				codeHtml += '<a href="#" class="ti-close fs-35 text-secondary las la-times-circle mt-2 del_poste2" data-rubrique2="'+rubrique2_count+'" data-poste2="'+poste2_count+'"></a>';
-				codeHtml += '</div>';
-				codeHtml += '</div>';
-				codeHtml += '</li>';
-				$('.rubrique2_'+rubrique2_count+'_poste2_'+(poste2_count - 1)).after(codeHtml);
+				var codeHtml = renderPosteHtml(2, rubrique2_count, poste2_count, '');
+				$(this).closest('li').before(codeHtml);
 				poste2_count += 1;
 				$(this).attr('data-poste2',poste2_count);
 				$('#tab-content').height($('#copropriete_Budget').height());
@@ -1302,28 +1154,41 @@ include_once(__DIR__.'/controllers/functions.php');
 			$("body").on("click", '.del_rubrique2', function(event) {
 				event.preventDefault();
 				var rubrique2_count =  parseInt($(this).attr('data-rubrique2'));
-				$('input[name="rubrique2_'+rubrique2_count+'"]').val("");
+				$('.rubrique2_'+rubrique2_count).remove();
 				var totalBudget = 0;
-				$('.value').each(function(i) {
-					totalBudget += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
+				var totalBudgetFonct = 0;
+				var totalBudgetInvest = 0;
+				$('#fonctionnement .value').each(function(i) {
+					totalBudgetFonct += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
 				});
+				$('#investissement .value').each(function(i) {
+					totalBudgetInvest += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
+				});
+				$('#totalBudgetFonct').text(totalBudgetFonct.toFixed(2));
+				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
+				totalBudget = totalBudgetFonct + totalBudgetInvest;
 				$('#totalBudget').text(totalBudget.toFixed(2));
-				$('.rubrique2_'+rubrique2_count).hide();
 				$('#tab-content').height($('#copropriete_Budget').height());
 				return false;
 			});
 			$("body").on("click", '.del_poste2', function(event) {
 				event.preventDefault();
-				var rubrique2_count =  parseInt($(this).attr('data-rubrique2'));
-				var poste2_count =  parseInt($(this).attr('data-poste2'));
-				$('input[name="rubrique2_'+rubrique2_count+'_poste2_'+poste2_count+'"]').val("");
-				$('input[name="rubrique2_'+rubrique2_count+'_poste2_'+poste2_count+'_value"]').val("");
+				var rubrique2_count =  $(this).attr('data-rubrique2');
+				var poste2_count =  $(this).attr('data-poste2');
+				$('.rubrique2_'+rubrique2_count+'_poste2_'+poste2_count).remove();
 				var totalBudget = 0;
-				$('.value').each(function(i) {
-					totalBudget += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
+				var totalBudgetFonct = 0;
+				var totalBudgetInvest = 0;
+				$('#fonctionnement .value').each(function(i) {
+					totalBudgetFonct += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
 				});
+				$('#investissement .value').each(function(i) {
+					totalBudgetInvest += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
+				});
+				$('#totalBudgetFonct').text(totalBudgetFonct.toFixed(2));
+				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
+				totalBudget = totalBudgetFonct + totalBudgetInvest;
 				$('#totalBudget').text(totalBudget.toFixed(2));
-				$('.rubrique2_'+rubrique2_count+'_poste2_'+poste2_count).hide();
 				$('#tab-content').height($('#copropriete_Budget').height());
 				return false;
 			});
