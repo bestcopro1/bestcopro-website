@@ -190,7 +190,9 @@ class Color
         }
 
         if (isset(self::$cssColorNames[$color])) {
-            return $cache[$color] = self::getArray(self::$cssColorNames[$color]);
+            return $cache[$color] = self::getArray(
+                self::$cssColorNames[$color],
+            );
         }
 
         // https://www.w3.org/TR/css-color-4/#hex-notation
@@ -200,28 +202,46 @@ class Color
 
             // #rgb format
             if ($length === 4) {
-                return $cache[$color] = self::getArray($color[1] . $color[1] . $color[2] . $color[2] . $color[3] . $color[3]);
+                return $cache[$color] = self::getArray(
+                    $color[1] .
+                        $color[1] .
+                        $color[2] .
+                        $color[2] .
+                        $color[3] .
+                        $color[3],
+                );
             }
 
             // #rgba format
             if ($length === 5) {
                 if (ctype_xdigit($color[4])) {
-                    $alpha = round(hexdec($color[4] . $color[4])/255, 2);
+                    $alpha = round(hexdec($color[4] . $color[4]) / 255, 2);
                 }
-                return $cache[$color] = self::getArray($color[1] . $color[1] . $color[2] . $color[2] . $color[3] . $color[3], $alpha);
+                return $cache[$color] = self::getArray(
+                    $color[1] .
+                        $color[1] .
+                        $color[2] .
+                        $color[2] .
+                        $color[3] .
+                        $color[3],
+                    $alpha,
+                );
             }
 
             // #rrggbb format
             if ($length === 7) {
                 return $cache[$color] = self::getArray(mb_substr($color, 1, 6));
             }
-            
+
             // #rrggbbaa format
             if ($length === 9) {
                 if (ctype_xdigit(mb_substr($color, 7, 2))) {
-                    $alpha = round(hexdec(mb_substr($color, 7, 2))/255, 2);
+                    $alpha = round(hexdec(mb_substr($color, 7, 2)) / 255, 2);
                 }
-                return $cache[$color] = self::getArray(mb_substr($color, 1, 6), $alpha);
+                return $cache[$color] = self::getArray(
+                    mb_substr($color, 1, 6),
+                    $alpha,
+                );
             }
 
             return null;
@@ -229,7 +249,10 @@ class Color
 
         // rgb( r g b [/α] ) / rgb( r,g,b[,α] ) format and alias rgba()
         // https://www.w3.org/TR/css-color-4/#rgb-functions
-        if (mb_substr($color, 0, 4) === "rgb(" || mb_substr($color, 0, 5) === "rgba(") {
+        if (
+            mb_substr($color, 0, 4) === "rgb(" ||
+            mb_substr($color, 0, 5) === "rgba("
+        ) {
             $i = mb_strpos($color, "(");
             $j = mb_strpos($color, ")");
 
@@ -271,7 +294,10 @@ class Color
                 }
             }
 
-            return $cache[$color] = self::getArray(vsprintf("%02X%02X%02X", $triplet), $alpha);
+            return $cache[$color] = self::getArray(
+                vsprintf("%02X%02X%02X", $triplet),
+                $alpha,
+            );
         }
 
         // cmyk( c,m,y,k ) format

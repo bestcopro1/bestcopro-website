@@ -103,7 +103,7 @@ class ListBullet extends AbstractRenderer
             case "lower-alpha":
             case "lower-latin":
             case "a":
-                $text = chr((($n - 1) % 26) + ord('a'));
+                $text = chr((($n - 1) % 26) + ord("a"));
                 break;
 
             case "upper-roman":
@@ -147,7 +147,10 @@ class ListBullet extends AbstractRenderer
 
         // Handle list-style-image
         // If list style image is requested but missing, fall back to predefined types
-        if ($frame instanceof ListBulletImage && !Cache::is_broken($img = $frame->get_image_url())) {
+        if (
+            $frame instanceof ListBulletImage &&
+            !Cache::is_broken($img = $frame->get_image_url())
+        ) {
             [$x, $y] = $frame->get_position();
             $w = $frame->get_width();
             $h = $frame->get_height();
@@ -162,20 +165,39 @@ class ListBullet extends AbstractRenderer
                 case "disc":
                 case "circle":
                     [$x, $y] = $frame->get_position();
-                    $offset = $font_size * ListBulletFrameDecorator::BULLET_OFFSET;
-                    $r = ($font_size * ListBulletFrameDecorator::BULLET_SIZE) / 2;
+                    $offset =
+                        $font_size * ListBulletFrameDecorator::BULLET_OFFSET;
+                    $r =
+                        ($font_size * ListBulletFrameDecorator::BULLET_SIZE) /
+                        2;
                     $x += $r;
                     $y += $baseline - $r - $offset;
-                    $o = $font_size * ListBulletFrameDecorator::BULLET_THICKNESS;
-                    $this->_canvas->circle($x, $y, $r, $style->color, $o, null, $bullet_style !== "circle");
+                    $o =
+                        $font_size * ListBulletFrameDecorator::BULLET_THICKNESS;
+                    $this->_canvas->circle(
+                        $x,
+                        $y,
+                        $r,
+                        $style->color,
+                        $o,
+                        null,
+                        $bullet_style !== "circle",
+                    );
                     break;
 
                 case "square":
                     [$x, $y] = $frame->get_position();
-                    $offset = $font_size * ListBulletFrameDecorator::BULLET_OFFSET;
+                    $offset =
+                        $font_size * ListBulletFrameDecorator::BULLET_OFFSET;
                     $w = $font_size * ListBulletFrameDecorator::BULLET_SIZE;
                     $y += $baseline - $w - $offset;
-                    $this->_canvas->filled_rectangle($x, $y, $w, $w, $style->color);
+                    $this->_canvas->filled_rectangle(
+                        $x,
+                        $y,
+                        $w,
+                        $w,
+                        $style->color,
+                    );
                     break;
 
                 case "decimal-leading-zero":
@@ -194,7 +216,12 @@ class ListBullet extends AbstractRenderer
                 case "I":
                     $pad = null;
                     if ($bullet_style === "decimal-leading-zero") {
-                        $pad = strlen($li->get_parent()->get_node()->getAttribute("dompdf-children-count"));
+                        $pad = strlen(
+                            $li
+                                ->get_parent()
+                                ->get_node()
+                                ->getAttribute("dompdf-children-count"),
+                        );
                     }
 
                     $node = $frame->get_node();
@@ -212,15 +239,30 @@ class ListBullet extends AbstractRenderer
 
                     $word_spacing = $style->word_spacing;
                     $letter_spacing = $style->letter_spacing;
-                    $text_width = $this->_dompdf->getFontMetrics()->getTextWidth($text, $font_family, $font_size, $word_spacing, $letter_spacing);
+                    $text_width = $this->_dompdf
+                        ->getFontMetrics()
+                        ->getTextWidth(
+                            $text,
+                            $font_family,
+                            $font_size,
+                            $word_spacing,
+                            $letter_spacing,
+                        );
 
                     [$x, $y] = $frame->get_position();
                     // Correct for static frame width applied by positioner
                     $x += $frame->get_width() - $text_width;
 
-                    $this->_canvas->text($x, $y, $text,
-                        $font_family, $font_size,
-                        $style->color, $word_spacing, $letter_spacing);
+                    $this->_canvas->text(
+                        $x,
+                        $y,
+                        $text,
+                        $font_family,
+                        $font_size,
+                        $style->color,
+                        $word_spacing,
+                        $letter_spacing,
+                    );
 
                 case "none":
                     break;

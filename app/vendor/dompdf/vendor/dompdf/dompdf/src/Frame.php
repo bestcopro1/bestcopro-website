@@ -171,18 +171,18 @@ class Frame
             "h" => null,
         ];
 
-        $this->_containing_block[0] =& $this->_containing_block["x"];
-        $this->_containing_block[1] =& $this->_containing_block["y"];
-        $this->_containing_block[2] =& $this->_containing_block["w"];
-        $this->_containing_block[3] =& $this->_containing_block["h"];
+        $this->_containing_block[0] = &$this->_containing_block["x"];
+        $this->_containing_block[1] = &$this->_containing_block["y"];
+        $this->_containing_block[2] = &$this->_containing_block["w"];
+        $this->_containing_block[3] = &$this->_containing_block["h"];
 
         $this->_position = [
             "x" => null,
             "y" => null,
         ];
 
-        $this->_position[0] =& $this->_position["x"];
-        $this->_position[1] =& $this->_position["y"];
+        $this->_position[0] = &$this->_position["x"];
+        $this->_position[1] = &$this->_position["y"];
 
         $this->_opacity = 1.0;
         $this->_decorator = null;
@@ -203,7 +203,11 @@ class Frame
             $node = $this->_node;
 
             if ($node->nodeName === "#text" && !empty($node->nodeValue)) {
-                $node->nodeValue = preg_replace("/[ \t\r\n\f]+/u", " ", trim($node->nodeValue));
+                $node->nodeValue = preg_replace(
+                    "/[ \t\r\n\f]+/u",
+                    " ",
+                    trim($node->nodeValue),
+                );
                 self::$_ws_state = self::WS_TEXT;
             }
         }
@@ -430,15 +434,18 @@ class Frame
     {
         $style = $this->_style;
 
-        return (float)$style->length_in_pt([
-            $style->width,
-            $style->margin_left,
-            $style->margin_right,
-            $style->border_left_width,
-            $style->border_right_width,
-            $style->padding_left,
-            $style->padding_right
-        ], $this->_containing_block["w"]);
+        return (float) $style->length_in_pt(
+            [
+                $style->width,
+                $style->margin_left,
+                $style->margin_right,
+                $style->border_left_width,
+                $style->border_right_width,
+                $style->padding_left,
+                $style->padding_right,
+            ],
+            $this->_containing_block["w"],
+        );
     }
 
     /**
@@ -451,21 +458,22 @@ class Frame
     {
         $style = $this->_style;
 
-        return (float)$style->length_in_pt(
+        return (float) $style->length_in_pt(
             [
                 $style->height,
-                (float)$style->length_in_pt(
+                (float) $style->length_in_pt(
                     [
                         $style->border_top_width,
                         $style->border_bottom_width,
                         $style->margin_top,
                         $style->margin_bottom,
                         $style->padding_top,
-                        $style->padding_bottom
-                    ], $this->_containing_block["w"]
-                )
+                        $style->padding_bottom,
+                    ],
+                    $this->_containing_block["w"],
+                ),
             ],
-            $this->_containing_block["h"]
+            $this->_containing_block["h"],
         );
     }
 
@@ -482,33 +490,42 @@ class Frame
         $style = $this->_style;
         $cb = $this->_containing_block;
 
-        $x = $this->_position["x"] +
-            (float)$style->length_in_pt(
+        $x =
+            $this->_position["x"] +
+            (float) $style->length_in_pt(
                 [
                     $style->margin_left,
                     $style->border_left_width,
-                    $style->padding_left
+                    $style->padding_left,
                 ],
-                $cb["w"]
+                $cb["w"],
             );
 
-        $y = $this->_position["y"] +
-            (float)$style->length_in_pt(
+        $y =
+            $this->_position["y"] +
+            (float) $style->length_in_pt(
                 [
                     $style->margin_top,
                     $style->border_top_width,
-                    $style->padding_top
-                ], $cb["w"]
+                    $style->padding_top,
+                ],
+                $cb["w"],
             );
 
-        $w = (float)$style->length_in_pt($style->width, $cb["w"]);
+        $w = (float) $style->length_in_pt($style->width, $cb["w"]);
 
-        $h = (float)$style->length_in_pt($style->height, $cb["h"]);
+        $h = (float) $style->length_in_pt($style->height, $cb["h"]);
 
-        return [0 => $x, "x" => $x,
-            1 => $y, "y" => $y,
-            2 => $w, "w" => $w,
-            3 => $h, "h" => $h];
+        return [
+            0 => $x,
+            "x" => $x,
+            1 => $y,
+            "y" => $y,
+            2 => $w,
+            "w" => $w,
+            3 => $h,
+            "h" => $h,
+        ];
     }
 
     /**
@@ -524,46 +541,44 @@ class Frame
         $style = $this->_style;
         $cb = $this->_containing_block;
 
-        $x = $this->_position["x"] +
-            (float)$style->length_in_pt(
-                [
-                    $style->margin_left,
-                    $style->border_left_width
-                ],
-                $cb["w"]
+        $x =
+            $this->_position["x"] +
+            (float) $style->length_in_pt(
+                [$style->margin_left, $style->border_left_width],
+                $cb["w"],
             );
 
-        $y = $this->_position["y"] +
-            (float)$style->length_in_pt(
-                [
-                    $style->margin_top,
-                    $style->border_top_width
-                ],
-                $cb["h"]
+        $y =
+            $this->_position["y"] +
+            (float) $style->length_in_pt(
+                [$style->margin_top, $style->border_top_width],
+                $cb["h"],
             );
 
-        $w = (float)$style->length_in_pt(
-                [
-                    $style->padding_left,
-                    $style->width,
-                    $style->padding_right
-                ],
-                $cb["w"]
-            );
+        $w = (float) $style->length_in_pt(
+            [$style->padding_left, $style->width, $style->padding_right],
+            $cb["w"],
+        );
 
-        $h = (float)$style->length_in_pt(
-                [
-                    $style->padding_top,
-                    $style->padding_bottom,
-                    $style->length_in_pt($style->height, $cb["h"])
-                ],
-                $cb["w"]
-            );
+        $h = (float) $style->length_in_pt(
+            [
+                $style->padding_top,
+                $style->padding_bottom,
+                $style->length_in_pt($style->height, $cb["h"]),
+            ],
+            $cb["w"],
+        );
 
-        return [0 => $x, "x" => $x,
-            1 => $y, "y" => $y,
-            2 => $w, "w" => $w,
-            3 => $h, "h" => $h];
+        return [
+            0 => $x,
+            "x" => $x,
+            1 => $y,
+            "y" => $y,
+            2 => $w,
+            "w" => $w,
+            3 => $h,
+            "h" => $h,
+        ];
     }
 
     /**
@@ -579,36 +594,46 @@ class Frame
         $style = $this->_style;
         $cb = $this->_containing_block;
 
-        $x = $this->_position["x"] + (float)$style->length_in_pt($style->margin_left, $cb["w"]);
+        $x =
+            $this->_position["x"] +
+            (float) $style->length_in_pt($style->margin_left, $cb["w"]);
 
-        $y = $this->_position["y"] + (float)$style->length_in_pt($style->margin_top, $cb["w"]);
+        $y =
+            $this->_position["y"] +
+            (float) $style->length_in_pt($style->margin_top, $cb["w"]);
 
-        $w = (float)$style->length_in_pt(
+        $w = (float) $style->length_in_pt(
             [
                 $style->border_left_width,
                 $style->padding_left,
                 $style->width,
                 $style->padding_right,
-                $style->border_right_width
+                $style->border_right_width,
             ],
-            $cb["w"]
+            $cb["w"],
         );
 
-        $h = (float)$style->length_in_pt(
+        $h = (float) $style->length_in_pt(
             [
                 $style->border_top_width,
                 $style->padding_top,
                 $style->padding_bottom,
                 $style->border_bottom_width,
-                $style->length_in_pt($style->height, $cb["h"])
+                $style->length_in_pt($style->height, $cb["h"]),
             ],
-            $cb["w"]
+            $cb["w"],
         );
 
-        return [0 => $x, "x" => $x,
-            1 => $y, "y" => $y,
-            2 => $w, "w" => $w,
-            3 => $h, "h" => $h];
+        return [
+            0 => $x,
+            "x" => $x,
+            1 => $y,
+            "y" => $y,
+            2 => $w,
+            "w" => $w,
+            3 => $h,
+            "h" => $h,
+        ];
     }
 
     /**
@@ -663,8 +688,9 @@ class Frame
     /**
      * @param FrameDecorator\AbstractFrameDecorator $decorator
      */
-    public function set_decorator(FrameDecorator\AbstractFrameDecorator $decorator)
-    {
+    public function set_decorator(
+        FrameDecorator\AbstractFrameDecorator $decorator,
+    ) {
         $this->_decorator = $decorator;
     }
 
@@ -674,8 +700,12 @@ class Frame
      * @param float|null $w
      * @param float|null $h
      */
-    public function set_containing_block($x = null, $y = null, $w = null, $h = null)
-    {
+    public function set_containing_block(
+        $x = null,
+        $y = null,
+        $w = null,
+        $h = null,
+    ) {
         if (is_array($x)) {
             foreach ($x as $key => $val) {
                 $$key = $val;
@@ -706,7 +736,7 @@ class Frame
     public function set_position($x = null, $y = null)
     {
         if (is_array($x)) {
-            list($x, $y) = [$x["x"], $x["y"]];
+            [$x, $y] = [$x["x"], $x["y"]];
         }
 
         if (is_numeric($x)) {
@@ -724,7 +754,8 @@ class Frame
     public function set_opacity(float $opacity): void
     {
         $parent = $this->get_parent();
-        $base_opacity = $parent && $parent->_opacity !== null ? $parent->_opacity : 1.0;
+        $base_opacity =
+            $parent && $parent->_opacity !== null ? $parent->_opacity : 1.0;
         $this->_opacity = $base_opacity * $opacity;
     }
 
@@ -755,9 +786,9 @@ class Frame
                 $style->border_bottom_width,
                 $style->padding_top,
                 $style->padding_bottom,
-                $this->_containing_block["h"]
+                $this->_containing_block["h"],
             ],
-            true
+            true,
         );
     }
 
@@ -780,9 +811,9 @@ class Frame
                 $style->border_right_width,
                 $style->padding_left,
                 $style->padding_right,
-                $this->_containing_block["w"]
+                $this->_containing_block["w"],
             ],
-            true
+            true,
         );
     }
 
@@ -797,7 +828,8 @@ class Frame
             return $this->_is_cache["text_node"];
         }
 
-        return $this->_is_cache["text_node"] = ($this->get_node()->nodeName === "#text");
+        return $this->_is_cache["text_node"] =
+            $this->get_node()->nodeName === "#text";
     }
 
     /**
@@ -811,7 +843,11 @@ class Frame
 
         $position = $this->get_style()->position;
 
-        return $this->_is_cache["positioned"] = in_array($position, Style::POSITIONED_TYPES, true);
+        return $this->_is_cache["positioned"] = in_array(
+            $position,
+            Style::POSITIONED_TYPES,
+            true,
+        );
     }
 
     /**
@@ -837,7 +873,11 @@ class Frame
             return $this->_is_cache["block"];
         }
 
-        return $this->_is_cache["block"] = in_array($this->get_style()->display, Style::BLOCK_TYPES, true);
+        return $this->_is_cache["block"] = in_array(
+            $this->get_style()->display,
+            Style::BLOCK_TYPES,
+            true,
+        );
     }
 
     /**
@@ -853,7 +893,11 @@ class Frame
 
         $display = $this->get_style()->display;
 
-        return $this->_is_cache["block_level"] = in_array($display, Style::BLOCK_LEVEL_TYPES, true);
+        return $this->_is_cache["block_level"] = in_array(
+            $display,
+            Style::BLOCK_LEVEL_TYPES,
+            true,
+        );
     }
 
     /**
@@ -869,7 +913,11 @@ class Frame
 
         $display = $this->get_style()->display;
 
-        return $this->_is_cache["inline_level"] = in_array($display, Style::INLINE_LEVEL_TYPES, true);
+        return $this->_is_cache["inline_level"] = in_array(
+            $display,
+            Style::INLINE_LEVEL_TYPES,
+            true,
+        );
     }
 
     /**
@@ -895,7 +943,11 @@ class Frame
 
         $white_space = $this->get_style()->white_space;
 
-        return $this->_is_cache["pre"] = in_array($white_space, ["pre", "pre-wrap"], true);
+        return $this->_is_cache["pre"] = in_array(
+            $white_space,
+            ["pre", "pre-wrap"],
+            true,
+        );
     }
 
     /**
@@ -909,9 +961,12 @@ class Frame
 
         $display = $this->get_style()->display;
 
-        return $this->_is_cache["table"] = in_array($display, Style::TABLE_TYPES, true);
+        return $this->_is_cache["table"] = in_array(
+            $display,
+            Style::TABLE_TYPES,
+            true,
+        );
     }
-
 
     /**
      * Inserts a new child at the beginning of the Frame
@@ -922,7 +977,10 @@ class Frame
     public function prepend_child(Frame $child, $update_node = true)
     {
         if ($update_node) {
-            $this->_node->insertBefore($child->_node, $this->_first_child ? $this->_first_child->_node : null);
+            $this->_node->insertBefore(
+                $child->_node,
+                $this->_first_child ? $this->_first_child->_node : null,
+            );
         }
 
         // Remove the child from its parent
@@ -991,8 +1049,11 @@ class Frame
      *
      * @throws Exception
      */
-    public function insert_child_before(Frame $new_child, Frame $ref, $update_node = true)
-    {
+    public function insert_child_before(
+        Frame $new_child,
+        Frame $ref,
+        $update_node = true,
+    ) {
         if ($ref === $this->_first_child) {
             $this->prepend_child($new_child, $update_node);
 
@@ -1039,8 +1100,11 @@ class Frame
      *
      * @throws Exception
      */
-    public function insert_child_after(Frame $new_child, Frame $ref, $update_node = true)
-    {
+    public function insert_child_after(
+        Frame $new_child,
+        Frame $ref,
+        $update_node = true,
+    ) {
         if ($ref === $this->_last_child) {
             $this->append_child($new_child, $update_node);
 
@@ -1063,7 +1127,9 @@ class Frame
                 $next_node = $ref->_next_sibling->_node;
                 $this->_node->insertBefore($new_child->_node, $next_node);
             } else {
-                $new_child->_node = $this->_node->appendChild($new_child->_node);
+                $new_child->_node = $this->_node->appendChild(
+                    $new_child->_node,
+                );
             }
         }
 
@@ -1134,10 +1200,9 @@ class Frame
     public function __toString()
     {
         // Skip empty text frames
-//     if ( $this->is_text_node() &&
-//          preg_replace("/\s/", "", $this->_node->data) === "" )
-//       return "";
-
+        //     if ( $this->is_text_node() &&
+        //          preg_replace("/\s/", "", $this->_node->data) === "" )
+        //       return "";
 
         $str = "<b>" . $this->_node->nodeName . ":</b><br/>";
         //$str .= spl_object_hash($this->_node) . "<br/>";
@@ -1146,27 +1211,42 @@ class Frame
 
         if ($this->is_text_node()) {
             $tmp = htmlspecialchars($this->_node->nodeValue);
-            $str .= "<pre>'" . mb_substr($tmp, 0, 70) .
-                (mb_strlen($tmp) > 70 ? "..." : "") . "'</pre>";
+            $str .=
+                "<pre>'" .
+                mb_substr($tmp, 0, 70) .
+                (mb_strlen($tmp) > 70 ? "..." : "") .
+                "'</pre>";
         } elseif ($css_class = $this->_node->getAttribute("class")) {
             $str .= "CSS class: '$css_class'<br/>";
         }
 
         if ($this->_parent) {
-            $str .= "\nParent:" . $this->_parent->_node->nodeName .
-                " (" . spl_object_hash($this->_parent->_node) . ") " .
+            $str .=
+                "\nParent:" .
+                $this->_parent->_node->nodeName .
+                " (" .
+                spl_object_hash($this->_parent->_node) .
+                ") " .
                 "<br/>";
         }
 
         if ($this->_prev_sibling) {
-            $str .= "Prev: " . $this->_prev_sibling->_node->nodeName .
-                " (" . spl_object_hash($this->_prev_sibling->_node) . ") " .
+            $str .=
+                "Prev: " .
+                $this->_prev_sibling->_node->nodeName .
+                " (" .
+                spl_object_hash($this->_prev_sibling->_node) .
+                ") " .
                 "<br/>";
         }
 
         if ($this->_next_sibling) {
-            $str .= "Next: " . $this->_next_sibling->_node->nodeName .
-                " (" . spl_object_hash($this->_next_sibling->_node) . ") " .
+            $str .=
+                "Next: " .
+                $this->_next_sibling->_node->nodeName .
+                " (" .
+                spl_object_hash($this->_next_sibling->_node) .
+                ") " .
                 "<br/>";
         }
 
@@ -1177,9 +1257,15 @@ class Frame
         }
 
         $str .= "Position: " . Helpers::pre_r($this->_position, true);
-        $str .= "\nContaining block: " . Helpers::pre_r($this->_containing_block, true);
-        $str .= "\nMargin width: " . Helpers::pre_r($this->get_margin_width(), true);
-        $str .= "\nMargin height: " . Helpers::pre_r($this->get_margin_height(), true);
+        $str .=
+            "\nContaining block: " .
+            Helpers::pre_r($this->_containing_block, true);
+        $str .=
+            "\nMargin width: " .
+            Helpers::pre_r($this->get_margin_width(), true);
+        $str .=
+            "\nMargin height: " .
+            Helpers::pre_r($this->get_margin_height(), true);
 
         $str .= "\nStyle: <pre>" . $this->_style->__toString() . "</pre>";
 
@@ -1189,27 +1275,43 @@ class Frame
                 foreach ($line->get_frames() as $frame) {
                     if ($frame instanceof FrameDecorator\Text) {
                         $str .= "\ntext: ";
-                        $str .= "'" . htmlspecialchars($frame->get_text()) . "'";
+                        $str .=
+                            "'" . htmlspecialchars($frame->get_text()) . "'";
                     } else {
-                        $str .= "\nBlock: " . $frame->get_node()->nodeName . " (" . spl_object_hash($frame->get_node()) . ")";
+                        $str .=
+                            "\nBlock: " .
+                            $frame->get_node()->nodeName .
+                            " (" .
+                            spl_object_hash($frame->get_node()) .
+                            ")";
                     }
                 }
 
                 $str .=
-                    "\ny => " . $line->y . "\n" .
-                    "w => " . $line->w . "\n" .
-                    "h => " . $line->h . "\n" .
-                    "left => " . $line->left . "\n" .
-                    "right => " . $line->right . "\n";
+                    "\ny => " .
+                    $line->y .
+                    "\n" .
+                    "w => " .
+                    $line->w .
+                    "\n" .
+                    "h => " .
+                    $line->h .
+                    "\n" .
+                    "left => " .
+                    $line->left .
+                    "\n" .
+                    "right => " .
+                    $line->right .
+                    "\n";
             }
             $str .= "</pre>";
         }
 
         $str .= "\n";
         if (php_sapi_name() === "cli") {
-            $str = strip_tags(str_replace(["<br/>", "<b>", "</b>"],
-                ["\n", "", ""],
-                $str));
+            $str = strip_tags(
+                str_replace(["<br/>", "<b>", "</b>"], ["\n", "", ""], $str),
+            );
         }
 
         return $str;

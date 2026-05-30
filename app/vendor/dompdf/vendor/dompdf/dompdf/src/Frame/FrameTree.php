@@ -43,7 +43,7 @@ class FrameTree implements IteratorAggregate
         "colgroup",
         "noembed",
         "param",
-        "#comment"
+        "#comment",
     ];
 
     /**
@@ -168,19 +168,19 @@ class FrameTree implements IteratorAggregate
 
         // Move table caption before the table
         // FIXME find a better way to deal with it...
-        $captions = $xp->query('//table/caption');
+        $captions = $xp->query("//table/caption");
         foreach ($captions as $caption) {
             $table = $caption->parentNode;
             $table->parentNode->insertBefore($caption, $table);
         }
 
-        $firstRows = $xp->query('//table/tr[1]');
+        $firstRows = $xp->query("//table/tr[1]");
         /** @var DOMElement $tableChild */
         foreach ($firstRows as $tableChild) {
-            $tbody = $this->_dom->createElement('tbody');
+            $tbody = $this->_dom->createElement("tbody");
             $tableNode = $tableChild->parentNode;
             do {
-                if ($tableChild->nodeName === 'tr') {
+                if ($tableChild->nodeName === "tr") {
                     $tmpNode = $tableChild;
                     $tableChild = $tableChild->nextSibling;
                     $tableNode->removeChild($tmpNode);
@@ -188,7 +188,7 @@ class FrameTree implements IteratorAggregate
                 } else {
                     if ($tbody->hasChildNodes() === true) {
                         $tableNode->insertBefore($tbody, $tableChild);
-                        $tbody = $this->_dom->createElement('tbody');
+                        $tbody = $this->_dom->createElement("tbody");
                     }
                     $tableChild = $tableChild->nextSibling;
                 }
@@ -217,9 +217,12 @@ class FrameTree implements IteratorAggregate
         $nextChild = $child->nextSibling;
         $node->removeChild($child);
         if (isset($previousChild, $nextChild)) {
-            if ($previousChild->nodeName === "#text" && $nextChild->nodeName === "#text") {
+            if (
+                $previousChild->nodeName === "#text" &&
+                $nextChild->nodeName === "#text"
+            ) {
                 $previousChild->nodeValue .= $nextChild->nodeValue;
-                $this->_remove_node($node, $children, $index+1);
+                $this->_remove_node($node, $children, $index + 1);
             }
         }
         array_splice($children, $index, 1);

@@ -17,7 +17,6 @@ use Dompdf\Exception;
  */
 class Inline extends AbstractFrameDecorator
 {
-
     /**
      * Inline constructor.
      * @param Frame $frame
@@ -46,20 +45,27 @@ class Inline extends AbstractFrameDecorator
         $style = $this->get_style();
         $font = $style->font_family;
         $size = $style->font_size;
-        $fontHeight = $this->_dompdf->getFontMetrics()->getFontHeight($font, $size);
+        $fontHeight = $this->_dompdf
+            ->getFontMetrics()
+            ->getFontHeight($font, $size);
 
         return ($style->line_height / ($size > 0 ? $size : 1)) * $fontHeight;
     }
 
-    public function split(?Frame $child = null, bool $page_break = false, bool $forced = false): void
-    {
+    public function split(
+        ?Frame $child = null,
+        bool $page_break = false,
+        bool $forced = false,
+    ): void {
         if (is_null($child)) {
             $this->get_parent()->split($this, $page_break, $forced);
             return;
         }
 
         if ($child->get_parent() !== $this) {
-            throw new Exception("Unable to split: frame is not a child of this one.");
+            throw new Exception(
+                "Unable to split: frame is not a child of this one.",
+            );
         }
 
         $this->revert_counter_increment();
@@ -92,8 +98,12 @@ class Inline extends AbstractFrameDecorator
         //On continuation of inline element on next line,
         //don't repeat non-horizontally repeatable background images
         //See e.g. in testcase image_variants, long descriptions
-        if (($url = $style->background_image) && $url !== "none"
-            && ($repeat = $style->background_repeat) && $repeat !== "repeat" && $repeat !== "repeat-x"
+        if (
+            ($url = $style->background_image) &&
+            $url !== "none" &&
+            ($repeat = $style->background_repeat) &&
+            $repeat !== "repeat" &&
+            $repeat !== "repeat-x"
         ) {
             $split_style->background_image = "none";
         }
@@ -117,5 +127,4 @@ class Inline extends AbstractFrameDecorator
             $parent->split($split);
         }
     }
-
 }

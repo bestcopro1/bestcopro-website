@@ -16,7 +16,6 @@ use Dompdf\FrameDecorator\Table;
  */
 class TableCell extends Block
 {
-
     /**
      * @param Frame $frame
      */
@@ -24,7 +23,10 @@ class TableCell extends Block
     {
         $style = $frame->get_style();
 
-        if (trim($frame->get_node()->nodeValue) === "" && $style->empty_cells === "hide") {
+        if (
+            trim($frame->get_node()->nodeValue) === "" &&
+            $style->empty_cells === "hide"
+        ) {
             return;
         }
 
@@ -70,8 +72,10 @@ class TableCell extends Block
      * @param Frame $frame
      * @param Table $table
      */
-    protected function _render_collapsed_border(Frame $frame, Table $table): void
-    {
+    protected function _render_collapsed_border(
+        Frame $frame,
+        Table $table,
+    ): void {
         $cellmap = $table->get_cellmap();
         $cells = $cellmap->get_spanned_cells($frame);
         $num_rows = $cellmap->get_num_rows();
@@ -100,18 +104,28 @@ class TableCell extends Block
 
             $x = $table_x + $col["x"] - $bp["left"]["width"] / 2;
             $y = $table_y + $top_row["y"] - $bp["top"]["width"] / 2;
-            $w = $col["used-width"] + ($bp["left"]["width"] + $bp["right"]["width"]) / 2;
+            $w =
+                $col["used-width"] +
+                ($bp["left"]["width"] + $bp["right"]["width"]) / 2;
 
             if ($bp["top"]["width"] > 0) {
                 $widths = [
-                    (float)$bp["top"]["width"],
-                    (float)$bp["right"]["width"],
-                    (float)$bp["bottom"]["width"],
-                    (float)$bp["left"]["width"]
+                    (float) $bp["top"]["width"],
+                    (float) $bp["right"]["width"],
+                    (float) $bp["bottom"]["width"],
+                    (float) $bp["left"]["width"],
                 ];
 
                 $method = "_border_" . $bp["top"]["style"];
-                $this->$method($x, $y, $w, $bp["top"]["color"], $widths, "top", "square");
+                $this->$method(
+                    $x,
+                    $y,
+                    $w,
+                    $bp["top"]["color"],
+                    $widths,
+                    "top",
+                    "square",
+                );
             }
 
             if ($draw_bottom) {
@@ -119,18 +133,30 @@ class TableCell extends Block
                 if ($bp["bottom"]["width"] <= 0) {
                     continue;
                 }
-                
+
                 $widths = [
-                    (float)$bp["top"]["width"],
-                    (float)$bp["right"]["width"],
-                    (float)$bp["bottom"]["width"],
-                    (float)$bp["left"]["width"]
+                    (float) $bp["top"]["width"],
+                    (float) $bp["right"]["width"],
+                    (float) $bp["bottom"]["width"],
+                    (float) $bp["left"]["width"],
                 ];
 
-                $y = $table_y + $bottom_row["y"] + $bottom_row["height"] + $bp["bottom"]["width"] / 2;
+                $y =
+                    $table_y +
+                    $bottom_row["y"] +
+                    $bottom_row["height"] +
+                    $bp["bottom"]["width"] / 2;
 
                 $method = "_border_" . $bp["bottom"]["style"];
-                $this->$method($x, $y, $w, $bp["bottom"]["color"], $widths, "bottom", "square");
+                $this->$method(
+                    $x,
+                    $y,
+                    $w,
+                    $bp["bottom"]["color"],
+                    $widths,
+                    "bottom",
+                    "square",
+                );
             }
         }
 
@@ -151,18 +177,28 @@ class TableCell extends Block
 
             $x = $table_x + $left_col["x"] - $bp["left"]["width"] / 2;
             $y = $table_y + $row["y"] - $bp["top"]["width"] / 2;
-            $h = $row["height"] + ($bp["top"]["width"] + $bp["bottom"]["width"]) / 2;
+            $h =
+                $row["height"] +
+                ($bp["top"]["width"] + $bp["bottom"]["width"]) / 2;
 
             if ($bp["left"]["width"] > 0) {
                 $widths = [
-                    (float)$bp["top"]["width"],
-                    (float)$bp["right"]["width"],
-                    (float)$bp["bottom"]["width"],
-                    (float)$bp["left"]["width"]
+                    (float) $bp["top"]["width"],
+                    (float) $bp["right"]["width"],
+                    (float) $bp["bottom"]["width"],
+                    (float) $bp["left"]["width"],
                 ];
 
                 $method = "_border_" . $bp["left"]["style"];
-                $this->$method($x, $y, $h, $bp["left"]["color"], $widths, "left", "square");
+                $this->$method(
+                    $x,
+                    $y,
+                    $h,
+                    $bp["left"]["color"],
+                    $widths,
+                    "left",
+                    "square",
+                );
             }
 
             if ($draw_right) {
@@ -172,16 +208,28 @@ class TableCell extends Block
                 }
 
                 $widths = [
-                    (float)$bp["top"]["width"],
-                    (float)$bp["right"]["width"],
-                    (float)$bp["bottom"]["width"],
-                    (float)$bp["left"]["width"]
+                    (float) $bp["top"]["width"],
+                    (float) $bp["right"]["width"],
+                    (float) $bp["bottom"]["width"],
+                    (float) $bp["left"]["width"],
                 ];
 
-                $x = $table_x + $right_col["x"] + $right_col["used-width"] + $bp["right"]["width"] / 2;
+                $x =
+                    $table_x +
+                    $right_col["x"] +
+                    $right_col["used-width"] +
+                    $bp["right"]["width"] / 2;
 
                 $method = "_border_" . $bp["right"]["style"];
-                $this->$method($x, $y, $h, $bp["right"]["color"], $widths, "right", "square");
+                $this->$method(
+                    $x,
+                    $y,
+                    $h,
+                    $bp["right"]["color"],
+                    $widths,
+                    "right",
+                    "square",
+                );
             }
         }
     }

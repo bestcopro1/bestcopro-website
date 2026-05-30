@@ -27,7 +27,7 @@ class Table extends AbstractFrameDecorator
     public const ROW_GROUPS = [
         "table-row-group",
         "table-header-group",
-        "table-footer-group"
+        "table-footer-group",
     ];
 
     /**
@@ -89,8 +89,11 @@ class Table extends AbstractFrameDecorator
      * added to the clone.  This method is overridden in order to remove
      * frames from the cellmap properly.
      */
-    public function split(?Frame $child = null, bool $page_break = false, bool $forced = false): void
-    {
+    public function split(
+        ?Frame $child = null,
+        bool $page_break = false,
+        bool $forced = false,
+    ): void {
         if (is_null($child)) {
             parent::split($child, $page_break, $forced);
             return;
@@ -98,15 +101,15 @@ class Table extends AbstractFrameDecorator
 
         // If $child is a header or if it is the first non-header row, do
         // not duplicate headers, simply move the table to the next page.
-        if (count($this->_headers)
-            && !in_array($child, $this->_headers, true)
-            && !in_array($child->get_prev_sibling(), $this->_headers, true)
+        if (
+            count($this->_headers) &&
+            !in_array($child, $this->_headers, true) &&
+            !in_array($child->get_prev_sibling(), $this->_headers, true)
         ) {
             $first_header = null;
 
             // Insert copies of the table headers before $child
             foreach ($this->_headers as $header) {
-
                 $new_header = $header->deep_copy();
 
                 if (is_null($first_header)) {
@@ -117,14 +120,12 @@ class Table extends AbstractFrameDecorator
             }
 
             parent::split($first_header, $page_break, $forced);
-
-        } elseif (in_array($child->get_style()->display, self::ROW_GROUPS, true)) {
-
+        } elseif (
+            in_array($child->get_style()->display, self::ROW_GROUPS, true)
+        ) {
             // Individual rows should have already been handled
             parent::split($child, $page_break, $forced);
-
         } else {
-
             $iter = $child;
 
             while ($iter) {
@@ -191,15 +192,19 @@ class Table extends AbstractFrameDecorator
         // i.e. only match on collapsible white space
         $wsPattern = '/^[^\S\xA0\x{202F}\x{2007}]*$/u';
         $validChildOrNull = function ($frame) {
-            return $frame === null
-                || in_array($frame->get_style()->display, self::VALID_CHILDREN, true);
+            return $frame === null ||
+                in_array(
+                    $frame->get_style()->display,
+                    self::VALID_CHILDREN,
+                    true,
+                );
         };
 
-        return $frame instanceof Text
-            && !$frame->is_pre()
-            && preg_match($wsPattern, $frame->get_text())
-            && $validChildOrNull($frame->get_prev_sibling())
-            && $validChildOrNull($frame->get_next_sibling());
+        return $frame instanceof Text &&
+            !$frame->is_pre() &&
+            preg_match($wsPattern, $frame->get_text()) &&
+            $validChildOrNull($frame->get_prev_sibling()) &&
+            $validChildOrNull($frame->get_next_sibling());
     }
 
     /**
@@ -211,7 +216,11 @@ class Table extends AbstractFrameDecorator
      */
     public function normalize(): void
     {
-        $column_caption = ["table-column-group", "table-column", "table-caption"];
+        $column_caption = [
+            "table-column-group",
+            "table-column",
+            "table-caption",
+        ];
         $children = iterator_to_array($this->get_children());
         $tbody = null;
 
@@ -243,7 +252,10 @@ class Table extends AbstractFrameDecorator
 
             // Catch consecutive misplaced frames within a single anonymous group
             if ($tbody === null) {
-                $tbody = $this->create_anonymous_child("tbody", "table-row-group");
+                $tbody = $this->create_anonymous_child(
+                    "tbody",
+                    "table-row-group",
+                );
                 $this->insert_child_before($tbody, $child);
             }
 

@@ -86,8 +86,10 @@ class Document extends CSSBlockList
      *
      * @see RuleSet->getRules()
      */
-    public function getAllValues($mElement = null, $bSearchInFunctionArguments = false)
-    {
+    public function getAllValues(
+        $mElement = null,
+        $bSearchInFunctionArguments = false,
+    ) {
         $sSearchString = null;
         if ($mElement === null) {
             $mElement = $this;
@@ -97,7 +99,12 @@ class Document extends CSSBlockList
         }
         /** @var array<int, Value> $aResult */
         $aResult = [];
-        $this->allValues($mElement, $aResult, $sSearchString, $bSearchInFunctionArguments);
+        $this->allValues(
+            $mElement,
+            $aResult,
+            $sSearchString,
+            $bSearchInFunctionArguments,
+        );
         return $aResult;
     }
 

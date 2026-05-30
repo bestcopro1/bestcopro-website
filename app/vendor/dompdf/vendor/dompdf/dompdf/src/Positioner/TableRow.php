@@ -15,7 +15,6 @@ use Dompdf\FrameDecorator\AbstractFrameDecorator;
  */
 class TableRow extends AbstractPositioner
 {
-
     /**
      * @param AbstractFrameDecorator $frame
      */

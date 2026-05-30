@@ -51,39 +51,46 @@ a:0:{}
  --------------------------------------------------------------------------------------------------------------- 
 a:0:{}
 */
-include_once(__DIR__.'/../config/db.php');
-include_once(__DIR__.'/../controllers/functions.php');
+include_once __DIR__ . "/../config/db.php";
+include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
-header('Content-Type: application/json; charset=utf-8');
+header("Content-Type: application/json; charset=utf-8");
 $token = "";
 $OK = "NOTOK";
-if (isset($_GET["token"], $_GET["anMoPasse"], $_GET["nouMoPasse"], $_GET["conMoPasse"])) {
-	$token = filter_input(INPUT_GET, 'token', FILTER_SANITIZE_STRING);
-	$anMoPasse = filter_input(INPUT_GET, 'anMoPasse', FILTER_SANITIZE_STRING);
-	$nouMoPasse = filter_input(INPUT_GET, 'nouMoPasse', FILTER_SANITIZE_STRING);
-	$conMoPasse = filter_input(INPUT_GET, 'conMoPasse', FILTER_SANITIZE_STRING);
-	if ($nouMoPasse === $conMoPasse) {
-		$sql = "SELECT * From lot WHERE token = '{$token}' AND password = '{$anMoPasse}' ";
-		$query = mysqli_query($connection, $sql);
-		$rowCount = mysqli_num_rows($query);
-		if ($rowCount > 0) {
-			while($row = mysqli_fetch_array($query)) {
-				$id_lot = $row['id'];
-			}
-			$request = "UPDATE lot SET password=? WHERE id=?";
-			if ($insert_stmt = $connection->prepare($request)) {
-				$insert_stmt->bind_param('ss', $nouMoPasse, $id_lot);
-				// Execute the prepared query.
-				if (! $insert_stmt->execute()) {
-					echo $connection->error;
-					exit();
-				}
-			}
-			$OK = "OK";
-		}
-	}
+if (
+    isset(
+        $_GET["token"],
+        $_GET["anMoPasse"],
+        $_GET["nouMoPasse"],
+        $_GET["conMoPasse"],
+    )
+) {
+    $token = filter_input(INPUT_GET, "token", FILTER_SANITIZE_STRING);
+    $anMoPasse = filter_input(INPUT_GET, "anMoPasse", FILTER_SANITIZE_STRING);
+    $nouMoPasse = filter_input(INPUT_GET, "nouMoPasse", FILTER_SANITIZE_STRING);
+    $conMoPasse = filter_input(INPUT_GET, "conMoPasse", FILTER_SANITIZE_STRING);
+    if ($nouMoPasse === $conMoPasse) {
+        $sql = "SELECT * From lot WHERE token = '{$token}' AND password = '{$anMoPasse}' ";
+        $query = mysqli_query($connection, $sql);
+        $rowCount = mysqli_num_rows($query);
+        if ($rowCount > 0) {
+            while ($row = mysqli_fetch_array($query)) {
+                $id_lot = $row["id"];
+            }
+            $request = "UPDATE lot SET password=? WHERE id=?";
+            if ($insert_stmt = $connection->prepare($request)) {
+                $insert_stmt->bind_param("ss", $nouMoPasse, $id_lot);
+                // Execute the prepared query.
+                if (!$insert_stmt->execute()) {
+                    echo $connection->error;
+                    exit();
+                }
+            }
+            $OK = "OK";
+        }
+    }
 }
 ?>
 {
-    "statut": "<?=$OK?>"
+    "statut": "<?= $OK ?>"
 }

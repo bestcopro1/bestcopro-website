@@ -23,21 +23,21 @@ class Line extends Shape
         $height = $this->document->getHeight();
         $width = $this->document->getWidth();
 
-        if (isset($attributes['x1'])) {
-            $this->x1 = $this->convertSize($attributes['x1'], $width);
+        if (isset($attributes["x1"])) {
+            $this->x1 = $this->convertSize($attributes["x1"], $width);
         }
-        if (isset($attributes['y1'])) {
-            $this->y1 = $this->convertSize($attributes['y1'], $height);
+        if (isset($attributes["y1"])) {
+            $this->y1 = $this->convertSize($attributes["y1"], $height);
         }
-        if (isset($attributes['x2'])) {
-            $this->x2 = $this->convertSize($attributes['x2'], $width);
+        if (isset($attributes["x2"])) {
+            $this->x2 = $this->convertSize($attributes["x2"], $width);
         }
-        if (isset($attributes['y2'])) {
-            $this->y2 = $this->convertSize($attributes['y2'], $height);
+        if (isset($attributes["y2"])) {
+            $this->y2 = $this->convertSize($attributes["y2"], $height);
         }
 
         $surface = $this->document->getSurface();
         $surface->moveTo($this->x1, $this->y1);
         $surface->lineTo($this->x2, $this->y2);
     }
-} 
+}

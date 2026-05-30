@@ -23,7 +23,6 @@ use Dompdf\Positioner\Inline as InlinePositioner;
  */
 class LineBox
 {
-
     /**
      * @var Block
      */
@@ -197,15 +196,23 @@ class LineBox
 
             $line_w = $this->get_width();
 
-            if (!$floating_frame->_float_next_line && ($cb_w <= $line_w + $floating_width) && ($cb_w > $line_w)) {
+            if (
+                !$floating_frame->_float_next_line &&
+                $cb_w <= $line_w + $floating_width &&
+                $cb_w > $line_w
+            ) {
                 $floating_frame->_float_next_line = true;
                 continue;
             }
 
             // If the child is still shifted by the floating element
-            if ($anti_infinite_loop-- > 0 &&
-                $floating_frame->get_position("y") + $floating_frame->get_margin_height() >= $this->y &&
-                $block->get_position("x") + $block->get_margin_width() >= $floating_frame->get_position("x")
+            if (
+                $anti_infinite_loop-- > 0 &&
+                $floating_frame->get_position("y") +
+                    $floating_frame->get_margin_height() >=
+                    $this->y &&
+                $block->get_position("x") + $block->get_margin_width() >=
+                    $floating_frame->get_position("x")
             ) {
                 if ($float === "left") {
                     if ($floating_frame_parent === $this->_block_frame) {
@@ -222,19 +229,36 @@ class LineBox
                 }
 
                 $this->floating_blocks[$id] = true;
-            } // else, the floating element won't shift anymore
+            }
+            // else, the floating element won't shift anymore
             else {
                 $root->remove_floating_frame($child_key);
             }
         }
 
         $this->left += $inside_left_floating_width;
-        if ($outside_left_floating_width > 0 && $outside_left_floating_width > ((float)$style->length_in_pt($style->margin_left) + (float)$style->length_in_pt($style->padding_left))) {
-            $this->left += $outside_left_floating_width - (float)$style->length_in_pt($style->margin_left) - (float)$style->length_in_pt($style->padding_left);
+        if (
+            $outside_left_floating_width > 0 &&
+            $outside_left_floating_width >
+                (float) $style->length_in_pt($style->margin_left) +
+                    (float) $style->length_in_pt($style->padding_left)
+        ) {
+            $this->left +=
+                $outside_left_floating_width -
+                (float) $style->length_in_pt($style->margin_left) -
+                (float) $style->length_in_pt($style->padding_left);
         }
         $this->right += $inside_right_floating_width;
-        if ($outside_right_floating_width > 0 && $outside_right_floating_width > ((float)$style->length_in_pt($style->margin_left) + (float)$style->length_in_pt($style->padding_right))) {
-            $this->right += $outside_right_floating_width - (float)$style->length_in_pt($style->margin_right) - (float)$style->length_in_pt($style->padding_right);
+        if (
+            $outside_right_floating_width > 0 &&
+            $outside_right_floating_width >
+                (float) $style->length_in_pt($style->margin_left) +
+                    (float) $style->length_in_pt($style->padding_right)
+        ) {
+            $this->right +=
+                $outside_right_floating_width -
+                (float) $style->length_in_pt($style->margin_right) -
+                (float) $style->length_in_pt($style->padding_right);
         }
     }
 

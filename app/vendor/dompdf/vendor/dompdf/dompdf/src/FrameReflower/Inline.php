@@ -48,13 +48,16 @@ class Inline extends AbstractFrameReflower
         $line = $block->get_current_line_box();
         $width = $frame->get_margin_width();
 
-        if ($width > ($cb["w"] - $line->left - $line->w - $line->right)) {
+        if ($width > $cb["w"] - $line->left - $line->w - $line->right) {
             $block->add_line();
 
             // Find the appropriate inline ancestor to split
             $child = $frame;
             $p = $child->get_parent();
-            while ($p instanceof InlineFrameDecorator && !$child->get_prev_sibling()) {
+            while (
+                $p instanceof InlineFrameDecorator &&
+                !$child->get_prev_sibling()
+            ) {
                 $child = $p;
                 $p = $p->get_parent();
             }
@@ -113,7 +116,10 @@ class Inline extends AbstractFrameReflower
             if ($block) {
                 $line = $block->get_current_line_box();
                 $frame->set_containing_line($line);
-                $block->maximize_line_height($frame->get_margin_height(), $frame);
+                $block->maximize_line_height(
+                    $frame->get_margin_height(),
+                    $frame,
+                );
                 $block->add_line(true);
 
                 $next = $frame->get_next_sibling();
@@ -135,7 +141,10 @@ class Inline extends AbstractFrameReflower
         }
 
         // Add our margin, padding & border to the first and last children
-        if (($f = $frame->get_first_child()) && $f instanceof TextFrameDecorator) {
+        if (
+            ($f = $frame->get_first_child()) &&
+            $f instanceof TextFrameDecorator
+        ) {
             $f_style = $f->get_style();
             $f_style->margin_left = $style->margin_left;
             $f_style->padding_left = $style->padding_left;
@@ -144,7 +153,10 @@ class Inline extends AbstractFrameReflower
             $f_style->border_left_color = $style->border_left_color;
         }
 
-        if (($l = $frame->get_last_child()) && $l instanceof TextFrameDecorator) {
+        if (
+            ($l = $frame->get_last_child()) &&
+            $l instanceof TextFrameDecorator
+        ) {
             $l_style = $l->get_style();
             $l_style->margin_right = $style->margin_right;
             $l_style->padding_right = $style->padding_right;

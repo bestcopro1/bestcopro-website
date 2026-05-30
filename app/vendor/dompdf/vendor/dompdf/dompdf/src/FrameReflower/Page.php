@@ -17,7 +17,6 @@ use Dompdf\FrameDecorator\Page as PageFrameDecorator;
  */
 class Page extends AbstractFrameReflower
 {
-
     /**
      * Cache of the callbacks array
      *
@@ -107,10 +106,16 @@ class Page extends AbstractFrameReflower
 
             // Pages are only concerned with margins
             $cb = $frame->get_containing_block();
-            $left = (float)$style->length_in_pt($style->margin_left, $cb["w"]);
-            $right = (float)$style->length_in_pt($style->margin_right, $cb["w"]);
-            $top = (float)$style->length_in_pt($style->margin_top, $cb["h"]);
-            $bottom = (float)$style->length_in_pt($style->margin_bottom, $cb["h"]);
+            $left = (float) $style->length_in_pt($style->margin_left, $cb["w"]);
+            $right = (float) $style->length_in_pt(
+                $style->margin_right,
+                $cb["w"],
+            );
+            $top = (float) $style->length_in_pt($style->margin_top, $cb["h"]);
+            $bottom = (float) $style->length_in_pt(
+                $style->margin_bottom,
+                $cb["h"],
+            );
 
             $content_x = $cb["x"] + $left;
             $content_y = $cb["y"] + $top;
@@ -127,7 +132,12 @@ class Page extends AbstractFrameReflower
                 $fixed_children = array_reverse($fixed_children);
             }
 
-            $child->set_containing_block($content_x, $content_y, $content_width, $content_height);
+            $child->set_containing_block(
+                $content_x,
+                $content_y,
+                $content_width,
+                $content_height,
+            );
 
             // Check for begin reflow callback
             $this->_check_callbacks("begin_page_reflow", $child);
@@ -135,7 +145,10 @@ class Page extends AbstractFrameReflower
             //Insert a copy of each node which have a fixed position
             if ($current_page >= 1) {
                 foreach ($fixed_children as $fixed_child) {
-                    $child->insert_child_before($fixed_child->deep_copy(), $child->get_first_child());
+                    $child->insert_child_before(
+                        $fixed_child->deep_copy(),
+                        $child->get_first_child(),
+                    );
                 }
             }
 

@@ -55,24 +55,36 @@ class DeclarationBlock extends RuleSet
             $aSelectorParts = [];
             $sStringWrapperChar = false;
             do {
-                $aSelectorParts[] = $oParserState->consume(1)
-                    . $oParserState->consumeUntil(['{', '}', '\'', '"'], false, false, $aComments);
-                if (in_array($oParserState->peek(), ['\'', '"']) && substr(end($aSelectorParts), -1) != "\\") {
+                $aSelectorParts[] =
+                    $oParserState->consume(1) .
+                    $oParserState->consumeUntil(
+                        ["{", "}", '\'', '"'],
+                        false,
+                        false,
+                        $aComments,
+                    );
+                if (
+                    in_array($oParserState->peek(), ['\'', '"']) &&
+                    substr(end($aSelectorParts), -1) != "\\"
+                ) {
                     if ($sStringWrapperChar === false) {
                         $sStringWrapperChar = $oParserState->peek();
                     } elseif ($sStringWrapperChar == $oParserState->peek()) {
                         $sStringWrapperChar = false;
                     }
                 }
-            } while (!in_array($oParserState->peek(), ['{', '}']) || $sStringWrapperChar !== false);
-            $oResult->setSelectors(implode('', $aSelectorParts), $oList);
-            if ($oParserState->comes('{')) {
+            } while (
+                !in_array($oParserState->peek(), ["{", "}"]) ||
+                $sStringWrapperChar !== false
+            );
+            $oResult->setSelectors(implode("", $aSelectorParts), $oList);
+            if ($oParserState->comes("{")) {
                 $oParserState->consume(1);
             }
         } catch (UnexpectedTokenException $e) {
             if ($oParserState->getSettings()->bLenientParsing) {
-                if (!$oParserState->comes('}')) {
-                    $oParserState->consumeUntil('}', false, true);
+                if (!$oParserState->comes("}")) {
+                    $oParserState->consumeUntil("}", false, true);
                 }
                 return false;
             } else {
@@ -95,25 +107,29 @@ class DeclarationBlock extends RuleSet
         if (is_array($mSelector)) {
             $this->aSelectors = $mSelector;
         } else {
-            $this->aSelectors = explode(',', $mSelector);
+            $this->aSelectors = explode(",", $mSelector);
         }
         foreach ($this->aSelectors as $iKey => $mSelector) {
             if (!($mSelector instanceof Selector)) {
                 if ($oList === null || !($oList instanceof KeyFrame)) {
                     if (!Selector::isValid($mSelector)) {
                         throw new UnexpectedTokenException(
-                            "Selector did not match '" . Selector::SELECTOR_VALIDATION_RX . "'.",
+                            "Selector did not match '" .
+                                Selector::SELECTOR_VALIDATION_RX .
+                                "'.",
                             $mSelector,
-                            "custom"
+                            "custom",
                         );
                     }
                     $this->aSelectors[$iKey] = new Selector($mSelector);
                 } else {
                     if (!KeyframeSelector::isValid($mSelector)) {
                         throw new UnexpectedTokenException(
-                            "Selector did not match '" . KeyframeSelector::SELECTOR_VALIDATION_RX . "'.",
+                            "Selector did not match '" .
+                                KeyframeSelector::SELECTOR_VALIDATION_RX .
+                                "'.",
                             $mSelector,
-                            "custom"
+                            "custom",
                         );
                     }
                     $this->aSelectors[$iKey] = new KeyframeSelector($mSelector);
@@ -216,17 +232,13 @@ class DeclarationBlock extends RuleSet
     public function expandBorderShorthand()
     {
         $aBorderRules = [
-            'border',
-            'border-left',
-            'border-right',
-            'border-top',
-            'border-bottom',
+            "border",
+            "border-left",
+            "border-right",
+            "border-top",
+            "border-bottom",
         ];
-        $aBorderSizes = [
-            'thin',
-            'medium',
-            'thick',
-        ];
+        $aBorderSizes = ["thin", "medium", "thick"];
         $aRules = $this->getRulesAssoc();
         foreach ($aBorderRules as $sBorderRule) {
             if (!isset($aRules[$sBorderRule])) {
@@ -235,7 +247,7 @@ class DeclarationBlock extends RuleSet
             $oRule = $aRules[$sBorderRule];
             $mRuleValue = $oRule->getValue();
             $aValues = [];
-            if (!$mRuleValue instanceof RuleValueList) {
+            if (!($mRuleValue instanceof RuleValueList)) {
                 $aValues[] = $mRuleValue;
             } else {
                 $aValues = $mRuleValue->getListComponents();
@@ -257,7 +269,11 @@ class DeclarationBlock extends RuleSet
                         $sNewRuleName = $sBorderRule . "-style";
                     }
                 }
-                $oNewRule = new Rule($sNewRuleName, $oRule->getLineNo(), $oRule->getColNo());
+                $oNewRule = new Rule(
+                    $sNewRuleName,
+                    $oRule->getLineNo(),
+                    $oRule->getColNo(),
+                );
                 $oNewRule->setIsImportant($oRule->getIsImportant());
                 $oNewRule->addValue([$mNewValue]);
                 $this->addRule($oNewRule);
@@ -277,11 +293,11 @@ class DeclarationBlock extends RuleSet
     public function expandDimensionsShorthand()
     {
         $aExpansions = [
-            'margin' => 'margin-%s',
-            'padding' => 'padding-%s',
-            'border-color' => 'border-%s-color',
-            'border-style' => 'border-%s-style',
-            'border-width' => 'border-%s-width',
+            "margin" => "margin-%s",
+            "padding" => "padding-%s",
+            "border-color" => "border-%s-color",
+            "border-style" => "border-%s-style",
+            "border-width" => "border-%s-width",
         ];
         $aRules = $this->getRulesAssoc();
         foreach ($aExpansions as $sProperty => $sExpanded) {
@@ -291,7 +307,7 @@ class DeclarationBlock extends RuleSet
             $oRule = $aRules[$sProperty];
             $mRuleValue = $oRule->getValue();
             $aValues = [];
-            if (!$mRuleValue instanceof RuleValueList) {
+            if (!($mRuleValue instanceof RuleValueList)) {
                 $aValues[] = $mRuleValue;
             } else {
                 $aValues = $mRuleValue->getListComponents();
@@ -317,8 +333,12 @@ class DeclarationBlock extends RuleSet
                     $left = $aValues[3];
                     break;
             }
-            foreach (['top', 'right', 'bottom', 'left'] as $sPosition) {
-                $oNewRule = new Rule(sprintf($sExpanded, $sPosition), $oRule->getLineNo(), $oRule->getColNo());
+            foreach (["top", "right", "bottom", "left"] as $sPosition) {
+                $oNewRule = new Rule(
+                    sprintf($sExpanded, $sPosition),
+                    $oRule->getLineNo(),
+                    $oRule->getColNo(),
+                );
                 $oNewRule->setIsImportant($oRule->getIsImportant());
                 $oNewRule->addValue(${$sPosition});
                 $this->addRule($oNewRule);
@@ -337,62 +357,72 @@ class DeclarationBlock extends RuleSet
     public function expandFontShorthand()
     {
         $aRules = $this->getRulesAssoc();
-        if (!isset($aRules['font'])) {
+        if (!isset($aRules["font"])) {
             return;
         }
-        $oRule = $aRules['font'];
+        $oRule = $aRules["font"];
         // reset properties to 'normal' per http://www.w3.org/TR/21/fonts.html#font-shorthand
         $aFontProperties = [
-            'font-style' => 'normal',
-            'font-variant' => 'normal',
-            'font-weight' => 'normal',
-            'font-size' => 'normal',
-            'line-height' => 'normal',
+            "font-style" => "normal",
+            "font-variant" => "normal",
+            "font-weight" => "normal",
+            "font-size" => "normal",
+            "line-height" => "normal",
         ];
         $mRuleValue = $oRule->getValue();
         $aValues = [];
-        if (!$mRuleValue instanceof RuleValueList) {
+        if (!($mRuleValue instanceof RuleValueList)) {
             $aValues[] = $mRuleValue;
         } else {
             $aValues = $mRuleValue->getListComponents();
         }
         foreach ($aValues as $mValue) {
-            if (!$mValue instanceof Value) {
+            if (!($mValue instanceof Value)) {
                 $mValue = mb_strtolower($mValue);
             }
-            if (in_array($mValue, ['normal', 'inherit'])) {
-                foreach (['font-style', 'font-weight', 'font-variant'] as $sProperty) {
+            if (in_array($mValue, ["normal", "inherit"])) {
+                foreach (
+                    ["font-style", "font-weight", "font-variant"]
+                    as $sProperty
+                ) {
                     if (!isset($aFontProperties[$sProperty])) {
                         $aFontProperties[$sProperty] = $mValue;
                     }
                 }
-            } elseif (in_array($mValue, ['italic', 'oblique'])) {
-                $aFontProperties['font-style'] = $mValue;
-            } elseif ($mValue == 'small-caps') {
-                $aFontProperties['font-variant'] = $mValue;
+            } elseif (in_array($mValue, ["italic", "oblique"])) {
+                $aFontProperties["font-style"] = $mValue;
+            } elseif ($mValue == "small-caps") {
+                $aFontProperties["font-variant"] = $mValue;
             } elseif (
-                in_array($mValue, ['bold', 'bolder', 'lighter'])
-                || ($mValue instanceof Size
-                    && in_array($mValue->getSize(), range(100, 900, 100)))
+                in_array($mValue, ["bold", "bolder", "lighter"]) ||
+                ($mValue instanceof Size &&
+                    in_array($mValue->getSize(), range(100, 900, 100)))
             ) {
-                $aFontProperties['font-weight'] = $mValue;
-            } elseif ($mValue instanceof RuleValueList && $mValue->getListSeparator() == '/') {
-                list($oSize, $oHeight) = $mValue->getListComponents();
-                $aFontProperties['font-size'] = $oSize;
-                $aFontProperties['line-height'] = $oHeight;
+                $aFontProperties["font-weight"] = $mValue;
+            } elseif (
+                $mValue instanceof RuleValueList &&
+                $mValue->getListSeparator() == "/"
+            ) {
+                [$oSize, $oHeight] = $mValue->getListComponents();
+                $aFontProperties["font-size"] = $oSize;
+                $aFontProperties["line-height"] = $oHeight;
             } elseif ($mValue instanceof Size && $mValue->getUnit() !== null) {
-                $aFontProperties['font-size'] = $mValue;
+                $aFontProperties["font-size"] = $mValue;
             } else {
-                $aFontProperties['font-family'] = $mValue;
+                $aFontProperties["font-family"] = $mValue;
             }
         }
         foreach ($aFontProperties as $sProperty => $mValue) {
-            $oNewRule = new Rule($sProperty, $oRule->getLineNo(), $oRule->getColNo());
+            $oNewRule = new Rule(
+                $sProperty,
+                $oRule->getLineNo(),
+                $oRule->getColNo(),
+            );
             $oNewRule->addValue($mValue);
             $oNewRule->setIsImportant($oRule->getIsImportant());
             $this->addRule($oNewRule);
         }
-        $this->removeRule('font');
+        $this->removeRule("font");
     }
 
     /**
@@ -407,70 +437,91 @@ class DeclarationBlock extends RuleSet
     public function expandBackgroundShorthand()
     {
         $aRules = $this->getRulesAssoc();
-        if (!isset($aRules['background'])) {
+        if (!isset($aRules["background"])) {
             return;
         }
-        $oRule = $aRules['background'];
+        $oRule = $aRules["background"];
         $aBgProperties = [
-            'background-color' => ['transparent'],
-            'background-image' => ['none'],
-            'background-repeat' => ['repeat'],
-            'background-attachment' => ['scroll'],
-            'background-position' => [
-                new Size(0, '%', null, false, $this->iLineNo),
-                new Size(0, '%', null, false, $this->iLineNo),
+            "background-color" => ["transparent"],
+            "background-image" => ["none"],
+            "background-repeat" => ["repeat"],
+            "background-attachment" => ["scroll"],
+            "background-position" => [
+                new Size(0, "%", null, false, $this->iLineNo),
+                new Size(0, "%", null, false, $this->iLineNo),
             ],
         ];
         $mRuleValue = $oRule->getValue();
         $aValues = [];
-        if (!$mRuleValue instanceof RuleValueList) {
+        if (!($mRuleValue instanceof RuleValueList)) {
             $aValues[] = $mRuleValue;
         } else {
             $aValues = $mRuleValue->getListComponents();
         }
-        if (count($aValues) == 1 && $aValues[0] == 'inherit') {
+        if (count($aValues) == 1 && $aValues[0] == "inherit") {
             foreach ($aBgProperties as $sProperty => $mValue) {
-                $oNewRule = new Rule($sProperty, $oRule->getLineNo(), $oRule->getColNo());
-                $oNewRule->addValue('inherit');
+                $oNewRule = new Rule(
+                    $sProperty,
+                    $oRule->getLineNo(),
+                    $oRule->getColNo(),
+                );
+                $oNewRule->addValue("inherit");
                 $oNewRule->setIsImportant($oRule->getIsImportant());
                 $this->addRule($oNewRule);
             }
-            $this->removeRule('background');
+            $this->removeRule("background");
             return;
         }
         $iNumBgPos = 0;
         foreach ($aValues as $mValue) {
-            if (!$mValue instanceof Value) {
+            if (!($mValue instanceof Value)) {
                 $mValue = mb_strtolower($mValue);
             }
             if ($mValue instanceof URL) {
-                $aBgProperties['background-image'] = $mValue;
+                $aBgProperties["background-image"] = $mValue;
             } elseif ($mValue instanceof Color) {
-                $aBgProperties['background-color'] = $mValue;
-            } elseif (in_array($mValue, ['scroll', 'fixed'])) {
-                $aBgProperties['background-attachment'] = $mValue;
-            } elseif (in_array($mValue, ['repeat', 'no-repeat', 'repeat-x', 'repeat-y'])) {
-                $aBgProperties['background-repeat'] = $mValue;
+                $aBgProperties["background-color"] = $mValue;
+            } elseif (in_array($mValue, ["scroll", "fixed"])) {
+                $aBgProperties["background-attachment"] = $mValue;
             } elseif (
-                in_array($mValue, ['left', 'center', 'right', 'top', 'bottom'])
-                || $mValue instanceof Size
+                in_array($mValue, [
+                    "repeat",
+                    "no-repeat",
+                    "repeat-x",
+                    "repeat-y",
+                ])
+            ) {
+                $aBgProperties["background-repeat"] = $mValue;
+            } elseif (
+                in_array($mValue, [
+                    "left",
+                    "center",
+                    "right",
+                    "top",
+                    "bottom",
+                ]) ||
+                $mValue instanceof Size
             ) {
                 if ($iNumBgPos == 0) {
-                    $aBgProperties['background-position'][0] = $mValue;
-                    $aBgProperties['background-position'][1] = 'center';
+                    $aBgProperties["background-position"][0] = $mValue;
+                    $aBgProperties["background-position"][1] = "center";
                 } else {
-                    $aBgProperties['background-position'][$iNumBgPos] = $mValue;
+                    $aBgProperties["background-position"][$iNumBgPos] = $mValue;
                 }
                 $iNumBgPos++;
             }
         }
         foreach ($aBgProperties as $sProperty => $mValue) {
-            $oNewRule = new Rule($sProperty, $oRule->getLineNo(), $oRule->getColNo());
+            $oNewRule = new Rule(
+                $sProperty,
+                $oRule->getLineNo(),
+                $oRule->getColNo(),
+            );
             $oNewRule->setIsImportant($oRule->getIsImportant());
             $oNewRule->addValue($mValue);
             $this->addRule($oNewRule);
         }
-        $this->removeRule('background');
+        $this->removeRule("background");
     }
 
     /**
@@ -479,78 +530,83 @@ class DeclarationBlock extends RuleSet
     public function expandListStyleShorthand()
     {
         $aListProperties = [
-            'list-style-type' => 'disc',
-            'list-style-position' => 'outside',
-            'list-style-image' => 'none',
+            "list-style-type" => "disc",
+            "list-style-position" => "outside",
+            "list-style-image" => "none",
         ];
         $aListStyleTypes = [
-            'none',
-            'disc',
-            'circle',
-            'square',
-            'decimal-leading-zero',
-            'decimal',
-            'lower-roman',
-            'upper-roman',
-            'lower-greek',
-            'lower-alpha',
-            'lower-latin',
-            'upper-alpha',
-            'upper-latin',
-            'hebrew',
-            'armenian',
-            'georgian',
-            'cjk-ideographic',
-            'hiragana',
-            'hira-gana-iroha',
-            'katakana-iroha',
-            'katakana',
+            "none",
+            "disc",
+            "circle",
+            "square",
+            "decimal-leading-zero",
+            "decimal",
+            "lower-roman",
+            "upper-roman",
+            "lower-greek",
+            "lower-alpha",
+            "lower-latin",
+            "upper-alpha",
+            "upper-latin",
+            "hebrew",
+            "armenian",
+            "georgian",
+            "cjk-ideographic",
+            "hiragana",
+            "hira-gana-iroha",
+            "katakana-iroha",
+            "katakana",
         ];
-        $aListStylePositions = [
-            'inside',
-            'outside',
-        ];
+        $aListStylePositions = ["inside", "outside"];
         $aRules = $this->getRulesAssoc();
-        if (!isset($aRules['list-style'])) {
+        if (!isset($aRules["list-style"])) {
             return;
         }
-        $oRule = $aRules['list-style'];
+        $oRule = $aRules["list-style"];
         $mRuleValue = $oRule->getValue();
         $aValues = [];
-        if (!$mRuleValue instanceof RuleValueList) {
+        if (!($mRuleValue instanceof RuleValueList)) {
             $aValues[] = $mRuleValue;
         } else {
             $aValues = $mRuleValue->getListComponents();
         }
-        if (count($aValues) == 1 && $aValues[0] == 'inherit') {
+        if (count($aValues) == 1 && $aValues[0] == "inherit") {
             foreach ($aListProperties as $sProperty => $mValue) {
-                $oNewRule = new Rule($sProperty, $oRule->getLineNo(), $oRule->getColNo());
-                $oNewRule->addValue('inherit');
+                $oNewRule = new Rule(
+                    $sProperty,
+                    $oRule->getLineNo(),
+                    $oRule->getColNo(),
+                );
+                $oNewRule->addValue("inherit");
                 $oNewRule->setIsImportant($oRule->getIsImportant());
                 $this->addRule($oNewRule);
             }
-            $this->removeRule('list-style');
+            $this->removeRule("list-style");
             return;
         }
         foreach ($aValues as $mValue) {
-            if (!$mValue instanceof Value) {
+            if (!($mValue instanceof Value)) {
                 $mValue = mb_strtolower($mValue);
             }
             if ($mValue instanceof Url) {
-                $aListProperties['list-style-image'] = $mValue;
+                $aListProperties["list-style-image"] = $mValue;
             } elseif (in_array($mValue, $aListStyleTypes)) {
-                $aListProperties['list-style-types'] = $mValue;
+                $aListProperties["list-style-types"] = $mValue;
             } elseif (in_array($mValue, $aListStylePositions)) {
-                $aListProperties['list-style-position'] = $mValue;
+                $aListProperties["list-style-position"] = $mValue;
             }
         }
         foreach ($aListProperties as $sProperty => $mValue) {
-            $oNewRule = new Rule($sProperty, $oRule->getLineNo(), $oRule->getColNo());
+            $oNewRule = new Rule(
+                $sProperty,
+                $oRule->getLineNo(),
+                $oRule->getColNo(),
+            );
             $oNewRule->setIsImportant($oRule->getIsImportant());
             $oNewRule->addValue($mValue);
             $this->addRule($oNewRule);
         }
-        $this->removeRule('list-style');
+        $this->removeRule("list-style");
     }
 
     /**
@@ -571,7 +627,7 @@ class DeclarationBlock extends RuleSet
             if (!$oRule->getIsImportant()) {
                 $mRuleValue = $oRule->getValue();
                 $aValues = [];
-                if (!$mRuleValue instanceof RuleValueList) {
+                if (!($mRuleValue instanceof RuleValueList)) {
                     $aValues[] = $mRuleValue;
                 } else {
                     $aValues = $mRuleValue->getListComponents();
@@ -583,7 +639,11 @@ class DeclarationBlock extends RuleSet
             }
         }
         if (count($aNewValues)) {
-            $oNewRule = new Rule($sShorthand, $oRule->getLineNo(), $oRule->getColNo());
+            $oNewRule = new Rule(
+                $sShorthand,
+                $oRule->getLineNo(),
+                $oRule->getColNo(),
+            );
             foreach ($aNewValues as $mValue) {
                 $oNewRule->addValue($mValue);
             }
@@ -597,13 +657,13 @@ class DeclarationBlock extends RuleSet
     public function createBackgroundShorthand()
     {
         $aProperties = [
-            'background-color',
-            'background-image',
-            'background-repeat',
-            'background-position',
-            'background-attachment',
+            "background-color",
+            "background-image",
+            "background-repeat",
+            "background-position",
+            "background-attachment",
         ];
-        $this->createShorthandProperties($aProperties, 'background');
+        $this->createShorthandProperties($aProperties, "background");
     }
 
     /**
@@ -612,11 +672,11 @@ class DeclarationBlock extends RuleSet
     public function createListStyleShorthand()
     {
         $aProperties = [
-            'list-style-type',
-            'list-style-position',
-            'list-style-image',
+            "list-style-type",
+            "list-style-position",
+            "list-style-image",
         ];
-        $this->createShorthandProperties($aProperties, 'list-style');
+        $this->createShorthandProperties($aProperties, "list-style");
     }
 
     /**
@@ -628,12 +688,8 @@ class DeclarationBlock extends RuleSet
      */
     public function createBorderShorthand()
     {
-        $aProperties = [
-            'border-width',
-            'border-style',
-            'border-color',
-        ];
-        $this->createShorthandProperties($aProperties, 'border');
+        $aProperties = ["border-width", "border-style", "border-color"];
+        $this->createShorthandProperties($aProperties, "border");
     }
 
     /**
@@ -645,13 +701,13 @@ class DeclarationBlock extends RuleSet
      */
     public function createDimensionsShorthand()
     {
-        $aPositions = ['top', 'right', 'bottom', 'left'];
+        $aPositions = ["top", "right", "bottom", "left"];
         $aExpansions = [
-            'margin' => 'margin-%s',
-            'padding' => 'padding-%s',
-            'border-color' => 'border-%s-color',
-            'border-style' => 'border-%s-style',
-            'border-width' => 'border-%s-width',
+            "margin" => "margin-%s",
+            "padding" => "padding-%s",
+            "border-color" => "border-%s-color",
+            "border-style" => "border-%s-style",
+            "border-width" => "border-%s-width",
         ];
         $aRules = $this->getRulesAssoc();
         foreach ($aExpansions as $sProperty => $sExpanded) {
@@ -670,36 +726,49 @@ class DeclarationBlock extends RuleSet
                     $oRule = $aRules[sprintf($sExpanded, $sPosition)];
                     $mRuleValue = $oRule->getValue();
                     $aRuleValues = [];
-                    if (!$mRuleValue instanceof RuleValueList) {
+                    if (!($mRuleValue instanceof RuleValueList)) {
                         $aRuleValues[] = $mRuleValue;
                     } else {
                         $aRuleValues = $mRuleValue->getListComponents();
                     }
                     $aValues[$sPosition] = $aRuleValues;
                 }
-                $oNewRule = new Rule($sProperty, $oRule->getLineNo(), $oRule->getColNo());
-                if ((string)$aValues['left'][0] == (string)$aValues['right'][0]) {
-                    if ((string)$aValues['top'][0] == (string)$aValues['bottom'][0]) {
-                        if ((string)$aValues['top'][0] == (string)$aValues['left'][0]) {
+                $oNewRule = new Rule(
+                    $sProperty,
+                    $oRule->getLineNo(),
+                    $oRule->getColNo(),
+                );
+                if (
+                    (string) $aValues["left"][0] ==
+                    (string) $aValues["right"][0]
+                ) {
+                    if (
+                        (string) $aValues["top"][0] ==
+                        (string) $aValues["bottom"][0]
+                    ) {
+                        if (
+                            (string) $aValues["top"][0] ==
+                            (string) $aValues["left"][0]
+                        ) {
                             // All 4 sides are equal
-                            $oNewRule->addValue($aValues['top']);
+                            $oNewRule->addValue($aValues["top"]);
                         } else {
                             // Top and bottom are equal, left and right are equal
-                            $oNewRule->addValue($aValues['top']);
-                            $oNewRule->addValue($aValues['left']);
+                            $oNewRule->addValue($aValues["top"]);
+                            $oNewRule->addValue($aValues["left"]);
                         }
                     } else {
                         // Only left and right are equal
-                        $oNewRule->addValue($aValues['top']);
-                        $oNewRule->addValue($aValues['left']);
-                        $oNewRule->addValue($aValues['bottom']);
+                        $oNewRule->addValue($aValues["top"]);
+                        $oNewRule->addValue($aValues["left"]);
+                        $oNewRule->addValue($aValues["bottom"]);
                     }
                 } else {
                     // No sides are equal
-                    $oNewRule->addValue($aValues['top']);
-                    $oNewRule->addValue($aValues['left']);
-                    $oNewRule->addValue($aValues['bottom']);
-                    $oNewRule->addValue($aValues['right']);
+                    $oNewRule->addValue($aValues["top"]);
+                    $oNewRule->addValue($aValues["left"]);
+                    $oNewRule->addValue($aValues["bottom"]);
+                    $oNewRule->addValue($aValues["right"]);
                 }
                 $this->addRule($oNewRule);
                 foreach ($aPositions as $sPosition) {
@@ -720,56 +789,62 @@ class DeclarationBlock extends RuleSet
     public function createFontShorthand()
     {
         $aFontProperties = [
-            'font-style',
-            'font-variant',
-            'font-weight',
-            'font-size',
-            'line-height',
-            'font-family',
+            "font-style",
+            "font-variant",
+            "font-weight",
+            "font-size",
+            "line-height",
+            "font-family",
         ];
         $aRules = $this->getRulesAssoc();
-        if (!isset($aRules['font-size']) || !isset($aRules['font-family'])) {
+        if (!isset($aRules["font-size"]) || !isset($aRules["font-family"])) {
             return;
         }
-        $oOldRule = isset($aRules['font-size']) ? $aRules['font-size'] : $aRules['font-family'];
-        $oNewRule = new Rule('font', $oOldRule->getLineNo(), $oOldRule->getColNo());
+        $oOldRule = isset($aRules["font-size"])
+            ? $aRules["font-size"]
+            : $aRules["font-family"];
+        $oNewRule = new Rule(
+            "font",
+            $oOldRule->getLineNo(),
+            $oOldRule->getColNo(),
+        );
         unset($oOldRule);
-        foreach (['font-style', 'font-variant', 'font-weight'] as $sProperty) {
+        foreach (["font-style", "font-variant", "font-weight"] as $sProperty) {
             if (isset($aRules[$sProperty])) {
                 $oRule = $aRules[$sProperty];
                 $mRuleValue = $oRule->getValue();
                 $aValues = [];
-                if (!$mRuleValue instanceof RuleValueList) {
+                if (!($mRuleValue instanceof RuleValueList)) {
                     $aValues[] = $mRuleValue;
                 } else {
                     $aValues = $mRuleValue->getListComponents();
                 }
-                if ($aValues[0] !== 'normal') {
+                if ($aValues[0] !== "normal") {
                     $oNewRule->addValue($aValues[0]);
                 }
             }
         }
         // Get the font-size value
-        $oRule = $aRules['font-size'];
+        $oRule = $aRules["font-size"];
         $mRuleValue = $oRule->getValue();
         $aFSValues = [];
-        if (!$mRuleValue instanceof RuleValueList) {
+        if (!($mRuleValue instanceof RuleValueList)) {
             $aFSValues[] = $mRuleValue;
         } else {
             $aFSValues = $mRuleValue->getListComponents();
         }
         // But wait to know if we have line-height to add it
-        if (isset($aRules['line-height'])) {
-            $oRule = $aRules['line-height'];
+        if (isset($aRules["line-height"])) {
+            $oRule = $aRules["line-height"];
             $mRuleValue = $oRule->getValue();
             $aLHValues = [];
-            if (!$mRuleValue instanceof RuleValueList) {
+            if (!($mRuleValue instanceof RuleValueList)) {
                 $aLHValues[] = $mRuleValue;
             } else {
                 $aLHValues = $mRuleValue->getListComponents();
             }
-            if ($aLHValues[0] !== 'normal') {
-                $val = new RuleValueList('/', $this->iLineNo);
+            if ($aLHValues[0] !== "normal") {
+                $val = new RuleValueList("/", $this->iLineNo);
                 $val->addListComponent($aFSValues[0]);
                 $val->addListComponent($aLHValues[0]);
                 $oNewRule->addValue($val);
@@ -777,15 +852,15 @@ class DeclarationBlock extends RuleSet
         } else {
             $oNewRule->addValue($aFSValues[0]);
         }
-        $oRule = $aRules['font-family'];
+        $oRule = $aRules["font-family"];
         $mRuleValue = $oRule->getValue();
         $aFFValues = [];
-        if (!$mRuleValue instanceof RuleValueList) {
+        if (!($mRuleValue instanceof RuleValueList)) {
             $aFFValues[] = $mRuleValue;
         } else {
             $aFFValues = $mRuleValue->getListComponents();
         }
-        $oFFValue = new RuleValueList(',', $this->iLineNo);
+        $oFFValue = new RuleValueList(",", $this->iLineNo);
         $oFFValue->setListComponents($aFFValues);
         $oNewRule->addValue($oFFValue);
 
@@ -814,17 +889,22 @@ class DeclarationBlock extends RuleSet
     {
         if (count($this->aSelectors) === 0) {
             // If all the selectors have been removed, this declaration block becomes invalid
-            throw new OutputException("Attempt to print declaration block with missing selector", $this->iLineNo);
+            throw new OutputException(
+                "Attempt to print declaration block with missing selector",
+                $this->iLineNo,
+            );
         }
         $sResult = $oOutputFormat->sBeforeDeclarationBlock;
         $sResult .= $oOutputFormat->implode(
-            $oOutputFormat->spaceBeforeSelectorSeparator() . ',' . $oOutputFormat->spaceAfterSelectorSeparator(),
-            $this->aSelectors
+            $oOutputFormat->spaceBeforeSelectorSeparator() .
+                "," .
+                $oOutputFormat->spaceAfterSelectorSeparator(),
+            $this->aSelectors,
         );
         $sResult .= $oOutputFormat->sAfterDeclarationBlockSelectors;
-        $sResult .= $oOutputFormat->spaceBeforeOpeningBrace() . '{';
+        $sResult .= $oOutputFormat->spaceBeforeOpeningBrace() . "{";
         $sResult .= parent::render($oOutputFormat);
-        $sResult .= '}';
+        $sResult .= "}";
         $sResult .= $oOutputFormat->sAfterDeclarationBlock;
         return $sResult;
     }

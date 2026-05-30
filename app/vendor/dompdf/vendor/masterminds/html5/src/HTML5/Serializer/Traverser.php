@@ -16,11 +16,11 @@ class Traverser
     /**
      * Namespaces that should be treated as "local" to HTML5.
      */
-    protected static $local_ns = array(
-        'http://www.w3.org/1999/xhtml' => 'html',
-        'http://www.w3.org/1998/Math/MathML' => 'math',
-        'http://www.w3.org/2000/svg' => 'svg',
-    );
+    protected static $local_ns = [
+        "http://www.w3.org/1999/xhtml" => "html",
+        "http://www.w3.org/1998/Math/MathML" => "math",
+        "http://www.w3.org/2000/svg" => "svg",
+    ];
 
     protected $dom;
 
@@ -43,8 +43,12 @@ class Traverser
      *                                       charachter references. Defaults to false which escapes &'<>".
      *                                       - output_rules: The path to the class handling the output rules.
      */
-    public function __construct($dom, $out, RulesInterface $rules, $options = array())
-    {
+    public function __construct(
+        $dom,
+        $out,
+        RulesInterface $rules,
+        $options = [],
+    ) {
         $this->dom = $dom;
         $this->out = $out;
         $this->rules = $rules;
@@ -68,11 +72,13 @@ class Traverser
             if ($this->dom->hasChildNodes()) {
                 $this->children($this->dom->childNodes);
             }
-        }        // If NodeList, loop
+        }
+        // If NodeList, loop
         elseif ($this->dom instanceof \DOMNodeList) {
             // If this is a NodeList of DOMDocuments this will not work.
             $this->children($this->dom);
-        }         // Else assume this is a DOMNode-like datastructure.
+        }
+        // Else assume this is a DOMNode-like datastructure.
         else {
             $this->node($this->dom);
         }

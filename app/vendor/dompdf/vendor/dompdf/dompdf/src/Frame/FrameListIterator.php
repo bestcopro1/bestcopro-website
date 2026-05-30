@@ -92,9 +92,10 @@ class FrameListIterator implements Iterator
         } else {
             // Continue from the previous child if the current frame has been
             // moved to another parent
-            $this->cur = $this->prev !== null
-                ? $this->prev->get_next_sibling()
-                : $this->parent->get_first_child();
+            $this->cur =
+                $this->prev !== null
+                    ? $this->prev->get_next_sibling()
+                    : $this->parent->get_first_child();
         }
     }
 }

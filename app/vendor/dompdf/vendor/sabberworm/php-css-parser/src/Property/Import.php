@@ -83,8 +83,10 @@ class Import implements AtRule
      */
     public function render(OutputFormat $oOutputFormat)
     {
-        return "@import " . $this->oLocation->render($oOutputFormat)
-            . ($this->sMediaQuery === null ? '' : ' ' . $this->sMediaQuery) . ';';
+        return "@import " .
+            $this->oLocation->render($oOutputFormat) .
+            ($this->sMediaQuery === null ? "" : " " . $this->sMediaQuery) .
+            ";";
     }
 
     /**
@@ -92,7 +94,7 @@ class Import implements AtRule
      */
     public function atRuleName()
     {
-        return 'import';
+        return "import";
     }
 
     /**

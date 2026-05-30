@@ -53,7 +53,17 @@ interface SurfaceInterface
     public function measureText($text);
 
     // drawing images
-    public function drawImage($image, $sx, $sy, $sw = null, $sh = null, $dx = null, $dy = null, $dw = null, $dh = null);
+    public function drawImage(
+        $image,
+        $sx,
+        $sy,
+        $sw = null,
+        $sh = null,
+        $dx = null,
+        $dy = null,
+        $dw = null,
+        $dh = null,
+    );
 
     // paths
     public function lineTo($x, $y);
@@ -68,9 +78,25 @@ interface SurfaceInterface
 
     public function circle($x, $y, $radius);
 
-    public function arc($x, $y, $radius, $startAngle, $endAngle, $anticlockwise = false);
+    public function arc(
+        $x,
+        $y,
+        $radius,
+        $startAngle,
+        $endAngle,
+        $anticlockwise = false,
+    );
 
-    public function ellipse($x, $y, $radiusX, $radiusY, $rotation, $startAngle, $endAngle, $anticlockwise);
+    public function ellipse(
+        $x,
+        $y,
+        $radiusX,
+        $radiusY,
+        $rotation,
+        $startAngle,
+        $endAngle,
+        $anticlockwise,
+    );
 
     // Rectangle
     public function rect($x, $y, $w, $h, $rx = 0, $ry = 0);

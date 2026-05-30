@@ -30,4 +30,4 @@ class ClipPath extends AbstractTag
     {
         $this->document->getSurface()->restore();
     }
-} 
+}

@@ -39,7 +39,7 @@ class TableCell extends Block
         $table = TableFrameDecorator::find_parent_table($this->_frame);
         $cellmap = $table->get_cellmap();
 
-        list($x, $y) = $cellmap->get_frame_position($this->_frame);
+        [$x, $y] = $cellmap->get_frame_position($this->_frame);
         $this->_frame->set_position($x, $y);
 
         $cells = $cellmap->get_spanned_cells($this->_frame);
@@ -53,24 +53,36 @@ class TableCell extends Block
         //FIXME?
         $h = $this->_frame->get_containing_block("h");
 
-        $left_space = (float)$style->length_in_pt([$style->margin_left,
+        $left_space = (float) $style->length_in_pt(
+            [
+                $style->margin_left,
                 $style->padding_left,
-                $style->border_left_width],
-            $w);
+                $style->border_left_width,
+            ],
+            $w,
+        );
 
-        $right_space = (float)$style->length_in_pt([$style->padding_right,
+        $right_space = (float) $style->length_in_pt(
+            [
+                $style->padding_right,
                 $style->margin_right,
-                $style->border_right_width],
-            $w);
+                $style->border_right_width,
+            ],
+            $w,
+        );
 
-        $top_space = (float)$style->length_in_pt([$style->margin_top,
-                $style->padding_top,
-                $style->border_top_width],
-            $h);
-        $bottom_space = (float)$style->length_in_pt([$style->margin_bottom,
+        $top_space = (float) $style->length_in_pt(
+            [$style->margin_top, $style->padding_top, $style->border_top_width],
+            $h,
+        );
+        $bottom_space = (float) $style->length_in_pt(
+            [
+                $style->margin_bottom,
                 $style->padding_bottom,
-                $style->border_bottom_width],
-            $h);
+                $style->border_bottom_width,
+            ],
+            $h,
+        );
 
         $cb_w = $w - $left_space - $right_space;
         $style->set_used("width", $cb_w);
@@ -79,7 +91,7 @@ class TableCell extends Block
         $content_y = $line_y = $y + $top_space;
 
         // Adjust the first line based on the text-indent property
-        $indent = (float)$style->length_in_pt($style->text_indent, $w);
+        $indent = (float) $style->length_in_pt($style->text_indent, $w);
         $this->_frame->increase_line_width($indent);
 
         $page = $this->_frame->get_root();
@@ -101,14 +113,14 @@ class TableCell extends Block
         }
 
         // Determine our height
-        $style_height = (float)$style->length_in_pt($style->height, $h);
+        $style_height = (float) $style->length_in_pt($style->height, $h);
 
         /** @var FrameDecorator\TableCell */
         $frame = $this->_frame;
 
         $frame->set_content_height($this->_calculate_content_height());
 
-        $height = max($style_height, (float)$frame->get_content_height());
+        $height = max($style_height, (float) $frame->get_content_height());
 
         // Let the cellmap know our height
         $cell_height = $height / count($cells["rows"]);

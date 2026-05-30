@@ -16,7 +16,6 @@ use Dompdf\FrameDecorator\ListBullet as ListBulletFrameDecorator;
  */
 class ListBullet extends AbstractFrameReflower
 {
-
     /**
      * ListBullet constructor.
      * @param ListBulletFrameDecorator $frame

@@ -12,8 +12,13 @@ class Polyline extends Shape
 {
     public function start($attributes)
     {
-        $tmp = array();
-        preg_match_all('/([\-]*[0-9\.]+)/', $attributes['points'], $tmp, PREG_PATTERN_ORDER);
+        $tmp = [];
+        preg_match_all(
+            "/([\-]*[0-9\.]+)/",
+            $attributes["points"],
+            $tmp,
+            PREG_PATTERN_ORDER,
+        );
 
         $points = $tmp[0];
         $count = count($points);
@@ -24,7 +29,7 @@ class Polyline extends Shape
         }
 
         $surface = $this->document->getSurface();
-        list($x, $y) = $points;
+        [$x, $y] = $points;
         $surface->moveTo($x, $y);
 
         for ($i = 2; $i < $count; $i += 2) {
@@ -37,4 +42,4 @@ class Polyline extends Shape
             $surface->lineTo($x, $y);
         }
     }
-} 
+}

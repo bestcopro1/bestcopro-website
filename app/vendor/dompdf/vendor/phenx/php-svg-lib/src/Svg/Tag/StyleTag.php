@@ -24,4 +24,4 @@ class StyleTag extends AbstractTag
     {
         $this->text .= $text;
     }
-} 
+}

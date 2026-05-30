@@ -17,7 +17,6 @@ use Dompdf\FrameDecorator\TableRowGroup as TableRowGroupFrameDecorator;
  */
 class TableRowGroup extends AbstractFrameReflower
 {
-
     /**
      * TableRowGroup constructor.
      * @param TableRowGroupFrameDecorator $frame
@@ -43,7 +42,12 @@ class TableRowGroup extends AbstractFrameReflower
         $cb = $frame->get_containing_block();
 
         foreach ($frame->get_children() as $child) {
-            $child->set_containing_block($cb["x"], $cb["y"], $cb["w"], $cb["h"]);
+            $child->set_containing_block(
+                $cb["x"],
+                $cb["y"],
+                $cb["w"],
+                $cb["h"],
+            );
             $child->reflow();
 
             // Check if a split has occurred

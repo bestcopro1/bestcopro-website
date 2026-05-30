@@ -23,162 +23,164 @@ class AttributeTranslator
     // http://www.cs.tut.fi/~jkorpela/html2css.html
     private static $__ATTRIBUTE_LOOKUP = [
         //'caption' => array ( 'align' => '', ),
-        'img' => [
-            'align' => [
-                'bottom' => 'vertical-align: baseline;',
-                'middle' => 'vertical-align: middle;',
-                'top' => 'vertical-align: top;',
-                'left' => 'float: left;',
-                'right' => 'float: right;'
+        "img" => [
+            "align" => [
+                "bottom" => "vertical-align: baseline;",
+                "middle" => "vertical-align: middle;",
+                "top" => "vertical-align: top;",
+                "left" => "float: left;",
+                "right" => "float: right;",
             ],
-            'border' => 'border: %0.2Fpx solid;',
-            'height' => '_set_px_height',
-            'hspace' => 'padding-left: %1$0.2Fpx; padding-right: %1$0.2Fpx;',
-            'vspace' => 'padding-top: %1$0.2Fpx; padding-bottom: %1$0.2Fpx;',
-            'width' => '_set_px_width',
+            "border" => "border: %0.2Fpx solid;",
+            "height" => "_set_px_height",
+            "hspace" => 'padding-left: %1$0.2Fpx; padding-right: %1$0.2Fpx;',
+            "vspace" => 'padding-top: %1$0.2Fpx; padding-bottom: %1$0.2Fpx;',
+            "width" => "_set_px_width",
         ],
-        'table' => [
-            'align' => [
-                'left' => 'margin-left: 0; margin-right: auto;',
-                'center' => 'margin-left: auto; margin-right: auto;',
-                'right' => 'margin-left: auto; margin-right: 0;'
+        "table" => [
+            "align" => [
+                "left" => "margin-left: 0; margin-right: auto;",
+                "center" => "margin-left: auto; margin-right: auto;",
+                "right" => "margin-left: auto; margin-right: 0;",
             ],
-            'bgcolor' => 'background-color: %s;',
-            'border' => '_set_table_border',
-            'cellpadding' => '_set_table_cellpadding', //'border-spacing: %0.2F; border-collapse: separate;',
-            'cellspacing' => '_set_table_cellspacing',
-            'frame' => [
-                'void' => 'border-style: none;',
-                'above' => 'border-top-style: solid;',
-                'below' => 'border-bottom-style: solid;',
-                'hsides' => 'border-left-style: solid; border-right-style: solid;',
-                'vsides' => 'border-top-style: solid; border-bottom-style: solid;',
-                'lhs' => 'border-left-style: solid;',
-                'rhs' => 'border-right-style: solid;',
-                'box' => 'border-style: solid;',
-                'border' => 'border-style: solid;'
+            "bgcolor" => "background-color: %s;",
+            "border" => "_set_table_border",
+            "cellpadding" => "_set_table_cellpadding", //'border-spacing: %0.2F; border-collapse: separate;',
+            "cellspacing" => "_set_table_cellspacing",
+            "frame" => [
+                "void" => "border-style: none;",
+                "above" => "border-top-style: solid;",
+                "below" => "border-bottom-style: solid;",
+                "hsides" =>
+                    "border-left-style: solid; border-right-style: solid;",
+                "vsides" =>
+                    "border-top-style: solid; border-bottom-style: solid;",
+                "lhs" => "border-left-style: solid;",
+                "rhs" => "border-right-style: solid;",
+                "box" => "border-style: solid;",
+                "border" => "border-style: solid;",
             ],
-            'rules' => '_set_table_rules',
-            'width' => 'width: %s;',
+            "rules" => "_set_table_rules",
+            "width" => "width: %s;",
         ],
-        'hr' => [
-            'align' => '_set_hr_align', // Need to grab width to set 'left' & 'right' correctly
-            'noshade' => 'border-style: solid;',
-            'size' => '_set_hr_size', //'border-width: %0.2F px;',
-            'width' => 'width: %s;',
+        "hr" => [
+            "align" => "_set_hr_align", // Need to grab width to set 'left' & 'right' correctly
+            "noshade" => "border-style: solid;",
+            "size" => "_set_hr_size", //'border-width: %0.2F px;',
+            "width" => "width: %s;",
         ],
-        'div' => [
-            'align' => 'text-align: %s;',
+        "div" => [
+            "align" => "text-align: %s;",
         ],
-        'h1' => [
-            'align' => 'text-align: %s;',
+        "h1" => [
+            "align" => "text-align: %s;",
         ],
-        'h2' => [
-            'align' => 'text-align: %s;',
+        "h2" => [
+            "align" => "text-align: %s;",
         ],
-        'h3' => [
-            'align' => 'text-align: %s;',
+        "h3" => [
+            "align" => "text-align: %s;",
         ],
-        'h4' => [
-            'align' => 'text-align: %s;',
+        "h4" => [
+            "align" => "text-align: %s;",
         ],
-        'h5' => [
-            'align' => 'text-align: %s;',
+        "h5" => [
+            "align" => "text-align: %s;",
         ],
-        'h6' => [
-            'align' => 'text-align: %s;',
+        "h6" => [
+            "align" => "text-align: %s;",
         ],
         //TODO: translate more form element attributes
-        'input' => [
-            'size' => '_set_input_width'
+        "input" => [
+            "size" => "_set_input_width",
         ],
-        'p' => [
-            'align' => 'text-align: %s;',
+        "p" => [
+            "align" => "text-align: %s;",
         ],
-//    'col' => array(
-//      'align'  => '',
-//      'valign' => '',
-//    ),
-//    'colgroup' => array(
-//      'align'  => '',
-//      'valign' => '',
-//    ),
-        'tbody' => [
-            'align' => '_set_table_row_align',
-            'valign' => '_set_table_row_valign',
+        //    'col' => array(
+        //      'align'  => '',
+        //      'valign' => '',
+        //    ),
+        //    'colgroup' => array(
+        //      'align'  => '',
+        //      'valign' => '',
+        //    ),
+        "tbody" => [
+            "align" => "_set_table_row_align",
+            "valign" => "_set_table_row_valign",
         ],
-        'td' => [
-            'align' => 'text-align: %s;',
-            'bgcolor' => '_set_background_color',
-            'height' => 'height: %s;',
-            'nowrap' => 'white-space: nowrap;',
-            'valign' => 'vertical-align: %s;',
-            'width' => 'width: %s;',
+        "td" => [
+            "align" => "text-align: %s;",
+            "bgcolor" => "_set_background_color",
+            "height" => "height: %s;",
+            "nowrap" => "white-space: nowrap;",
+            "valign" => "vertical-align: %s;",
+            "width" => "width: %s;",
         ],
-        'tfoot' => [
-            'align' => '_set_table_row_align',
-            'valign' => '_set_table_row_valign',
+        "tfoot" => [
+            "align" => "_set_table_row_align",
+            "valign" => "_set_table_row_valign",
         ],
-        'th' => [
-            'align' => 'text-align: %s;',
-            'bgcolor' => '_set_background_color',
-            'height' => 'height: %s;',
-            'nowrap' => 'white-space: nowrap;',
-            'valign' => 'vertical-align: %s;',
-            'width' => 'width: %s;',
+        "th" => [
+            "align" => "text-align: %s;",
+            "bgcolor" => "_set_background_color",
+            "height" => "height: %s;",
+            "nowrap" => "white-space: nowrap;",
+            "valign" => "vertical-align: %s;",
+            "width" => "width: %s;",
         ],
-        'thead' => [
-            'align' => '_set_table_row_align',
-            'valign' => '_set_table_row_valign',
+        "thead" => [
+            "align" => "_set_table_row_align",
+            "valign" => "_set_table_row_valign",
         ],
-        'tr' => [
-            'align' => '_set_table_row_align',
-            'bgcolor' => '_set_table_row_bgcolor',
-            'valign' => '_set_table_row_valign',
+        "tr" => [
+            "align" => "_set_table_row_align",
+            "bgcolor" => "_set_table_row_bgcolor",
+            "valign" => "_set_table_row_valign",
         ],
-        'body' => [
-            'background' => 'background-image: url(%s);',
-            'bgcolor' => '_set_background_color',
-            'link' => '_set_body_link',
-            'text' => '_set_color',
+        "body" => [
+            "background" => "background-image: url(%s);",
+            "bgcolor" => "_set_background_color",
+            "link" => "_set_body_link",
+            "text" => "_set_color",
         ],
-        'br' => [
-            'clear' => 'clear: %s;',
+        "br" => [
+            "clear" => "clear: %s;",
         ],
-        'basefont' => [
-            'color' => '_set_color',
-            'face' => 'font-family: %s;',
-            'size' => '_set_basefont_size',
+        "basefont" => [
+            "color" => "_set_color",
+            "face" => "font-family: %s;",
+            "size" => "_set_basefont_size",
         ],
-        'font' => [
-            'color' => '_set_color',
-            'face' => 'font-family: %s;',
-            'size' => '_set_font_size',
+        "font" => [
+            "color" => "_set_color",
+            "face" => "font-family: %s;",
+            "size" => "_set_font_size",
         ],
-        'dir' => [
-            'compact' => 'margin: 0.5em 0;',
+        "dir" => [
+            "compact" => "margin: 0.5em 0;",
         ],
-        'dl' => [
-            'compact' => 'margin: 0.5em 0;',
+        "dl" => [
+            "compact" => "margin: 0.5em 0;",
         ],
-        'menu' => [
-            'compact' => 'margin: 0.5em 0;',
+        "menu" => [
+            "compact" => "margin: 0.5em 0;",
         ],
-        'ol' => [
-            'compact' => 'margin: 0.5em 0;',
-            'start' => 'counter-reset: -dompdf-default-counter %d;',
-            'type' => 'list-style-type: %s;',
+        "ol" => [
+            "compact" => "margin: 0.5em 0;",
+            "start" => "counter-reset: -dompdf-default-counter %d;",
+            "type" => "list-style-type: %s;",
         ],
-        'ul' => [
-            'compact' => 'margin: 0.5em 0;',
-            'type' => 'list-style-type: %s;',
+        "ul" => [
+            "compact" => "margin: 0.5em 0;",
+            "type" => "list-style-type: %s;",
         ],
-        'li' => [
-            'type' => 'list-style-type: %s;',
-            'value' => 'counter-reset: -dompdf-default-counter %d;',
+        "li" => [
+            "type" => "list-style-type: %s;",
+            "value" => "counter-reset: -dompdf-default-counter %d;",
         ],
-        'pre' => [
-            'width' => 'width: %s;',
+        "pre" => [
+            "width" => "width: %s;",
         ],
     ];
 
@@ -236,7 +238,9 @@ class AttributeTranslator
             // Look up $value in $target, if $target is an array:
             if (is_array($target)) {
                 if (isset($target[$value])) {
-                    $style .= " " . self::_resolve_target($node, $target[$value], $value);
+                    $style .=
+                        " " .
+                        self::_resolve_target($node, $target[$value], $value);
                 }
             } else {
                 // otherwise use target directly
@@ -290,7 +294,8 @@ class AttributeTranslator
         switch ($node->nodeName) {
             default:
             case "table":
-                $query = "tr/td | thead/tr/td | tbody/tr/td | tfoot/tr/td | tr/th | thead/tr/th | tbody/tr/th | tfoot/tr/th";
+                $query =
+                    "tr/td | thead/tr/td | tbody/tr/td | tfoot/tr/td | tr/th | thead/tr/th | tbody/tr/th | tfoot/tr/th";
                 break;
 
             case "tbody":
@@ -347,8 +352,10 @@ class AttributeTranslator
         return "background-color: $value;";
     }
 
-    protected static function _set_px_width(\DOMElement $node, string $value): string
-    {
+    protected static function _set_px_width(
+        \DOMElement $node,
+        string $value,
+    ): string {
         $v = trim($value);
 
         if (Helpers::is_percent($v)) {
@@ -362,8 +369,10 @@ class AttributeTranslator
         return "";
     }
 
-    protected static function _set_px_height(\DOMElement $node, string $value): string
-    {
+    protected static function _set_px_height(
+        \DOMElement $node,
+        string $value,
+    ): string {
         $v = trim($value);
 
         if (Helpers::is_percent($v)) {
@@ -444,11 +453,13 @@ class AttributeTranslator
                 return null;
 
             case "rows":
-                $new_style .= "border-style: solid none solid none; border-width: 1px; ";
+                $new_style .=
+                    "border-style: solid none solid none; border-width: 1px; ";
                 break;
 
             case "cols":
-                $new_style .= "border-style: none solid none solid; border-width: 1px; ";
+                $new_style .=
+                    "border-style: none solid none solid; border-width: 1px; ";
                 break;
 
             case "all":
@@ -503,7 +514,7 @@ class AttributeTranslator
             $width = "100%";
         }
 
-        $remainder = 100 - (double)rtrim($width, "% ");
+        $remainder = 100 - (float) rtrim($width, "% ");
 
         switch ($value) {
             case "left":
@@ -533,12 +544,20 @@ class AttributeTranslator
      */
     protected static function _set_input_width(\DOMElement $node, $value)
     {
-        if (empty($value)) { return null; }
+        if (empty($value)) {
+            return null;
+        }
 
-        if ($node->hasAttribute("type") && in_array(strtolower($node->getAttribute("type")), ["text","password"])) {
-            return sprintf("width: %Fem", (((int)$value * .65)+2));
+        if (
+            $node->hasAttribute("type") &&
+            in_array(strtolower($node->getAttribute("type")), [
+                "text",
+                "password",
+            ])
+        ) {
+            return sprintf("width: %Fem", (int) $value * 0.65 + 2);
         } else {
-            return sprintf("width: %upx;", (int)$value);
+            return sprintf("width: %upx;", (int) $value);
         }
     }
 
@@ -638,7 +657,7 @@ class AttributeTranslator
         $style = $node->getAttribute(self::$_style_attr);
 
         if ($value[0] === "-" || $value[0] === "+") {
-            $value = self::$_last_basefont_size + (int)$value;
+            $value = self::$_last_basefont_size + (int) $value;
         }
 
         if (isset(self::$_font_size_lookup[$value])) {

@@ -27,7 +27,6 @@ use DOMXPath;
  */
 class Factory
 {
-
     /**
      * Array of positioners for specific frame types
      *
@@ -43,8 +42,10 @@ class Factory
      *
      * @return PageFrameDecorator
      */
-    public static function decorate_root(Frame $root, Dompdf $dompdf): PageFrameDecorator
-    {
+    public static function decorate_root(
+        Frame $root,
+        Dompdf $dompdf,
+    ): PageFrameDecorator {
         $frame = new PageFrameDecorator($root, $dompdf);
         $frame->set_reflower(new PageFrameReflower($frame));
         $root->set_decorator($frame);
@@ -63,13 +64,15 @@ class Factory
      * @return AbstractFrameDecorator|null
      * FIXME: this is admittedly a little smelly...
      */
-    public static function decorate_frame(Frame $frame, Dompdf $dompdf, ?Frame $root = null): ?AbstractFrameDecorator
-    {
+    public static function decorate_frame(
+        Frame $frame,
+        Dompdf $dompdf,
+        ?Frame $root = null,
+    ): ?AbstractFrameDecorator {
         $style = $frame->get_style();
         $display = $style->display;
 
         switch ($display) {
-
             case "block":
                 $positioner = "Block";
                 $decorator = "Block";
@@ -191,8 +194,8 @@ class Factory
             $reflower = "Image";
         }
 
-        $decorator  = "Dompdf\\FrameDecorator\\$decorator";
-        $reflower   = "Dompdf\\FrameReflower\\$reflower";
+        $decorator = "Dompdf\\FrameDecorator\\$decorator";
+        $reflower = "Dompdf\\FrameReflower\\$reflower";
 
         /** @var AbstractFrameDecorator $deco */
         $deco = new $decorator($frame, $dompdf);
@@ -223,9 +226,13 @@ class Factory
                     $index = intval($node->getAttribute("value"));
                 } else {
                     if (!$parent_node->hasAttribute("dompdf-counter")) {
-                        $index = ($parent_node->hasAttribute("start") ? $parent_node->getAttribute("start") : 1);
+                        $index = $parent_node->hasAttribute("start")
+                            ? $parent_node->getAttribute("start")
+                            : 1;
                     } else {
-                        $index = (int)$parent_node->getAttribute("dompdf-counter") + 1;
+                        $index =
+                            (int) $parent_node->getAttribute("dompdf-counter") +
+                            1;
                     }
                 }
 
@@ -251,10 +258,11 @@ class Factory
      *
      * @return AbstractPositioner
      */
-    protected static function getPositionerInstance(string $type): AbstractPositioner
-    {
+    protected static function getPositionerInstance(
+        string $type,
+    ): AbstractPositioner {
         if (!isset(self::$_positioners[$type])) {
-            $class = '\\Dompdf\\Positioner\\'.$type;
+            $class = "\\Dompdf\\Positioner\\" . $type;
             self::$_positioners[$type] = new $class();
         }
         return self::$_positioners[$type];

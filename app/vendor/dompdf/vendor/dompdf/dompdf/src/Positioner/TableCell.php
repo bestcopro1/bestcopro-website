@@ -16,7 +16,6 @@ use Dompdf\FrameDecorator\Table;
  */
 class TableCell extends AbstractPositioner
 {
-
     /**
      * @param AbstractFrameDecorator $frame
      */

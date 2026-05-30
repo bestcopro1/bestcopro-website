@@ -22,8 +22,11 @@ abstract class ValueList extends Value
      * @param string $sSeparator
      * @param int $iLineNo
      */
-    public function __construct($aComponents = [], $sSeparator = ',', $iLineNo = 0)
-    {
+    public function __construct(
+        $aComponents = [],
+        $sSeparator = ",",
+        $iLineNo = 0,
+    ) {
         parent::__construct($iLineNo);
         if (!is_array($aComponents)) {
             $aComponents = [$aComponents];
@@ -92,9 +95,14 @@ abstract class ValueList extends Value
     public function render(OutputFormat $oOutputFormat)
     {
         return $oOutputFormat->implode(
-            $oOutputFormat->spaceBeforeListArgumentSeparator($this->sSeparator) . $this->sSeparator
-            . $oOutputFormat->spaceAfterListArgumentSeparator($this->sSeparator),
-            $this->aComponents
+            $oOutputFormat->spaceBeforeListArgumentSeparator(
+                $this->sSeparator,
+            ) .
+                $this->sSeparator .
+                $oOutputFormat->spaceAfterListArgumentSeparator(
+                    $this->sSeparator,
+                ),
+            $this->aComponents,
         );
     }
 }

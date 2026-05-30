@@ -13,7 +13,6 @@ namespace Dompdf;
  */
 class Exception extends \Exception
 {
-
     /**
      * Class constructor
      *

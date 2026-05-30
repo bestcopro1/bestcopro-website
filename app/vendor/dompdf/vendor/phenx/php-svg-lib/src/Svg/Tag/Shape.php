@@ -33,31 +33,29 @@ class Shape extends AbstractTag
         if ($this->hasShape) {
             $style = $surface->getStyle();
 
-            $fill   = $style->fill   && is_array($style->fill);
+            $fill = $style->fill && is_array($style->fill);
             $stroke = $style->stroke && is_array($style->stroke);
 
             if ($fill) {
                 if ($stroke) {
                     $surface->fillStroke(false);
                 } else {
-//                    if (is_string($style->fill)) {
-//                        /** @var LinearGradient|RadialGradient $gradient */
-//                        $gradient = $this->getDocument()->getDef($style->fill);
-//
-//                        var_dump($gradient->getStops());
-//                    }
+                    //                    if (is_string($style->fill)) {
+                    //                        /** @var LinearGradient|RadialGradient $gradient */
+                    //                        $gradient = $this->getDocument()->getDef($style->fill);
+                    //
+                    //                        var_dump($gradient->getStops());
+                    //                    }
 
                     $surface->fill();
                 }
-            }
-            elseif ($stroke) {
+            } elseif ($stroke) {
                 $surface->stroke(false);
-            }
-            else {
+            } else {
                 $surface->endPath();
             }
         }
 
         $surface->restore();
     }
-} 
+}

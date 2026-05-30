@@ -23,7 +23,7 @@ class Settings
      *
      * @var string
      */
-    public $sDefaultCharset = 'utf-8';
+    public $sDefaultCharset = "utf-8";
 
     /**
      * Lenient parsing. When used (which is true by default), the parser will not choke
@@ -35,7 +35,7 @@ class Settings
 
     private function __construct()
     {
-        $this->bMultibyteSupport = extension_loaded('mbstring');
+        $this->bMultibyteSupport = extension_loaded("mbstring");
     }
 
     /**

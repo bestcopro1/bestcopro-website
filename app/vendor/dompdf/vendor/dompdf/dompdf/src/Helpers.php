@@ -74,14 +74,16 @@ class Helpers
         // Is the url already fully qualified, a Data URI, or a reference to a named anchor?
         // File-protocol URLs may require additional processing (e.g. for URLs with a relative path)
         if (
-            (
-                mb_strpos($url_lc, "://") !== false
-                && !in_array(substr($url_lc, 0, 7), ["file://", "phar://"], true)
-            )
-            || mb_substr($url_lc, 0, 1) === "#"
-            || mb_strpos($url_lc, "data:") === 0
-            || mb_strpos($url_lc, "mailto:") === 0
-            || mb_strpos($url_lc, "tel:") === 0
+            (mb_strpos($url_lc, "://") !== false &&
+                !in_array(
+                    substr($url_lc, 0, 7),
+                    ["file://", "phar://"],
+                    true,
+                )) ||
+            mb_substr($url_lc, 0, 1) === "#" ||
+            mb_strpos($url_lc, "data:") === 0 ||
+            mb_strpos($url_lc, "mailto:") === 0 ||
+            mb_strpos($url_lc, "tel:") === 0
         ) {
             return $url;
         }
@@ -91,8 +93,8 @@ class Helpers
             $url = substr($url, 7);
             $protocol = "file://";
         } elseif (strpos($url_lc, "phar://") === 0) {
-            $res = substr($url, strpos($url_lc, ".phar")+5);
-            $url = substr($url, 7, strpos($url_lc, ".phar")-2);
+            $res = substr($url, strpos($url_lc, ".phar") + 5);
+            $url = substr($url, 7, strpos($url_lc, ".phar") - 2);
             $protocol = "phar://";
         }
 
@@ -105,9 +107,15 @@ class Helpers
             //drive: followed by a relative path would be a drive specific default folder.
             //not known in php app code, treat as abs path
             //($url[1] !== ':' || ($url[2]!=='\\' && $url[2]!=='/'))
-            if ($url[0] !== '/' && (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN' || (mb_strlen($url) > 1 && $url[0] !== '\\' && $url[1] !== ':'))) {
+            if (
+                $url[0] !== "/" &&
+                (strtoupper(substr(PHP_OS, 0, 3)) !== "WIN" ||
+                    (mb_strlen($url) > 1 &&
+                        $url[0] !== "\\" &&
+                        $url[1] !== ":"))
+            ) {
                 // For rel path and local access we ignore the host, and run the path through realpath()
-                $ret .= realpath($base_path) . '/';
+                $ret .= realpath($base_path) . "/";
             }
             $ret .= $url;
             $ret = preg_replace('/\?(.*)$/', "", $ret);
@@ -124,10 +132,10 @@ class Helpers
 
         $ret = $protocol;
         // Protocol relative urls (e.g. "//example.org/style.css")
-        if (strpos($url, '//') === 0) {
+        if (strpos($url, "//") === 0) {
             $ret .= substr($url, 2);
             //remote urls with backslash in html/css are not really correct, but lets be genereous
-        } elseif ($url[0] === '/' || $url[0] === '\\') {
+        } elseif ($url[0] === "/" || $url[0] === "\\") {
             // Absolute path
             $ret .= $host . $url;
         } else {
@@ -140,20 +148,25 @@ class Helpers
         $parsed_url = parse_url($ret);
 
         // reproduced from https://www.php.net/manual/en/function.parse-url.php#106731
-        $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
-        $host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
-        $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
-        $user     = isset($parsed_url['user']) ? $parsed_url['user'] : '';
-        $pass     = isset($parsed_url['pass']) ? ':' . $parsed_url['pass']  : '';
-        $pass     = ($user || $pass) ? "$pass@" : '';
-        $path     = isset($parsed_url['path']) ? $parsed_url['path'] : '';
-        $query    = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
-        $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : '';
-        
+        $scheme = isset($parsed_url["scheme"])
+            ? $parsed_url["scheme"] . "://"
+            : "";
+        $host = isset($parsed_url["host"]) ? $parsed_url["host"] : "";
+        $port = isset($parsed_url["port"]) ? ":" . $parsed_url["port"] : "";
+        $user = isset($parsed_url["user"]) ? $parsed_url["user"] : "";
+        $pass = isset($parsed_url["pass"]) ? ":" . $parsed_url["pass"] : "";
+        $pass = $user || $pass ? "$pass@" : "";
+        $path = isset($parsed_url["path"]) ? $parsed_url["path"] : "";
+        $query = isset($parsed_url["query"]) ? "?" . $parsed_url["query"] : "";
+        $fragment = isset($parsed_url["fragment"])
+            ? "#" . $parsed_url["fragment"]
+            : "";
+
         // partially reproduced from https://stackoverflow.com/a/1243431/264628
         /* replace '//' or '/./' or '/foo/../' with '/' */
-        $re = array('#(/\.?/)#', '#/(?!\.\.)[^/]+/\.\./#');
-        for ($n=1; $n>0; $path=preg_replace($re, '/', $path, -1, $n)) {}
+        $re = ["#(/\.?/)#", "#/(?!\.\.)[^/]+/\.\./#"];
+        for ($n = 1; $n > 0; $path = preg_replace($re, "/", $path, -1, $n)) {
+        }
 
         $ret = "$scheme$user$pass$host$port$path$query$fragment";
 
@@ -172,10 +185,16 @@ class Helpers
      * @param string $filename
      * @return string
      */
-    public static function buildContentDispositionHeader($dispositionType, $filename)
-    {
+    public static function buildContentDispositionHeader(
+        $dispositionType,
+        $filename,
+    ) {
         $encoding = mb_detect_encoding($filename);
-        $fallbackfilename = mb_convert_encoding($filename, "ISO-8859-1", $encoding);
+        $fallbackfilename = mb_convert_encoding(
+            $filename,
+            "ISO-8859-1",
+            $encoding,
+        );
         $fallbackfilename = str_replace("\"", "", $fallbackfilename);
         $encodedfilename = rawurlencode($filename);
 
@@ -202,10 +221,42 @@ class Helpers
      */
     public static function dec2roman($num): string
     {
-
-        static $ones = ["", "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix"];
-        static $tens = ["", "x", "xx", "xxx", "xl", "l", "lx", "lxx", "lxxx", "xc"];
-        static $hund = ["", "c", "cc", "ccc", "cd", "d", "dc", "dcc", "dccc", "cm"];
+        static $ones = [
+            "",
+            "i",
+            "ii",
+            "iii",
+            "iv",
+            "v",
+            "vi",
+            "vii",
+            "viii",
+            "ix",
+        ];
+        static $tens = [
+            "",
+            "x",
+            "xx",
+            "xxx",
+            "xl",
+            "l",
+            "lx",
+            "lxx",
+            "lxxx",
+            "xc",
+        ];
+        static $hund = [
+            "",
+            "c",
+            "cc",
+            "ccc",
+            "cd",
+            "d",
+            "dc",
+            "dcc",
+            "dccc",
+            "cm",
+        ];
         static $thou = ["", "m", "mm", "mmm"];
 
         if (!is_numeric($num)) {
@@ -216,7 +267,7 @@ class Helpers
             return (string) $num;
         }
 
-        $num = strrev((string)$num);
+        $num = strrev((string) $num);
 
         $ret = "";
         switch (mb_strlen($num)) {
@@ -277,15 +328,23 @@ class Helpers
      */
     public static function parse_data_uri($data_uri)
     {
-        if (!preg_match('/^data:(?P<mime>[a-z0-9\/+-.]+)(;charset=(?P<charset>[a-z0-9-])+)?(?P<base64>;base64)?\,(?P<data>.*)?/is', $data_uri, $match)) {
+        if (
+            !preg_match(
+                "/^data:(?P<mime>[a-z0-9\/+-.]+)(;charset=(?P<charset>[a-z0-9-])+)?(?P<base64>;base64)?\,(?P<data>.*)?/is",
+                $data_uri,
+                $match,
+            )
+        ) {
             return false;
         }
 
-        $match['data'] = rawurldecode($match['data']);
+        $match["data"] = rawurldecode($match["data"]);
         $result = [
-            'charset' => $match['charset'] ? $match['charset'] : 'US-ASCII',
-            'mime' => $match['mime'] ? $match['mime'] : 'text/plain',
-            'data' => $match['base64'] ? base64_decode($match['data']) : $match['data'],
+            "charset" => $match["charset"] ? $match["charset"] : "US-ASCII",
+            "mime" => $match["mime"] ? $match["mime"] : "text/plain",
+            "data" => $match["base64"]
+                ? base64_decode($match["data"])
+                : $match["data"],
         ];
 
         return $result;
@@ -307,19 +366,38 @@ class Helpers
      * @param string $uri The URI to encode
      * @return string The original URL with special characters encoded
      */
-    public static function encodeURI($uri) {
+    public static function encodeURI($uri)
+    {
         $unescaped = [
-            '%2D'=>'-','%5F'=>'_','%2E'=>'.','%21'=>'!', '%7E'=>'~',
-            '%2A'=>'*', '%27'=>"'", '%28'=>'(', '%29'=>')'
+            "%2D" => "-",
+            "%5F" => "_",
+            "%2E" => ".",
+            "%21" => "!",
+            "%7E" => "~",
+            "%2A" => "*",
+            "%27" => "'",
+            "%28" => "(",
+            "%29" => ")",
         ];
         $reserved = [
-            '%3B'=>';','%2C'=>',','%2F'=>'/','%3F'=>'?','%3A'=>':',
-            '%40'=>'@','%26'=>'&','%3D'=>'=','%2B'=>'+','%24'=>'$'
+            "%3B" => ";",
+            "%2C" => ",",
+            "%2F" => "/",
+            "%3F" => "?",
+            "%3A" => ":",
+            "%40" => "@",
+            "%26" => "&",
+            "%3D" => "=",
+            "%2B" => "+",
+            "%24" => '$',
         ];
         $score = [
-            '%23'=>'#'
+            "%23" => "#",
         ];
-        return strtr(rawurlencode(rawurldecode($uri)), array_merge($reserved, $unescaped, $score));
+        return strtr(
+            rawurlencode(rawurldecode($uri)),
+            array_merge($reserved, $unescaped, $score),
+        );
     }
 
     /**
@@ -333,8 +411,8 @@ class Helpers
      */
     public static function rle8_decode($str, $width)
     {
-        $lineWidth = $width + (3 - ($width - 1) % 4);
-        $out = '';
+        $lineWidth = $width + (3 - (($width - 1) % 4));
+        $out = "";
         $cnt = strlen($str);
 
         for ($i = 0; $i < $cnt; $i++) {
@@ -344,13 +422,13 @@ class Helpers
                     $i++;
                     switch (ord($str[$i])) {
                         case 0: # NEW LINE
-                            $padCnt = $lineWidth - strlen($out) % $lineWidth;
+                            $padCnt = $lineWidth - (strlen($out) % $lineWidth);
                             if ($padCnt < $lineWidth) {
                                 $out .= str_repeat(chr(0), $padCnt); # pad line
                             }
                             break;
                         case 1: # END OF FILE
-                            $padCnt = $lineWidth - strlen($out) % $lineWidth;
+                            $padCnt = $lineWidth - (strlen($out) % $lineWidth);
                             if ($padCnt < $lineWidth) {
                                 $out .= str_repeat(chr(0), $padCnt); # pad line
                             }
@@ -358,7 +436,8 @@ class Helpers
                         case 2: # DELTA
                             $i += 2;
                             break;
-                        default: # ABSOLUTE MODE
+                        default:
+                            # ABSOLUTE MODE
                             $num = ord($str[$i]);
                             for ($j = 0; $j < $num; $j++) {
                                 $out .= $str[++$i];
@@ -387,7 +466,7 @@ class Helpers
     public static function rle4_decode($str, $width)
     {
         $w = floor($width / 2) + ($width % 2);
-        $lineWidth = $w + (3 - (($width - 1) / 2) % 4);
+        $lineWidth = $w + (3 - ((($width - 1) / 2) % 4));
         $pixels = [];
         $cnt = strlen($str);
         $c = 0;
@@ -411,7 +490,8 @@ class Helpers
                         case 2: # DELTA
                             $i += 2;
                             break;
-                        default: # ABSOLUTE MODE
+                        default:
+                            # ABSOLUTE MODE
                             $num = ord($str[$i]);
                             for ($j = 0; $j < $num; $j++) {
                                 if ($j % 2 == 0) {
@@ -430,12 +510,12 @@ class Helpers
                 default:
                     $c = ord($str[++$i]);
                     for ($j = 0; $j < $o; $j++) {
-                        $pixels[] = ($j % 2 == 0 ? ($c & 240) >> 4 : $c & 15);
+                        $pixels[] = $j % 2 == 0 ? ($c & 240) >> 4 : $c & 15;
                     }
             }
         }
 
-        $out = '';
+        $out = "";
         if (count($pixels) % 2) {
             $pixels[] = 0;
         }
@@ -465,11 +545,16 @@ class Helpers
         $res = "";
 
         $arr = parse_url($url);
-        if ( isset($arr["scheme"]) ) {
+        if (isset($arr["scheme"])) {
             $arr["scheme"] = mb_strtolower($arr["scheme"]);
         }
 
-        if (isset($arr["scheme"]) && $arr["scheme"] !== "file" && $arr["scheme"] !== "phar" && strlen($arr["scheme"]) > 1) {
+        if (
+            isset($arr["scheme"]) &&
+            $arr["scheme"] !== "file" &&
+            $arr["scheme"] !== "phar" &&
+            strlen($arr["scheme"]) > 1
+        ) {
             $protocol = $arr["scheme"] . "://";
 
             if (isset($arr["user"])) {
@@ -496,7 +581,7 @@ class Helpers
                     $path = $arr["path"];
                     $file = "";
                 } else {
-                    $path = rtrim(dirname($arr["path"]), '/\\') . "/";
+                    $path = rtrim(dirname($arr["path"]), "/\\") . "/";
                     $file = basename($arr["path"]);
                 }
             }
@@ -508,9 +593,7 @@ class Helpers
             if (isset($arr["fragment"])) {
                 $file .= "#" . $arr["fragment"];
             }
-
         } else {
-
             $protocol = "";
             $host = ""; // localhost, really
 
@@ -523,20 +606,25 @@ class Helpers
             }
 
             if ($protocol === "phar://") {
-                $res = substr($url, stripos($url, ".phar")+5);
-                $url = substr($url, 7, stripos($url, ".phar")-2);
+                $res = substr($url, stripos($url, ".phar") + 5);
+                $url = substr($url, 7, stripos($url, ".phar") - 2);
             }
 
             $file = basename($url);
             $path = dirname($url) . "/";
         }
 
-        $ret = [$protocol, $host, $path, $file,
+        $ret = [
+            $protocol,
+            $host,
+            $path,
+            $file,
             "protocol" => $protocol,
             "host" => $host,
             "path" => $path,
             "file" => $file,
-            "resource" => $res];
+            "resource" => $res,
+        ];
         return $ret;
     }
 
@@ -549,10 +637,18 @@ class Helpers
     public static function dompdf_debug($type, $msg)
     {
         global $_DOMPDF_DEBUG_TYPES, $_dompdf_show_warnings, $_dompdf_debug;
-        if (isset($_DOMPDF_DEBUG_TYPES[$type]) && ($_dompdf_show_warnings || $_dompdf_debug)) {
+        if (
+            isset($_DOMPDF_DEBUG_TYPES[$type]) &&
+            ($_dompdf_show_warnings || $_dompdf_debug)
+        ) {
             $arr = debug_backtrace();
 
-            echo basename($arr[0]["file"]) . " (" . $arr[0]["line"] . "): " . $arr[1]["function"] . ": ";
+            echo basename($arr[0]["file"]) .
+                " (" .
+                $arr[0]["line"] .
+                "): " .
+                $arr[1]["function"] .
+                ": ";
             Helpers::pre_r($msg);
         }
     }
@@ -575,7 +671,18 @@ class Helpers
     public static function record_warnings($errno, $errstr, $errfile, $errline)
     {
         // Not a warning or notice
-        if (!($errno & (E_WARNING | E_NOTICE | E_USER_NOTICE | E_USER_WARNING | E_STRICT | E_DEPRECATED | E_USER_DEPRECATED))) {
+        if (
+            !(
+                $errno &
+                (E_WARNING |
+                    E_NOTICE |
+                    E_USER_NOTICE |
+                    E_USER_WARNING |
+                    E_STRICT |
+                    E_DEPRECATED |
+                    E_USER_DEPRECATED)
+            )
+        ) {
             throw new Exception($errstr . " $errno");
         }
 
@@ -595,17 +702,19 @@ class Helpers
      */
     public static function unichr($c)
     {
-        if ($c <= 0x7F) {
+        if ($c <= 0x7f) {
             return chr($c);
-        } elseif ($c <= 0x7FF) {
-            return chr(0xC0 | $c >> 6) . chr(0x80 | $c & 0x3F);
-        } elseif ($c <= 0xFFFF) {
-            return chr(0xE0 | $c >> 12) . chr(0x80 | $c >> 6 & 0x3F)
-            . chr(0x80 | $c & 0x3F);
-        } elseif ($c <= 0x10FFFF) {
-            return chr(0xF0 | $c >> 18) . chr(0x80 | $c >> 12 & 0x3F)
-            . chr(0x80 | $c >> 6 & 0x3F)
-            . chr(0x80 | $c & 0x3F);
+        } elseif ($c <= 0x7ff) {
+            return chr(0xc0 | ($c >> 6)) . chr(0x80 | ($c & 0x3f));
+        } elseif ($c <= 0xffff) {
+            return chr(0xe0 | ($c >> 12)) .
+                chr(0x80 | (($c >> 6) & 0x3f)) .
+                chr(0x80 | ($c & 0x3f));
+        } elseif ($c <= 0x10ffff) {
+            return chr(0xf0 | ($c >> 18)) .
+                chr(0x80 | (($c >> 12) & 0x3f)) .
+                chr(0x80 | (($c >> 6) & 0x3f)) .
+                chr(0x80 | ($c & 0x3f));
         }
         return false;
     }
@@ -631,9 +740,9 @@ class Helpers
         $y *= 255;
         $k *= 255;
 
-        $r = (1 - round(2.55 * ($c + $k)));
-        $g = (1 - round(2.55 * ($m + $k)));
-        $b = (1 - round(2.55 * ($y + $k)));
+        $r = 1 - round(2.55 * ($c + $k));
+        $g = 1 - round(2.55 * ($m + $k));
+        $b = 1 - round(2.55 * ($y + $k));
 
         if ($r < 0) {
             $r = 0;
@@ -645,10 +754,7 @@ class Helpers
             $b = 0;
         }
 
-        return [
-            $r, $g, $b,
-            "r" => $r, "g" => $g, "b" => $b
-        ];
+        return [$r, $g, $b, "r" => $r, "g" => $g, "b" => $b];
     }
 
     /**
@@ -672,9 +778,9 @@ class Helpers
         // Custom types
         $types = [
             IMAGETYPE_JPEG => "jpeg",
-            IMAGETYPE_GIF  => "gif",
-            IMAGETYPE_BMP  => "bmp",
-            IMAGETYPE_PNG  => "png",
+            IMAGETYPE_GIF => "gif",
+            IMAGETYPE_BMP => "bmp",
+            IMAGETYPE_PNG => "png",
             IMAGETYPE_WEBP => "webp",
         ];
 
@@ -685,7 +791,10 @@ class Helpers
 
             if ($data !== null) {
                 if (substr($data, 0, 2) === "BM") {
-                    $meta = unpack("vtype/Vfilesize/Vreserved/Voffset/Vheadersize/Vwidth/Vheight", $data);
+                    $meta = unpack(
+                        "vtype/Vfilesize/Vreserved/Voffset/Vheadersize/Vwidth/Vheight",
+                        $data,
+                    );
                     $width = (int) $meta["width"];
                     $height = (int) $meta["height"];
                     $type = "bmp";
@@ -712,64 +821,90 @@ class Helpers
     public static function imagecreatefrombmp($filename, $context = null)
     {
         if (!function_exists("imagecreatetruecolor")) {
-            trigger_error("The PHP GD extension is required, but is not installed.", E_ERROR);
+            trigger_error(
+                "The PHP GD extension is required, but is not installed.",
+                E_ERROR,
+            );
             return false;
         }
 
         // version 1.00
-        if (!($fh = fopen($filename, 'rb'))) {
-            trigger_error('imagecreatefrombmp: Can not open ' . $filename, E_USER_WARNING);
+        if (!($fh = fopen($filename, "rb"))) {
+            trigger_error(
+                "imagecreatefrombmp: Can not open " . $filename,
+                E_USER_WARNING,
+            );
             return false;
         }
 
         $bytes_read = 0;
 
         // read file header
-        $meta = unpack('vtype/Vfilesize/Vreserved/Voffset', fread($fh, 14));
+        $meta = unpack("vtype/Vfilesize/Vreserved/Voffset", fread($fh, 14));
 
         // check for bitmap
-        if ($meta['type'] != 19778) {
-            trigger_error('imagecreatefrombmp: ' . $filename . ' is not a bitmap!', E_USER_WARNING);
+        if ($meta["type"] != 19778) {
+            trigger_error(
+                "imagecreatefrombmp: " . $filename . " is not a bitmap!",
+                E_USER_WARNING,
+            );
             return false;
         }
 
         // read image header
-        $meta += unpack('Vheadersize/Vwidth/Vheight/vplanes/vbits/Vcompression/Vimagesize/Vxres/Vyres/Vcolors/Vimportant', fread($fh, 40));
+        $meta += unpack(
+            "Vheadersize/Vwidth/Vheight/vplanes/vbits/Vcompression/Vimagesize/Vxres/Vyres/Vcolors/Vimportant",
+            fread($fh, 40),
+        );
         $bytes_read += 40;
 
         // read additional bitfield header
-        if ($meta['compression'] == 3) {
-            $meta += unpack('VrMask/VgMask/VbMask', fread($fh, 12));
+        if ($meta["compression"] == 3) {
+            $meta += unpack("VrMask/VgMask/VbMask", fread($fh, 12));
             $bytes_read += 12;
         }
 
         // set bytes and padding
-        $meta['bytes'] = $meta['bits'] / 8;
-        $meta['decal'] = 4 - (4 * (($meta['width'] * $meta['bytes'] / 4) - floor($meta['width'] * $meta['bytes'] / 4)));
-        if ($meta['decal'] == 4) {
-            $meta['decal'] = 0;
+        $meta["bytes"] = $meta["bits"] / 8;
+        $meta["decal"] =
+            4 -
+            4 *
+                (($meta["width"] * $meta["bytes"]) / 4 -
+                    floor(($meta["width"] * $meta["bytes"]) / 4));
+        if ($meta["decal"] == 4) {
+            $meta["decal"] = 0;
         }
 
         // obtain imagesize
-        if ($meta['imagesize'] < 1) {
-            $meta['imagesize'] = $meta['filesize'] - $meta['offset'];
+        if ($meta["imagesize"] < 1) {
+            $meta["imagesize"] = $meta["filesize"] - $meta["offset"];
             // in rare cases filesize is equal to offset so we need to read physical size
-            if ($meta['imagesize'] < 1) {
-                $meta['imagesize'] = @filesize($filename) - $meta['offset'];
-                if ($meta['imagesize'] < 1) {
-                    trigger_error('imagecreatefrombmp: Can not obtain filesize of ' . $filename . '!', E_USER_WARNING);
+            if ($meta["imagesize"] < 1) {
+                $meta["imagesize"] = @filesize($filename) - $meta["offset"];
+                if ($meta["imagesize"] < 1) {
+                    trigger_error(
+                        "imagecreatefrombmp: Can not obtain filesize of " .
+                            $filename .
+                            "!",
+                        E_USER_WARNING,
+                    );
                     return false;
                 }
             }
         }
 
         // calculate colors
-        $meta['colors'] = !$meta['colors'] ? pow(2, $meta['bits']) : $meta['colors'];
+        $meta["colors"] = !$meta["colors"]
+            ? pow(2, $meta["bits"])
+            : $meta["colors"];
 
         // read color palette
         $palette = [];
-        if ($meta['bits'] < 16) {
-            $palette = unpack('l' . $meta['colors'], fread($fh, $meta['colors'] * 4));
+        if ($meta["bits"] < 16) {
+            $palette = unpack(
+                "l" . $meta["colors"],
+                fread($fh, $meta["colors"] * 4),
+            );
             // in rare cases the color value is signed
             if ($palette[1] < 0) {
                 foreach ($palette as $i => $color) {
@@ -779,66 +914,85 @@ class Helpers
         }
 
         // ignore extra bitmap headers
-        if ($meta['headersize'] > $bytes_read) {
-            fread($fh, $meta['headersize'] - $bytes_read);
+        if ($meta["headersize"] > $bytes_read) {
+            fread($fh, $meta["headersize"] - $bytes_read);
         }
 
         // create gd image
-        $im = imagecreatetruecolor($meta['width'], $meta['height']);
-        $data = fread($fh, $meta['imagesize']);
+        $im = imagecreatetruecolor($meta["width"], $meta["height"]);
+        $data = fread($fh, $meta["imagesize"]);
 
         // uncompress data
-        switch ($meta['compression']) {
+        switch ($meta["compression"]) {
             case 1:
-                $data = Helpers::rle8_decode($data, $meta['width']);
+                $data = Helpers::rle8_decode($data, $meta["width"]);
                 break;
             case 2:
-                $data = Helpers::rle4_decode($data, $meta['width']);
+                $data = Helpers::rle4_decode($data, $meta["width"]);
                 break;
         }
 
         $p = 0;
         $vide = chr(0);
-        $y = $meta['height'] - 1;
-        $error = 'imagecreatefrombmp: ' . $filename . ' has not enough data!';
+        $y = $meta["height"] - 1;
+        $error = "imagecreatefrombmp: " . $filename . " has not enough data!";
 
         // loop through the image data beginning with the lower left corner
         while ($y >= 0) {
             $x = 0;
-            while ($x < $meta['width']) {
-                switch ($meta['bits']) {
+            while ($x < $meta["width"]) {
+                switch ($meta["bits"]) {
                     case 32:
                     case 24:
-                        if (!($part = substr($data, $p, 3 /*$meta['bytes']*/))) {
+                        if (
+                            !($part = substr($data, $p, 3 /*$meta['bytes']*/))
+                        ) {
                             trigger_error($error, E_USER_WARNING);
                             return $im;
                         }
-                        $color = unpack('V', $part . $vide);
+                        $color = unpack("V", $part . $vide);
                         break;
                     case 16:
-                        if (!($part = substr($data, $p, 2 /*$meta['bytes']*/))) {
+                        if (
+                            !($part = substr($data, $p, 2 /*$meta['bytes']*/))
+                        ) {
                             trigger_error($error, E_USER_WARNING);
                             return $im;
                         }
-                        $color = unpack('v', $part);
+                        $color = unpack("v", $part);
 
-                        if (empty($meta['rMask']) || $meta['rMask'] != 0xf800) {
-                            $color[1] = (($color[1] & 0x7c00) >> 7) * 65536 + (($color[1] & 0x03e0) >> 2) * 256 + (($color[1] & 0x001f) << 3); // 555
+                        if (empty($meta["rMask"]) || $meta["rMask"] != 0xf800) {
+                            $color[1] =
+                                (($color[1] & 0x7c00) >> 7) * 65536 +
+                                (($color[1] & 0x03e0) >> 2) * 256 +
+                                (($color[1] & 0x001f) << 3); // 555
                         } else {
-                            $color[1] = (($color[1] & 0xf800) >> 8) * 65536 + (($color[1] & 0x07e0) >> 3) * 256 + (($color[1] & 0x001f) << 3); // 565
+                            $color[1] =
+                                (($color[1] & 0xf800) >> 8) * 65536 +
+                                (($color[1] & 0x07e0) >> 3) * 256 +
+                                (($color[1] & 0x001f) << 3); // 565
                         }
                         break;
                     case 8:
-                        $color = unpack('n', $vide . substr($data, $p, 1));
+                        $color = unpack("n", $vide . substr($data, $p, 1));
                         $color[1] = $palette[$color[1] + 1];
                         break;
                     case 4:
-                        $color = unpack('n', $vide . substr($data, floor($p), 1));
-                        $color[1] = ($p * 2) % 2 == 0 ? $color[1] >> 4 : $color[1] & 0x0F;
+                        $color = unpack(
+                            "n",
+                            $vide . substr($data, floor($p), 1),
+                        );
+                        $color[1] =
+                            ($p * 2) % 2 == 0
+                                ? $color[1] >> 4
+                                : $color[1] & 0x0f;
                         $color[1] = $palette[$color[1] + 1];
                         break;
                     case 1:
-                        $color = unpack('n', $vide . substr($data, floor($p), 1));
+                        $color = unpack(
+                            "n",
+                            $vide . substr($data, floor($p), 1),
+                        );
                         switch (($p * 8) % 8) {
                             case 0:
                                 $color[1] = $color[1] >> 7;
@@ -862,21 +1016,28 @@ class Helpers
                                 $color[1] = ($color[1] & 0x2) >> 1;
                                 break;
                             case 7:
-                                $color[1] = ($color[1] & 0x1);
+                                $color[1] = $color[1] & 0x1;
                                 break;
                         }
                         $color[1] = $palette[$color[1] + 1];
                         break;
                     default:
-                        trigger_error('imagecreatefrombmp: ' . $filename . ' has ' . $meta['bits'] . ' bits and this is not supported!', E_USER_WARNING);
+                        trigger_error(
+                            "imagecreatefrombmp: " .
+                                $filename .
+                                " has " .
+                                $meta["bits"] .
+                                " bits and this is not supported!",
+                            E_USER_WARNING,
+                        );
                         return false;
                 }
                 imagesetpixel($im, $x, $y, $color[1]);
                 $x++;
-                $p += $meta['bytes'];
+                $p += $meta["bytes"];
             }
             $y--;
-            $p += $meta['decal'];
+            $p += $meta["decal"];
         }
         fclose($fh);
         return $im;
@@ -894,23 +1055,45 @@ class Helpers
      * @param int $maxlen
      * @return string[]
      */
-    public static function getFileContent($uri, $context = null, $offset = 0, $maxlen = null)
-    {
+    public static function getFileContent(
+        $uri,
+        $context = null,
+        $offset = 0,
+        $maxlen = null,
+    ) {
         $content = null;
         $headers = null;
         [$protocol] = Helpers::explode_url($uri);
-        $is_local_path = in_array(strtolower($protocol), ["", "file://", "phar://"], true);
-        $can_use_curl = in_array(strtolower($protocol), ["http://", "https://"], true);
+        $is_local_path = in_array(
+            strtolower($protocol),
+            ["", "file://", "phar://"],
+            true,
+        );
+        $can_use_curl = in_array(
+            strtolower($protocol),
+            ["http://", "https://"],
+            true,
+        );
 
-        set_error_handler([self::class, 'record_warnings']);
+        set_error_handler([self::class, "record_warnings"]);
 
         try {
-            if ($is_local_path || ini_get('allow_url_fopen') || !$can_use_curl) {
+            if (
+                $is_local_path ||
+                ini_get("allow_url_fopen") ||
+                !$can_use_curl
+            ) {
                 if ($is_local_path === false) {
                     $uri = Helpers::encodeURI($uri);
                 }
                 if (isset($maxlen)) {
-                    $result = file_get_contents($uri, false, $context, $offset, $maxlen);
+                    $result = file_get_contents(
+                        $uri,
+                        false,
+                        $context,
+                        $offset,
+                        $maxlen,
+                    );
                 } else {
                     $result = file_get_contents($uri, false, $context, $offset);
                 }
@@ -920,8 +1103,7 @@ class Helpers
                 if (isset($http_response_header)) {
                     $headers = $http_response_header;
                 }
-
-            } elseif ($can_use_curl && function_exists('curl_exec')) {
+            } elseif ($can_use_curl && function_exists("curl_exec")) {
                 $curl = curl_init($uri);
 
                 curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -933,8 +1115,14 @@ class Helpers
                 if ($maxlen > 0) {
                     curl_setopt($curl, CURLOPT_BUFFERSIZE, 128);
                     curl_setopt($curl, CURLOPT_NOPROGRESS, false);
-                    curl_setopt($curl, CURLOPT_PROGRESSFUNCTION, function ($res, $download_size_total, $download_size, $upload_size_total, $upload_size) use ($maxlen) {
-                        return ($download_size > $maxlen) ? 1 : 0;
+                    curl_setopt($curl, CURLOPT_PROGRESSFUNCTION, function (
+                        $res,
+                        $download_size_total,
+                        $download_size,
+                        $upload_size_total,
+                        $upload_size,
+                    ) use ($maxlen) {
+                        return $download_size > $maxlen ? 1 : 0;
                     });
                 }
 
@@ -947,19 +1135,33 @@ class Helpers
                         $key = strtolower($stream) . ":" . strtolower($option);
                         switch ($key) {
                             case "curl:curl_verify_ssl_host":
-                                curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, !$value ? 0 : 2);
+                                curl_setopt(
+                                    $curl,
+                                    CURLOPT_SSL_VERIFYHOST,
+                                    !$value ? 0 : 2,
+                                );
                                 break;
                             case "curl:max_redirects":
                                 curl_setopt($curl, CURLOPT_MAXREDIRS, $value);
                                 break;
                             case "http:follow_location":
-                                curl_setopt($curl, CURLOPT_FOLLOWLOCATION, $value);
+                                curl_setopt(
+                                    $curl,
+                                    CURLOPT_FOLLOWLOCATION,
+                                    $value,
+                                );
                                 break;
                             case "http:header":
                                 if (is_string($value)) {
-                                    curl_setopt($curl, CURLOPT_HTTPHEADER, [$value]);
+                                    curl_setopt($curl, CURLOPT_HTTPHEADER, [
+                                        $value,
+                                    ]);
                                 } else {
-                                    curl_setopt($curl, CURLOPT_HTTPHEADER, $value);
+                                    curl_setopt(
+                                        $curl,
+                                        CURLOPT_HTTPHEADER,
+                                        $value,
+                                    );
                                 }
                                 break;
                             case "http:timeout":
@@ -970,7 +1172,11 @@ class Helpers
                                 break;
                             case "curl:curl_verify_ssl_peer":
                             case "ssl:verify_peer":
-                                curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, $value);
+                                curl_setopt(
+                                    $curl,
+                                    CURLOPT_SSL_VERIFYPEER,
+                                    $value,
+                                );
                                 break;
                         }
                     }
@@ -979,11 +1185,23 @@ class Helpers
                 $data = curl_exec($curl);
 
                 if ($data !== false && !curl_errno($curl)) {
-                    switch ($http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE)) {
+                    switch (
+                        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE)
+                    ) {
                         case 200:
-                            $raw_headers = substr($data, 0, curl_getinfo($curl, CURLINFO_HEADER_SIZE));
-                            $headers = preg_split("/[\n\r]+/", trim($raw_headers));
-                            $content = substr($data, curl_getinfo($curl, CURLINFO_HEADER_SIZE));
+                            $raw_headers = substr(
+                                $data,
+                                0,
+                                curl_getinfo($curl, CURLINFO_HEADER_SIZE),
+                            );
+                            $headers = preg_split(
+                                "/[\n\r]+/",
+                                trim($raw_headers),
+                            );
+                            $content = substr(
+                                $data,
+                                curl_getinfo($curl, CURLINFO_HEADER_SIZE),
+                            );
                             break;
                     }
                 }
@@ -1009,7 +1227,7 @@ class Helpers
 
         $str = mb_strtoupper(mb_substr($str, 0, 1)) . mb_substr($str, 1);
 
-        foreach ([' ', '.', ',', '!', '?', '-', '+'] as $s) {
+        foreach ([" ", ".", ",", "!", "?", "-", "+"] as $s) {
             $pos = 0;
             while (($pos = mb_strpos($str, $s, $pos)) !== false) {
                 $pos++;
@@ -1017,9 +1235,14 @@ class Helpers
                 if ($pos !== false && $pos < $max_len) {
                     // If the char we want to upper is the last char there is nothing to append behind
                     if ($pos + 1 < $max_len) {
-                        $str = mb_substr($str, 0, $pos) . mb_strtoupper(mb_substr($str, $pos, 1)) . mb_substr($str, $pos + 1);
+                        $str =
+                            mb_substr($str, 0, $pos) .
+                            mb_strtoupper(mb_substr($str, $pos, 1)) .
+                            mb_substr($str, $pos + 1);
                     } else {
-                        $str = mb_substr($str, 0, $pos) . mb_strtoupper(mb_substr($str, $pos, 1));
+                        $str =
+                            mb_substr($str, 0, $pos) .
+                            mb_strtoupper(mb_substr($str, $pos, 1));
                     }
                 }
             }

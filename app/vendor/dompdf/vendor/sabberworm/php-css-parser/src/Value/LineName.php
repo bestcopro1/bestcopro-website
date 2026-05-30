@@ -15,7 +15,7 @@ class LineName extends ValueList
      */
     public function __construct(array $aComponents = [], $iLineNo = 0)
     {
-        parent::__construct($aComponents, ' ', $iLineNo);
+        parent::__construct($aComponents, " ", $iLineNo);
     }
 
     /**
@@ -26,7 +26,7 @@ class LineName extends ValueList
      */
     public static function parse(ParserState $oParserState)
     {
-        $oParserState->consume('[');
+        $oParserState->consume("[");
         $oParserState->consumeWhiteSpace();
         $aNames = [];
         do {
@@ -34,7 +34,7 @@ class LineName extends ValueList
                 try {
                     $aNames[] = $oParserState->parseIdentifier();
                 } catch (UnexpectedTokenException $e) {
-                    if (!$oParserState->comes(']')) {
+                    if (!$oParserState->comes("]")) {
                         throw $e;
                     }
                 }
@@ -42,8 +42,8 @@ class LineName extends ValueList
                 $aNames[] = $oParserState->parseIdentifier();
             }
             $oParserState->consumeWhiteSpace();
-        } while (!$oParserState->comes(']'));
-        $oParserState->consume(']');
+        } while (!$oParserState->comes("]"));
+        $oParserState->consume("]");
         return new LineName($aNames, $oParserState->currentLine());
     }
 
@@ -60,6 +60,6 @@ class LineName extends ValueList
      */
     public function render(OutputFormat $oOutputFormat)
     {
-        return '[' . parent::render(OutputFormat::createCompact()) . ']';
+        return "[" . parent::render(OutputFormat::createCompact()) . "]";
     }
 }

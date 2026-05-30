@@ -14,7 +14,6 @@ use Dompdf\FrameReflower\Block;
  */
 class Fixed extends Absolute
 {
-
     /**
      * @param AbstractFrameDecorator $frame
      */
@@ -36,23 +35,53 @@ class Fixed extends Absolute
                 $p->add_line();
             }
             // Compute the margins of the @page style
-            $margin_top = (float)$initialcb_style->length_in_pt($initialcb_style->margin_top, $initialcb["h"]);
-            $margin_right = (float)$initialcb_style->length_in_pt($initialcb_style->margin_right, $initialcb["w"]);
-            $margin_bottom = (float)$initialcb_style->length_in_pt($initialcb_style->margin_bottom, $initialcb["h"]);
-            $margin_left = (float)$initialcb_style->length_in_pt($initialcb_style->margin_left, $initialcb["w"]);
+            $margin_top = (float) $initialcb_style->length_in_pt(
+                $initialcb_style->margin_top,
+                $initialcb["h"],
+            );
+            $margin_right = (float) $initialcb_style->length_in_pt(
+                $initialcb_style->margin_right,
+                $initialcb["w"],
+            );
+            $margin_bottom = (float) $initialcb_style->length_in_pt(
+                $initialcb_style->margin_bottom,
+                $initialcb["h"],
+            );
+            $margin_left = (float) $initialcb_style->length_in_pt(
+                $initialcb_style->margin_left,
+                $initialcb["w"],
+            );
 
             // The needed computed style of the element
-            $height = (float)$style->length_in_pt($style->get_specified("height"), $initialcb["h"]);
-            $width = (float)$style->length_in_pt($style->get_specified("width"), $initialcb["w"]);
+            $height = (float) $style->length_in_pt(
+                $style->get_specified("height"),
+                $initialcb["h"],
+            );
+            $width = (float) $style->length_in_pt(
+                $style->get_specified("width"),
+                $initialcb["w"],
+            );
 
-            $top = $style->length_in_pt($style->get_specified("top"), $initialcb["h"]);
-            $right = $style->length_in_pt($style->get_specified("right"), $initialcb["w"]);
-            $bottom = $style->length_in_pt($style->get_specified("bottom"), $initialcb["h"]);
-            $left = $style->length_in_pt($style->get_specified("left"), $initialcb["w"]);
+            $top = $style->length_in_pt(
+                $style->get_specified("top"),
+                $initialcb["h"],
+            );
+            $right = $style->length_in_pt(
+                $style->get_specified("right"),
+                $initialcb["w"],
+            );
+            $bottom = $style->length_in_pt(
+                $style->get_specified("bottom"),
+                $initialcb["h"],
+            );
+            $left = $style->length_in_pt(
+                $style->get_specified("left"),
+                $initialcb["w"],
+            );
 
             $y = $margin_top;
             if (isset($top)) {
-                $y = (float)$top + $margin_top;
+                $y = (float) $top + $margin_top;
                 if ($top === "auto") {
                     $y = $margin_top;
                     if (isset($bottom) && $bottom !== "auto") {
@@ -68,7 +97,7 @@ class Fixed extends Absolute
 
             $x = $margin_left;
             if (isset($left)) {
-                $x = (float)$left + $margin_left;
+                $x = (float) $left + $margin_left;
                 if ($left === "auto") {
                     $x = $margin_left;
                     if (isset($right) && $right !== "auto") {

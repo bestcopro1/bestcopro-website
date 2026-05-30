@@ -74,7 +74,7 @@ class KeyFrame extends CSSList implements AtRule
     {
         $sResult = "@{$this->vendorKeyFrame} {$this->animationName}{$oOutputFormat->spaceBeforeOpeningBrace()}{";
         $sResult .= parent::render($oOutputFormat);
-        $sResult .= '}';
+        $sResult .= "}";
         return $sResult;
     }
 

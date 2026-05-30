@@ -17,7 +17,6 @@ use Dompdf\FrameDecorator\Block as BlockFrameDecorator;
  */
 class TableCell extends BlockFrameDecorator
 {
-
     protected $_resolved_borders;
     protected $_content_height;
 
@@ -67,16 +66,16 @@ class TableCell extends BlockFrameDecorator
     function set_cell_height($height)
     {
         $style = $this->get_style();
-        $v_space = (float)$style->length_in_pt(
+        $v_space = (float) $style->length_in_pt(
             [
                 $style->margin_top,
                 $style->padding_top,
                 $style->border_top_width,
                 $style->border_bottom_width,
                 $style->padding_bottom,
-                $style->margin_bottom
+                $style->margin_bottom,
             ],
-            (float)$style->length_in_pt($style->height)
+            (float) $style->length_in_pt($style->height),
         );
 
         $new_height = $height - $v_space;
@@ -89,7 +88,7 @@ class TableCell extends BlockFrameDecorator
             switch ($style->vertical_align) {
                 default:
                 case "baseline":
-                    // FIXME: this isn't right
+                // FIXME: this isn't right
 
                 case "top":
                     // Don't need to do anything

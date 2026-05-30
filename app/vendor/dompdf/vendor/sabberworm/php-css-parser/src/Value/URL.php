@@ -33,17 +33,20 @@ class URL extends PrimitiveValue
      */
     public static function parse(ParserState $oParserState)
     {
-        $bUseUrl = $oParserState->comes('url', true);
+        $bUseUrl = $oParserState->comes("url", true);
         if ($bUseUrl) {
-            $oParserState->consume('url');
+            $oParserState->consume("url");
             $oParserState->consumeWhiteSpace();
-            $oParserState->consume('(');
+            $oParserState->consume("(");
         }
         $oParserState->consumeWhiteSpace();
-        $oResult = new URL(CSSString::parse($oParserState), $oParserState->currentLine());
+        $oResult = new URL(
+            CSSString::parse($oParserState),
+            $oParserState->currentLine(),
+        );
         if ($bUseUrl) {
             $oParserState->consumeWhiteSpace();
-            $oParserState->consume(')');
+            $oParserState->consume(")");
         }
         return $oResult;
     }

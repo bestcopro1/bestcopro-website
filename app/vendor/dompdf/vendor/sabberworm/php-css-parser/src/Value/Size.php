@@ -14,17 +14,39 @@ class Size extends PrimitiveValue
      *
      * @var array<int, string>
      */
-    const ABSOLUTE_SIZE_UNITS = ['px', 'cm', 'mm', 'mozmm', 'in', 'pt', 'pc', 'vh', 'vw', 'vmin', 'vmax', 'rem'];
+    const ABSOLUTE_SIZE_UNITS = [
+        "px",
+        "cm",
+        "mm",
+        "mozmm",
+        "in",
+        "pt",
+        "pc",
+        "vh",
+        "vw",
+        "vmin",
+        "vmax",
+        "rem",
+    ];
 
     /**
      * @var array<int, string>
      */
-    const RELATIVE_SIZE_UNITS = ['%', 'em', 'ex', 'ch', 'fr'];
+    const RELATIVE_SIZE_UNITS = ["%", "em", "ex", "ch", "fr"];
 
     /**
      * @var array<int, string>
      */
-    const NON_SIZE_UNITS = ['deg', 'grad', 'rad', 's', 'ms', 'turns', 'Hz', 'kHz'];
+    const NON_SIZE_UNITS = [
+        "deg",
+        "grad",
+        "rad",
+        "s",
+        "ms",
+        "turns",
+        "Hz",
+        "kHz",
+    ];
 
     /**
      * @var array<int, array<string, string>>|null
@@ -52,10 +74,14 @@ class Size extends PrimitiveValue
      * @param bool $bIsColorComponent
      * @param int $iLineNo
      */
-    public function __construct($fSize, $sUnit = null, $bIsColorComponent = false, $iLineNo = 0)
-    {
+    public function __construct(
+        $fSize,
+        $sUnit = null,
+        $bIsColorComponent = false,
+        $iLineNo = 0,
+    ) {
         parent::__construct($iLineNo);
-        $this->fSize = (float)$fSize;
+        $this->fSize = (float) $fSize;
         $this->sUnit = $sUnit;
         $this->bIsColorComponent = $bIsColorComponent;
     }
@@ -68,15 +94,17 @@ class Size extends PrimitiveValue
      * @throws UnexpectedEOFException
      * @throws UnexpectedTokenException
      */
-    public static function parse(ParserState $oParserState, $bIsColorComponent = false)
-    {
-        $sSize = '';
-        if ($oParserState->comes('-')) {
-            $sSize .= $oParserState->consume('-');
+    public static function parse(
+        ParserState $oParserState,
+        $bIsColorComponent = false,
+    ) {
+        $sSize = "";
+        if ($oParserState->comes("-")) {
+            $sSize .= $oParserState->consume("-");
         }
-        while (is_numeric($oParserState->peek()) || $oParserState->comes('.')) {
-            if ($oParserState->comes('.')) {
-                $sSize .= $oParserState->consume('.');
+        while (is_numeric($oParserState->peek()) || $oParserState->comes(".")) {
+            if ($oParserState->comes(".")) {
+                $sSize .= $oParserState->consume(".");
             } else {
                 $sSize .= $oParserState->consume(1);
             }
@@ -93,7 +121,12 @@ class Size extends PrimitiveValue
                 }
             }
         }
-        return new Size((float)$sSize, $sUnit, $bIsColorComponent, $oParserState->currentLine());
+        return new Size(
+            (float) $sSize,
+            $sUnit,
+            $bIsColorComponent,
+            $oParserState->currentLine(),
+        );
     }
 
     /**
@@ -103,7 +136,14 @@ class Size extends PrimitiveValue
     {
         if (!is_array(self::$SIZE_UNITS)) {
             self::$SIZE_UNITS = [];
-            foreach (array_merge(self::ABSOLUTE_SIZE_UNITS, self::RELATIVE_SIZE_UNITS, self::NON_SIZE_UNITS) as $val) {
+            foreach (
+                array_merge(
+                    self::ABSOLUTE_SIZE_UNITS,
+                    self::RELATIVE_SIZE_UNITS,
+                    self::NON_SIZE_UNITS,
+                )
+                as $val
+            ) {
                 $iSize = strlen($val);
                 if (!isset(self::$SIZE_UNITS[$iSize])) {
                     self::$SIZE_UNITS[$iSize] = [];
@@ -140,7 +180,7 @@ class Size extends PrimitiveValue
      */
     public function setSize($fSize)
     {
-        $this->fSize = (float)$fSize;
+        $this->fSize = (float) $fSize;
     }
 
     /**
@@ -200,10 +240,11 @@ class Size extends PrimitiveValue
     public function render(OutputFormat $oOutputFormat)
     {
         $l = localeconv();
-        $sPoint = preg_quote($l['decimal_point'], '/');
-        $sSize = preg_match("/[\d\.]+e[+-]?\d+/i", (string)$this->fSize)
-            ? preg_replace("/$sPoint?0+$/", "", sprintf("%f", $this->fSize)) : $this->fSize;
-        return preg_replace(["/$sPoint/", "/^(-?)0\./"], ['.', '$1.'], $sSize)
-            . ($this->sUnit === null ? '' : $this->sUnit);
+        $sPoint = preg_quote($l["decimal_point"], "/");
+        $sSize = preg_match("/[\d\.]+e[+-]?\d+/i", (string) $this->fSize)
+            ? preg_replace("/$sPoint?0+$/", "", sprintf("%f", $this->fSize))
+            : $this->fSize;
+        return preg_replace(["/$sPoint/", "/^(-?)0\./"], [".", '$1.'], $sSize) .
+            ($this->sUnit === null ? "" : $this->sUnit);
     }
 }

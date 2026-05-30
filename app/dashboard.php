@@ -1,73 +1,98 @@
 ﻿<?php
- if(!isset($_SESSION)) {
-	session_start();
+if (!isset($_SESSION)) {
+    session_start();
 }
 // If the user is not logged in redirect to the login page...
-if (!isset($_SESSION['loggedin'], $_SESSION['id']) || (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] !== "ImIn") || (isset($_SESSION['id']) && !is_int(intval($_SESSION['id'])))) {
-	header('Location: ./login.php');
-	exit;
+if (
+    !isset($_SESSION["loggedin"], $_SESSION["id"]) ||
+    (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] !== "ImIn") ||
+    (isset($_SESSION["id"]) && !is_int(intval($_SESSION["id"])))
+) {
+    header("Location: ./login.php");
+    exit();
 }
-include_once('config/db.php');
-include_once('controllers/functions.php');
+include_once "config/db.php";
+include_once "controllers/functions.php";
 $connection = $GLOBALS["connection"];
 $page = null;
-if (isset($_GET['page'])) {
-	$page = filter_input(INPUT_GET, 'page', FILTER_SANITIZE_STRING);
+if (isset($_GET["page"])) {
+    $page = filter_input(INPUT_GET, "page", FILTER_SANITIZE_STRING);
 }
 $id_copropriete = null;
-if (isset($_GET['copropriete'])) {
-	$id_copropriete = filter_input(INPUT_GET, 'copropriete', FILTER_SANITIZE_STRING);
-	$copropriete = getCopropriete($id_copropriete, $connection);
-	if (count($copropriete) > 0) {
-		$_SESSION['id_copropriete'] = $copropriete[0]["id"];
-		$id_exercice = null;
-		$_SESSION['id_exercice'] = "";
-	} else {
-		header('Location: ./index.php');
-		exit;
-	}
+if (isset($_GET["copropriete"])) {
+    $id_copropriete = filter_input(
+        INPUT_GET,
+        "copropriete",
+        FILTER_SANITIZE_STRING,
+    );
+    $copropriete = getCopropriete($id_copropriete, $connection);
+    if (count($copropriete) > 0) {
+        $_SESSION["id_copropriete"] = $copropriete[0]["id"];
+        $id_exercice = null;
+        $_SESSION["id_exercice"] = "";
+    } else {
+        header("Location: ./index.php");
+        exit();
+    }
 }
-if (!isset($_SESSION['id_copropriete']) || (isset($_SESSION['id_copropriete']) && $_SESSION['id_copropriete'] === "")) {
-	header('Location: ./index.php');
-	exit;
+if (
+    !isset($_SESSION["id_copropriete"]) ||
+    (isset($_SESSION["id_copropriete"]) && $_SESSION["id_copropriete"] === "")
+) {
+    header("Location: ./index.php");
+    exit();
 } else {
-	$id_copropriete = $_SESSION['id_copropriete'];
+    $id_copropriete = $_SESSION["id_copropriete"];
 }
 $id_exercice = null;
-if (isset($_GET['exercice'])) {
-	$id_exercice = filter_input(INPUT_GET, 'exercice', FILTER_SANITIZE_STRING);
-	$exercice = getExercice($id_exercice, null, $connection);
-	if (count($exercice) > 0) {
-		$_SESSION['id_exercice'] = $exercice[0]["id"];
-	} else {
-		$_SESSION['id_exercice'] = getExercice(null, $id_copropriete, $connection)[0]["id"];
-	}
+if (isset($_GET["exercice"])) {
+    $id_exercice = filter_input(INPUT_GET, "exercice", FILTER_SANITIZE_STRING);
+    $exercice = getExercice($id_exercice, null, $connection);
+    if (count($exercice) > 0) {
+        $_SESSION["id_exercice"] = $exercice[0]["id"];
+    } else {
+        $_SESSION["id_exercice"] = getExercice(
+            null,
+            $id_copropriete,
+            $connection,
+        )[0]["id"];
+    }
 }
-if (!isset($_SESSION['id_exercice']) || (isset($_SESSION['id_exercice']) && $_SESSION['id_exercice'] === "")) {
-	$id_exercice = getExercice(null, $id_copropriete, $connection)[0]["id"];
+if (
+    !isset($_SESSION["id_exercice"]) ||
+    (isset($_SESSION["id_exercice"]) && $_SESSION["id_exercice"] === "")
+) {
+    $id_exercice = getExercice(null, $id_copropriete, $connection)[0]["id"];
 } else {
-	$id_exercice = $_SESSION['id_exercice'];
+    $id_exercice = $_SESSION["id_exercice"];
 }
 $copropriete = getCopropriete($id_copropriete, $connection);
-$date = date('Y-m-d H:i:s');
+$date = date("Y-m-d H:i:s");
 $echeances = getEcheance(null, $date, null, $connection);
-foreach($echeances as $echeance) {
-	$request = "INSERT INTO notificationsyndic (description, date, nomPage, idPage, id_copropriete) 
+foreach ($echeances as $echeance) {
+    $request = "INSERT INTO notificationsyndic (description, date, nomPage, idPage, id_copropriete) 
 				VALUES (?, ?, ?, ?, ?)";
-	$description = "Rappel de la date d'échéance";
-	$nomPage = "echeances";
-	if ($insert_stmt = $connection->prepare($request)) {
-		$insert_stmt->bind_param('sssss', $description, $date, $nomPage, $echeance["id"], $echeance["id_copropriete"]);
-		// Execute the prepared query.
-		if (! $insert_stmt->execute()) {
-			echo $connection->error;
-			exit();
-		}
-	}
+    $description = "Rappel de la date d'échéance";
+    $nomPage = "echeances";
+    if ($insert_stmt = $connection->prepare($request)) {
+        $insert_stmt->bind_param(
+            "sssss",
+            $description,
+            $date,
+            $nomPage,
+            $echeance["id"],
+            $echeance["id_copropriete"],
+        );
+        // Execute the prepared query.
+        if (!$insert_stmt->execute()) {
+            echo $connection->error;
+            exit();
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
-<html lang="en" data-exercice="<?=$_SESSION['id_exercice']?>">
+<html lang="en" data-exercice="<?= $_SESSION["id_exercice"] ?>">
 <head>
     <meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -84,19 +109,27 @@ foreach($echeances as $echeance) {
 	<link rel="shortcut icon" type="image/png" href="images\favicon.png">
 	<!-- Datatable -->
     <link href="vendor\datatables\css\jquery.dataTables.min.css" rel="stylesheet">
-	<?php if ($page == "actions" && (isset($_GET["action"]) && ($_GET["action"] == "add" || $_GET["action"] == "update"))) : ?>
+	<?php if (
+     $page == "actions" &&
+     (isset($_GET["action"]) &&
+         ($_GET["action"] == "add" || $_GET["action"] == "update"))
+ ): ?>
 	<!-- Nouislider -->
 	<link rel="stylesheet" href="vendor\nouislider\nouislider.min.css">
 	<?php endif; ?>
-	<?php if ($page == "reclamations" && (isset($_GET["action"]) && ($_GET["action"] == "add" || $_GET["action"] == "update"))) : ?>
+	<?php if (
+     $page == "reclamations" &&
+     (isset($_GET["action"]) &&
+         ($_GET["action"] == "add" || $_GET["action"] == "update"))
+ ): ?>
 	<!-- lightgallery -->
 	<link href="vendor\lightgallery\css\lightgallery.min.css" rel="stylesheet">
 	<?php endif; ?>
-	<?php if ($page == "dashboard" || $page == null || $page == "") : ?>
+	<?php if ($page == "dashboard" || $page == null || $page == ""): ?>
 	<!-- owl-carousel -->
 	<link href="vendor\owl-carousel\owl.carousel.css" rel="stylesheet">
 	<?php endif; ?>
-	<?php if ($page == "assemblee") : ?>
+	<?php if ($page == "assemblee"): ?>
 	<!-- dropzone -->
 	<link href="vendor\dropzone\dist\dropzone.css" rel="stylesheet">
 	<?php endif; ?>
@@ -125,7 +158,7 @@ foreach($echeances as $echeance) {
     ***********************************-->
     <div id="main-wrapper">
 	
-		<?php include('./header.php'); ?>
+		<?php include "./header.php"; ?>
 
         <!--**********************************
             Sidebar start
@@ -135,10 +168,10 @@ foreach($echeances as $echeance) {
 				<div class="dropdown header-profile2 ">
 					<a class="nav-link " href="javascript:void(0);" role="button" data-bs-toggle="dropdown">
 						<div class="header-info2 d-flex align-items-center">
-							<img src="<?=$image?>" alt="">
+							<img src="<?= $image ?>" alt="">
 							<div class="d-flex align-items-center sidebar-info">
 								<div>
-									<span class="font-w400 d-block"><?=$_SESSION['prenom']?></span>
+									<span class="font-w400 d-block"><?= $_SESSION["prenom"] ?></span>
 									<small class="text-end font-w400">Superadmin</small>
 								</div>	
 								<i class="fas fa-chevron-down"></i>
@@ -158,100 +191,192 @@ foreach($echeances as $echeance) {
 					</div>
 				</div>
 				<ul class="metismenu" id="menu">
-					<li class="<?php if($page == 'dashboard' || $page == '' || $page == null) echo 'mm-active'; ?>">
-						<a href="dashboard.php" class="<?php if($page == 'dashboard' || $page == '' || $page == null) echo 'mm-active'; ?>" aria-expanded="false">
+					<li class="<?php if ($page == "dashboard" || $page == "" || $page == null) {
+         echo "mm-active";
+     } ?>">
+						<a href="dashboard.php" class="<?php if (
+          $page == "dashboard" ||
+          $page == "" ||
+          $page == null
+      ) {
+          echo "mm-active";
+      } ?>" aria-expanded="false">
 							<i class="bi-columns-gap"></i>
 							<span class="nav-text">Tableau de bord</span>
 						</a>
 					</li>
-                    <li class="<?php if($page == 'copropriete' || $page == 'lots' || $page == 'proprietaires') echo 'mm-active'; ?>">
+                    <li class="<?php if (
+                        $page == "copropriete" ||
+                        $page == "lots" ||
+                        $page == "proprietaires"
+                    ) {
+                        echo "mm-active";
+                    } ?>">
 						<a class="has-arrow" href="javascript:void()" aria-expanded="false">
 							<i class="bi-building"></i>
 							<span class="nav-text">Copropriété</span>
 						</a>
 						<ul aria-expanded="false">
-                            <li class="<?php if($page == 'copropriete') echo 'mm-active'; ?>">
-								<a href="dashboard.php?page=copropriete" class="<?php if($page == 'copropriete') echo 'mm-active'; ?>">Copropriété</a>
+                            <li class="<?php if ($page == "copropriete") {
+                                echo "mm-active";
+                            } ?>">
+								<a href="dashboard.php?page=copropriete" class="<?php if (
+            $page == "copropriete"
+        ) {
+            echo "mm-active";
+        } ?>">Copropriété</a>
 							</li>
-                            <li class="<?php if($page == 'lots') echo 'mm-active'; ?>">
-								<a href="dashboard.php?page=lots" class="<?php if($page == 'lots') echo 'mm-active'; ?>">Lots</a>
+                            <li class="<?php if ($page == "lots") {
+                                echo "mm-active";
+                            } ?>">
+								<a href="dashboard.php?page=lots" class="<?php if ($page == "lots") {
+            echo "mm-active";
+        } ?>">Lots</a>
 							</li>
-                            <li class="<?php if($page == 'contentieux') echo 'mm-active'; ?>">
-								<a href="dashboard.php?page=contentieux" class="<?php if($page == 'contentieux') echo 'mm-active'; ?>">Contentieux</a>
+                            <li class="<?php if ($page == "contentieux") {
+                                echo "mm-active";
+                            } ?>">
+								<a href="dashboard.php?page=contentieux" class="<?php if (
+            $page == "contentieux"
+        ) {
+            echo "mm-active";
+        } ?>">Contentieux</a>
 							</li>
-                            <li class="<?php if($page == 'proprietaires') echo 'mm-active'; ?>">
-								<a href="dashboard.php?page=proprietaires" class="<?php if($page == 'proprietaires') echo 'mm-active'; ?>">Propriétaires</a>
+                            <li class="<?php if ($page == "proprietaires") {
+                                echo "mm-active";
+                            } ?>">
+								<a href="dashboard.php?page=proprietaires" class="<?php if (
+            $page == "proprietaires"
+        ) {
+            echo "mm-active";
+        } ?>">Propriétaires</a>
 							</li>
                         </ul>
 					</li>
-                    <li class="<?php if($page == 'paiements' || $page == 'depenses' || $page == 'fournisseurs' || $page == 'fonctionnement' || $page == 'investissement') echo 'mm-active'; ?>">
+                    <li class="<?php if (
+                        $page == "paiements" ||
+                        $page == "depenses" ||
+                        $page == "fournisseurs" ||
+                        $page == "fonctionnement" ||
+                        $page == "investissement"
+                    ) {
+                        echo "mm-active";
+                    } ?>">
 						<a class="has-arrow" href="javascript:void()" aria-expanded="false">
 							<i class="bi-calculator"></i>
 							<span class="nav-text">Gestion financière</span>
 						</a>
                         <ul aria-expanded="false">
-							<li class="<?php if($page == 'paiements') echo 'mm-active'; ?>">
-								<a href="dashboard.php?page=paiements" class="<?php if($page == 'paiements') echo 'mm-active'; ?>">Paiements</a>
+							<li class="<?php if ($page == "paiements") {
+           echo "mm-active";
+       } ?>">
+								<a href="dashboard.php?page=paiements" class="<?php if ($page == "paiements") {
+            echo "mm-active";
+        } ?>">Paiements</a>
 							</li>
-							<li class="<?php if($page == 'depenses') echo 'mm-active'; ?>">
-								<a href="dashboard.php?page=depenses" class="<?php if($page == 'depenses') echo 'mm-active'; ?>">Dépenses</a>
+							<li class="<?php if ($page == "depenses") {
+           echo "mm-active";
+       } ?>">
+								<a href="dashboard.php?page=depenses" class="<?php if ($page == "depenses") {
+            echo "mm-active";
+        } ?>">Dépenses</a>
 							</li>
-                            <li class="<?php if($page == 'fournisseurs') echo 'mm-active'; ?>">
-								<a href="dashboard.php?page=fournisseurs" class="<?php if($page == 'fournisseurs') echo 'mm-active'; ?>">Fournisseurs</a>
+                            <li class="<?php if ($page == "fournisseurs") {
+                                echo "mm-active";
+                            } ?>">
+								<a href="dashboard.php?page=fournisseurs" class="<?php if (
+            $page == "fournisseurs"
+        ) {
+            echo "mm-active";
+        } ?>">Fournisseurs</a>
 							</li>
-							<li class="<?php if($page == 'fonctionnement') echo 'mm-active'; ?>">
-								<a href="dashboard.php?page=fonctionnement" class="<?php if($page == 'fonctionnement') echo 'mm-active'; ?>">Budget de fonctionnement</a>
+							<li class="<?php if ($page == "fonctionnement") {
+           echo "mm-active";
+       } ?>">
+								<a href="dashboard.php?page=fonctionnement" class="<?php if (
+            $page == "fonctionnement"
+        ) {
+            echo "mm-active";
+        } ?>">Budget de fonctionnement</a>
 							</li>
-                            <li class="<?php if($page == 'investissement') echo 'mm-active'; ?>">
-								<a href="dashboard.php?page=investissement" class="<?php if($page == 'investissement') echo 'mm-active'; ?>">Budget d'investissement</a>
+                            <li class="<?php if ($page == "investissement") {
+                                echo "mm-active";
+                            } ?>">
+								<a href="dashboard.php?page=investissement" class="<?php if (
+            $page == "investissement"
+        ) {
+            echo "mm-active";
+        } ?>">Budget d'investissement</a>
 							</li>
                         </ul>
                     </li>
-					<?php
-					if ($_SESSION['id_usertype'] === "1" || $_SESSION['id_usertype'] === "2" || $_SESSION['id_usertype'] === "3") :
-					?>
-					<li class="<?php if($page == 'assemblee') echo 'mm-active'; ?>">
-						<a href="dashboard.php?page=assemblee" class="<?php if($page == 'assemblee') echo 'mm-active'; ?>" aria-expanded="false">
+					<?php if (
+         $_SESSION["id_usertype"] === "1" ||
+         $_SESSION["id_usertype"] === "2" ||
+         $_SESSION["id_usertype"] === "3"
+     ): ?>
+					<li class="<?php if ($page == "assemblee") {
+         echo "mm-active";
+     } ?>">
+						<a href="dashboard.php?page=assemblee" class="<?php if ($page == "assemblee") {
+          echo "mm-active";
+      } ?>" aria-expanded="false">
 							<i class="bi-journal-check"></i>
 							<span class="nav-text">Assemblée générale</span>
 						</a>
 					</li>
-					<?php
-					endif;
-					?>
-					<li class="<?php if($page == 'reclamations') echo 'mm-active'; ?>">
-						<a href="dashboard.php?page=reclamations" class="<?php if($page == 'reclamations') echo 'mm-active'; ?>" aria-expanded="false">
+					<?php endif; ?>
+					<li class="<?php if ($page == "reclamations") {
+         echo "mm-active";
+     } ?>">
+						<a href="dashboard.php?page=reclamations" class="<?php if (
+          $page == "reclamations"
+      ) {
+          echo "mm-active";
+      } ?>" aria-expanded="false">
 							<i class="bi-megaphone"></i>
 							<span class="nav-text">Réclamations</span>
 						</a>
 					</li>
-					<?php
-					if ($_SESSION['id_usertype'] === "1" || $_SESSION['id_usertype'] === "2" || $_SESSION['id_usertype'] === "3") :
-					?>
-					<li class="<?php if($page == 'actions') echo 'mm-active'; ?>">
-						<a href="dashboard.php?page=actions" class="<?php if($page == 'actions') echo 'mm-active'; ?>" aria-expanded="false">
+					<?php if (
+         $_SESSION["id_usertype"] === "1" ||
+         $_SESSION["id_usertype"] === "2" ||
+         $_SESSION["id_usertype"] === "3"
+     ): ?>
+					<li class="<?php if ($page == "actions") {
+         echo "mm-active";
+     } ?>">
+						<a href="dashboard.php?page=actions" class="<?php if ($page == "actions") {
+          echo "mm-active";
+      } ?>" aria-expanded="false">
 							<i class="bi-sliders"></i>
 							<span class="nav-text">Plans d'action</span>
 						</a>
 					</li>
-					<?php
-					endif;
-					?>
-					<li class="<?php if($page == 'echeances') echo 'mm-active'; ?>">
-						<a href="dashboard.php?page=echeances" class="<?php if($page == 'echeances') echo 'mm-active'; ?>" aria-expanded="false">
+					<?php endif; ?>
+					<li class="<?php if ($page == "echeances") {
+         echo "mm-active";
+     } ?>">
+						<a href="dashboard.php?page=echeances" class="<?php if ($page == "echeances") {
+          echo "mm-active";
+      } ?>" aria-expanded="false">
 							<i class="bi-stopwatch"></i>
 							<span class="nav-text">Échéances</span>
 						</a>
 					</li>
-					<li class="<?php if($page == 'documents') echo 'mm-active'; ?>">
-						<a href="dashboard.php?page=documents" class="<?php if($page == 'documents') echo 'mm-active'; ?>" aria-expanded="false">
+					<li class="<?php if ($page == "documents") {
+         echo "mm-active";
+     } ?>">
+						<a href="dashboard.php?page=documents" class="<?php if ($page == "documents") {
+          echo "mm-active";
+      } ?>" aria-expanded="false">
 							<i class="bi-stickies"></i>
 							<span class="nav-text">Documents</span>
 						</a>
 					</li>
                 </ul>
 				<div class="copyright">
-					<p><strong>BEST COPRO</strong> © 2022-<?=date('Y');?> Tous droits réservés</p>
+					<p><strong>BEST COPRO</strong> © 2022-<?= date("Y") ?> Tous droits réservés</p>
 					<p class="fs-12">Conçu et développé avec <span class="heart"></span> par IARoTech</p>
 				</div>
 			</div>
@@ -328,7 +453,7 @@ foreach($echeances as $echeance) {
 		</div>
 
         <!-- Footer -->
-		<?php include('./footer.php'); ?>
+		<?php include "./footer.php"; ?>
 
 
     </div>
@@ -344,21 +469,29 @@ foreach($echeances as $echeance) {
 	<!-- Datatable -->
     <script src="vendor\datatables\js\jquery.dataTables.min.js"></script>
     <script src="js\plugins-init\datatables.init.js"></script>
-	<?php if ($page == "actions" && (isset($_GET["action"]) && ($_GET["action"] == "add" || $_GET["action"] == "update"))) : ?>
+	<?php if (
+     $page == "actions" &&
+     (isset($_GET["action"]) &&
+         ($_GET["action"] == "add" || $_GET["action"] == "update"))
+ ): ?>
 	<!-- nouislider -->
 	<script src="vendor\nouislider\nouislider.min.js"></script>
     <script src="vendor\wnumb\wNumb.js"></script>
     <script src="js\plugins-init\nouislider-init.js"></script>
 	<?php endif; ?>
-	<?php if ($page == "dashboard" || $page == null || $page == "") : ?>
+	<?php if ($page == "dashboard" || $page == null || $page == ""): ?>
 	<!-- owl-carousel -->
 	<script src="vendor\owl-carousel\owl.carousel.js"></script>
 	<?php endif; ?>
-	<?php if ($page == "reclamations" && (isset($_GET["action"]) && ($_GET["action"] == "add" || $_GET["action"] == "update"))) : ?>
+	<?php if (
+     $page == "reclamations" &&
+     (isset($_GET["action"]) &&
+         ($_GET["action"] == "add" || $_GET["action"] == "update"))
+ ): ?>
 	<!-- lightgallery -->
 	<script src="vendor\lightgallery\js\lightgallery-all.min.js"></script>
 	<?php endif; ?>
-	<?php if ($page == "assemblee") : ?>
+	<?php if ($page == "assemblee"): ?>
 	<!-- dropzone -->
 	<script src="vendor\dropzone\dist\dropzone.js"></script>
 	<?php endif; ?>
@@ -460,7 +593,7 @@ foreach($echeances as $echeance) {
 				url:"./views/notifications.php",
 				method:"POST",
 				data: {
-					id_copropriete: <?=$id_copropriete?>,
+					id_copropriete: <?= $id_copropriete ?>,
 					getNotificationsyndic: 'true'
 				},
 				success:function(notification) {
@@ -477,7 +610,7 @@ foreach($echeances as $echeance) {
 			});
 		}, 20000);
 	</script>
-	<?php if ($page == "paiements") : ?>
+	<?php if ($page == "paiements"): ?>
 	<script>
 		$('#id_lot').on('change', function() {
 			var id_lot = $(this).val();
@@ -543,7 +676,7 @@ foreach($echeances as $echeance) {
 		});
 	</script>
 	<?php endif; ?>
-	<?php if ($page == "depenses") : ?>
+	<?php if ($page == "depenses"): ?>
 	<script>
 		$('#depenses_rubrique').on('change', function() {
 			var id_rubrique = $(this).val();
@@ -585,7 +718,10 @@ foreach($echeances as $echeance) {
 		});
 	</script>
 	<?php endif; ?>
-	<?php if ($page == "lots" && (isset($_GET["action"]) && $_GET["action"] == "view")) : ?>
+	<?php if (
+     $page == "lots" &&
+     (isset($_GET["action"]) && $_GET["action"] == "view")
+ ): ?>
 	<script>
 		$('.windowPrint').on('click', function() {
 			var id_paiement = $(this).attr('data-id');
@@ -613,7 +749,11 @@ foreach($echeances as $echeance) {
 		});
 	</script>
 	<?php endif; ?>
-	<?php if ($page == "documents" && (isset($_GET["action"]) && ($_GET["action"] == "add" || $_GET["action"] == "update"))) : ?>
+	<?php if (
+     $page == "documents" &&
+     (isset($_GET["action"]) &&
+         ($_GET["action"] == "add" || $_GET["action"] == "update"))
+ ): ?>
 	<script>
 		$('#addTypedocument').on('click', function() {
 			$(this).hide();
@@ -659,7 +799,7 @@ foreach($echeances as $echeance) {
 		});
 	</script>
 	<?php endif; ?>
-	<?php if ($page == "fonctionnement") : ?>
+	<?php if ($page == "fonctionnement"): ?>
 	<script>
 		$(".add_rubrique").on("click", function(event) {
 			event.preventDefault();
@@ -767,7 +907,7 @@ foreach($echeances as $echeance) {
 		});
 	</script>
 	<?php endif; ?>
-	<?php if ($page == "investissement") : ?>
+	<?php if ($page == "investissement"): ?>
 	<script>
 		$(".add_rubrique2").on("click", function(event) {
 			event.preventDefault();
@@ -875,7 +1015,11 @@ foreach($echeances as $echeance) {
 		});
 	</script>
 	<?php endif; ?>
-	<?php if ($page == "reclamations" && (isset($_GET["action"]) && ($_GET["action"] == "add" || $_GET["action"] == "update"))) : ?>
+	<?php if (
+     $page == "reclamations" &&
+     (isset($_GET["action"]) &&
+         ($_GET["action"] == "add" || $_GET["action"] == "update"))
+ ): ?>
 	<script>
 		$(document).on('change', '.default-select', function (e) {
 			if ($(this).val() == "1")
@@ -885,7 +1029,7 @@ foreach($echeances as $echeance) {
 		});
 	</script>
 	<?php endif; ?>
-	<?php if ($page == "dashboard" || $page == null || $page == "") : ?>
+	<?php if ($page == "dashboard" || $page == null || $page == ""): ?>
 	<script>
 		function JobickCarousel()
 			{
@@ -931,7 +1075,7 @@ foreach($echeances as $echeance) {
 			});
 	</script>
 	<?php endif; ?>
-	<?php if ($page == "copropriete") : ?>
+	<?php if ($page == "copropriete"): ?>
 	<script>
 		$('#deleteCoproprieteBtn').on('click', function() {
 			var id_copropriete = $(this).attr('data-id');
@@ -954,7 +1098,7 @@ foreach($echeances as $echeance) {
 		});
 	</script>
 	<?php endif; ?>
-	<?php if ($page == "contentieux") : ?>
+	<?php if ($page == "contentieux"): ?>
 	<script>
 		$("#saveContentieux").on("click", function(event) {
 			$('.waitModal').css('display', 'flex');
@@ -1026,7 +1170,7 @@ foreach($echeances as $echeance) {
 		});
 	</script>
 	<?php endif; ?>
-	<?php if ($page == "assemblee") : ?>
+	<?php if ($page == "assemblee"): ?>
 	<script>
 		Dropzone.options.mydz = {
 			dictDefaultMessage: "Glisser et déposez vos fichiers ici",

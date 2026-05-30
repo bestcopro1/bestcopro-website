@@ -1,11 +1,15 @@
 ﻿<?php
- if(!isset($_SESSION)) {
-	session_start();
+if (!isset($_SESSION)) {
+    session_start();
 }
 // If the user is logged in redirect to the dashboard page...
-if (isset($_SESSION['loggedin'], $_SESSION['id']) && $_SESSION['loggedin'] === 'ImIn' && is_int(intval($_SESSION['id']))) {
-	header('Location: ./index.php');
-	exit;
+if (
+    isset($_SESSION["loggedin"], $_SESSION["id"]) &&
+    $_SESSION["loggedin"] === "ImIn" &&
+    is_int(intval($_SESSION["id"]))
+) {
+    header("Location: ./index.php");
+    exit();
 }
 ?>
 <!DOCTYPE html>
@@ -33,7 +37,7 @@ if (isset($_SESSION['loggedin'], $_SESSION['id']) && $_SESSION['loggedin'] === '
 <body class="vh-100">
 
     <!-- Login script -->
-    <?php include('./controllers/login.php'); ?>
+    <?php include "./controllers/login.php"; ?>
 
     <div class="authincation h-100">
         <div class="container h-100">

@@ -66,22 +66,49 @@ abstract class CSSBlockList extends CSSList
      *
      * @return void
      */
-    protected function allValues($oElement, array &$aResult, $sSearchString = null, $bSearchInFunctionArguments = false)
-    {
+    protected function allValues(
+        $oElement,
+        array &$aResult,
+        $sSearchString = null,
+        $bSearchInFunctionArguments = false,
+    ) {
         if ($oElement instanceof CSSBlockList) {
             foreach ($oElement->getContents() as $oContent) {
-                $this->allValues($oContent, $aResult, $sSearchString, $bSearchInFunctionArguments);
+                $this->allValues(
+                    $oContent,
+                    $aResult,
+                    $sSearchString,
+                    $bSearchInFunctionArguments,
+                );
             }
         } elseif ($oElement instanceof RuleSet) {
             foreach ($oElement->getRules($sSearchString) as $oRule) {
-                $this->allValues($oRule, $aResult, $sSearchString, $bSearchInFunctionArguments);
+                $this->allValues(
+                    $oRule,
+                    $aResult,
+                    $sSearchString,
+                    $bSearchInFunctionArguments,
+                );
             }
         } elseif ($oElement instanceof Rule) {
-            $this->allValues($oElement->getValue(), $aResult, $sSearchString, $bSearchInFunctionArguments);
+            $this->allValues(
+                $oElement->getValue(),
+                $aResult,
+                $sSearchString,
+                $bSearchInFunctionArguments,
+            );
         } elseif ($oElement instanceof ValueList) {
-            if ($bSearchInFunctionArguments || !($oElement instanceof CSSFunction)) {
+            if (
+                $bSearchInFunctionArguments ||
+                !($oElement instanceof CSSFunction)
+            ) {
                 foreach ($oElement->getListComponents() as $mComponent) {
-                    $this->allValues($mComponent, $aResult, $sSearchString, $bSearchInFunctionArguments);
+                    $this->allValues(
+                        $mComponent,
+                        $aResult,
+                        $sSearchString,
+                        $bSearchInFunctionArguments,
+                    );
                 }
             }
         } else {
@@ -106,31 +133,36 @@ abstract class CSSBlockList extends CSSList
                 if ($sSpecificitySearch === null) {
                     $aResult[] = $oSelector;
                 } else {
-                    $sComparator = '===';
-                    $aSpecificitySearch = explode(' ', $sSpecificitySearch);
+                    $sComparator = "===";
+                    $aSpecificitySearch = explode(" ", $sSpecificitySearch);
                     $iTargetSpecificity = $aSpecificitySearch[0];
                     if (count($aSpecificitySearch) > 1) {
                         $sComparator = $aSpecificitySearch[0];
                         $iTargetSpecificity = $aSpecificitySearch[1];
                     }
-                    $iTargetSpecificity = (int)$iTargetSpecificity;
+                    $iTargetSpecificity = (int) $iTargetSpecificity;
                     $iSelectorSpecificity = $oSelector->getSpecificity();
                     $bMatches = false;
                     switch ($sComparator) {
-                        case '<=':
-                            $bMatches = $iSelectorSpecificity <= $iTargetSpecificity;
+                        case "<=":
+                            $bMatches =
+                                $iSelectorSpecificity <= $iTargetSpecificity;
                             break;
-                        case '<':
-                            $bMatches = $iSelectorSpecificity < $iTargetSpecificity;
+                        case "<":
+                            $bMatches =
+                                $iSelectorSpecificity < $iTargetSpecificity;
                             break;
-                        case '>=':
-                            $bMatches = $iSelectorSpecificity >= $iTargetSpecificity;
+                        case ">=":
+                            $bMatches =
+                                $iSelectorSpecificity >= $iTargetSpecificity;
                             break;
-                        case '>':
-                            $bMatches = $iSelectorSpecificity > $iTargetSpecificity;
+                        case ">":
+                            $bMatches =
+                                $iSelectorSpecificity > $iTargetSpecificity;
                             break;
                         default:
-                            $bMatches = $iSelectorSpecificity === $iTargetSpecificity;
+                            $bMatches =
+                                $iSelectorSpecificity === $iTargetSpecificity;
                             break;
                     }
                     if ($bMatches) {

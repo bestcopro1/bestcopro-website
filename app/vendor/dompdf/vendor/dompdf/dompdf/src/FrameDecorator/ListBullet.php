@@ -110,7 +110,9 @@ class ListBullet extends AbstractFrameDecorator
         // Would be nice to properly refactor that at some point
         $font = $style->font_family;
         $size = $style->font_size;
-        $fontHeight = $this->_dompdf->getFontMetrics()->getFontHeight($font, $size);
+        $fontHeight = $this->_dompdf
+            ->getFontMetrics()
+            ->getFontHeight($font, $size);
 
         return ($style->line_height / ($size > 0 ? $size : 1)) * $fontHeight;
     }

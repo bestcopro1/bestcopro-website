@@ -18,19 +18,19 @@ class Circle extends Shape
 
     public function start($attributes)
     {
-        if (isset($attributes['cx'])) {
+        if (isset($attributes["cx"])) {
             $width = $this->document->getWidth();
-            $this->cx = $this->convertSize($attributes['cx'], $width);
+            $this->cx = $this->convertSize($attributes["cx"], $width);
         }
-        if (isset($attributes['cy'])) {
+        if (isset($attributes["cy"])) {
             $height = $this->document->getHeight();
-            $this->cy = $this->convertSize($attributes['cy'], $height);
+            $this->cy = $this->convertSize($attributes["cy"], $height);
         }
-        if (isset($attributes['r'])) {
+        if (isset($attributes["r"])) {
             $diagonal = $this->document->getDiagonal();
-            $this->r = $this->convertSize($attributes['r'], $diagonal);
+            $this->r = $this->convertSize($attributes["r"], $diagonal);
         }
 
         $this->document->getSurface()->circle($this->cx, $this->cy, $this->r);
     }
-} 
+}

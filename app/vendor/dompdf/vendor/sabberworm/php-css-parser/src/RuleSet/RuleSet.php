@@ -48,25 +48,30 @@ abstract class RuleSet implements Renderable, Commentable
      * @throws UnexpectedTokenException
      * @throws UnexpectedEOFException
      */
-    public static function parseRuleSet(ParserState $oParserState, RuleSet $oRuleSet)
-    {
-        while ($oParserState->comes(';')) {
-            $oParserState->consume(';');
+    public static function parseRuleSet(
+        ParserState $oParserState,
+        RuleSet $oRuleSet,
+    ) {
+        while ($oParserState->comes(";")) {
+            $oParserState->consume(";");
         }
-        while (!$oParserState->comes('}')) {
+        while (!$oParserState->comes("}")) {
             $oRule = null;
             if ($oParserState->getSettings()->bLenientParsing) {
                 try {
                     $oRule = Rule::parse($oParserState);
                 } catch (UnexpectedTokenException $e) {
                     try {
-                        $sConsume = $oParserState->consumeUntil(["\n", ";", '}'], true);
+                        $sConsume = $oParserState->consumeUntil(
+                            ["\n", ";", "}"],
+                            true,
+                        );
                         // We need to “unfind” the matches to the end of the ruleSet as this will be matched later
-                        if ($oParserState->streql(substr($sConsume, -1), '}')) {
+                        if ($oParserState->streql(substr($sConsume, -1), "}")) {
                             $oParserState->backtrack(1);
                         } else {
-                            while ($oParserState->comes(';')) {
-                                $oParserState->consume(';');
+                            while ($oParserState->comes(";")) {
+                                $oParserState->consume(";");
                             }
                         }
                     } catch (UnexpectedTokenException $e) {
@@ -81,7 +86,7 @@ abstract class RuleSet implements Renderable, Commentable
                 $oRuleSet->addRule($oRule);
             }
         }
-        $oParserState->consume('}');
+        $oParserState->consume("}");
     }
 
     /**
@@ -110,7 +115,10 @@ abstract class RuleSet implements Renderable, Commentable
             $iSiblingPos = array_search($oSibling, $this->aRules[$sRule], true);
             if ($iSiblingPos !== false) {
                 $iPosition = $iSiblingPos;
-                $oRule->setPosition($oSibling->getLineNo(), $oSibling->getColNo() - 1);
+                $oRule->setPosition(
+                    $oSibling->getLineNo(),
+                    $oSibling->getColNo() - 1,
+                );
             }
         }
         if ($oRule->getLineNo() === 0 && $oRule->getColNo() === 0) {
@@ -153,11 +161,11 @@ abstract class RuleSet implements Renderable, Commentable
             // Either no search rule is given or the search rule matches the found rule exactly
             // or the search rule ends in “-” and the found rule starts with the search rule.
             if (
-                !$mRule || $sName === $mRule
-                || (
-                    strrpos($mRule, '-') === strlen($mRule) - strlen('-')
-                    && (strpos($sName, $mRule) === 0 || $sName === substr($mRule, 0, -1))
-                )
+                !$mRule ||
+                $sName === $mRule ||
+                (strrpos($mRule, "-") === strlen($mRule) - strlen("-") &&
+                    (strpos($sName, $mRule) === 0 ||
+                        $sName === substr($mRule, 0, -1)))
             ) {
                 $aResult = array_merge($aResult, $aRules);
             }
@@ -245,9 +253,11 @@ abstract class RuleSet implements Renderable, Commentable
                 // or the search rule ends in “-” and the found rule starts with the search rule or equals it
                 // (without the trailing dash).
                 if (
-                    !$mRule || $sName === $mRule
-                    || (strrpos($mRule, '-') === strlen($mRule) - strlen('-')
-                        && (strpos($sName, $mRule) === 0 || $sName === substr($mRule, 0, -1)))
+                    !$mRule ||
+                    $sName === $mRule ||
+                    (strrpos($mRule, "-") === strlen($mRule) - strlen("-") &&
+                        (strpos($sName, $mRule) === 0 ||
+                            $sName === substr($mRule, 0, -1)))
                 ) {
                     unset($this->aRules[$sName]);
                 }
@@ -268,11 +278,14 @@ abstract class RuleSet implements Renderable, Commentable
      */
     public function render(OutputFormat $oOutputFormat)
     {
-        $sResult = '';
+        $sResult = "";
         $bIsFirst = true;
         foreach ($this->aRules as $aRules) {
             foreach ($aRules as $oRule) {
-                $sRendered = $oOutputFormat->safely(function () use ($oRule, $oOutputFormat) {
+                $sRendered = $oOutputFormat->safely(function () use (
+                    $oRule,
+                    $oOutputFormat,
+                ) {
                     return $oRule->render($oOutputFormat->nextLevel());
                 });
                 if ($sRendered === null) {
@@ -282,7 +295,9 @@ abstract class RuleSet implements Renderable, Commentable
                     $bIsFirst = false;
                     $sResult .= $oOutputFormat->nextLevel()->spaceBeforeRules();
                 } else {
-                    $sResult .= $oOutputFormat->nextLevel()->spaceBetweenRules();
+                    $sResult .= $oOutputFormat
+                        ->nextLevel()
+                        ->spaceBetweenRules();
                 }
                 $sResult .= $sRendered;
             }

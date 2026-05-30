@@ -8,7 +8,4 @@
 
 namespace Svg\Tag;
 
-class Anchor extends Group
-{
-
-} 
+class Anchor extends Group {}

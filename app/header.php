@@ -74,9 +74,7 @@
                     <div class="collapse navbar-collapse justify-content-between">
                         <div class="header-left"></div>
                         <ul class="navbar-nav header-right">
-							<?php
-							if ($_SESSION['id_usertype'] === "1") :
-							?>
+							<?php if ($_SESSION["id_usertype"] === "1"): ?>
 							<li class="nav-item dropdown notification_dropdown">
                                 <a class="nav-link bell-link " href="javascript:void(0);">
 									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="22.871" viewbox="0 0 24 22.871">
@@ -88,67 +86,79 @@
 									</svg>
                                 </a>
 							</li>	
-							<?php
-							endif;
-							?>
-							<?php
-							if (isset($GLOBALS["copropriete"]) && $GLOBALS["copropriete"] != "") :
-							?>
+							<?php endif; ?>
+							<?php if (isset($GLOBALS["copropriete"]) && $GLOBALS["copropriete"] != ""): ?>
 							<li class="nav-item dropdown notification_dropdown">
                                 <?php
-								$notifications = getNotificationsyndic(5, $GLOBALS["copropriete"][0]["id"], $connection);
-								$bell = "";
-								foreach($notifications as $notification)
-									if ($notification["seen"] == "0") {
-										$bell = "bell";
-										break;
-									}
-								?>
-								<a class="nav-link <?=$bell?>" href="javascript:void(0);" role="button" data-bs-toggle="dropdown">
+                                $notifications = getNotificationsyndic(
+                                    5,
+                                    $GLOBALS["copropriete"][0]["id"],
+                                    $connection,
+                                );
+                                $bell = "";
+                                foreach ($notifications as $notification) {
+                                    if ($notification["seen"] == "0") {
+                                        $bell = "bell";
+                                        break;
+                                    }
+                                }
+                                ?>
+								<a class="nav-link <?= $bell ?>" href="javascript:void(0);" role="button" data-bs-toggle="dropdown">
                                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewbox="0 0 24 24">
 									  <g data-name="Layer 2" transform="translate(-2 -2)">
 										<path id="Path_20" data-name="Path 20" d="M22.571,15.8V13.066a8.5,8.5,0,0,0-7.714-8.455V2.857a.857.857,0,0,0-1.714,0V4.611a8.5,8.5,0,0,0-7.714,8.455V15.8A4.293,4.293,0,0,0,2,20a2.574,2.574,0,0,0,2.571,2.571H9.8a4.286,4.286,0,0,0,8.4,0h5.23A2.574,2.574,0,0,0,26,20,4.293,4.293,0,0,0,22.571,15.8ZM7.143,13.066a6.789,6.789,0,0,1,6.78-6.78h.154a6.789,6.789,0,0,1,6.78,6.78v2.649H7.143ZM14,24.286a2.567,2.567,0,0,1-2.413-1.714h4.827A2.567,2.567,0,0,1,14,24.286Zm9.429-3.429H4.571A.858.858,0,0,1,3.714,20a2.574,2.574,0,0,1,2.571-2.571H21.714A2.574,2.574,0,0,1,24.286,20a.858.858,0,0,1-.857.857Z"></path>
 									  </g>
 									</svg>
-									<div class="pulse-css" <?php if ($bell != "bell") echo 'style="display: none;"'; ?>></div>
+									<div class="pulse-css" <?php if ($bell != "bell") {
+             echo 'style="display: none;"';
+         } ?>></div>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-end">
                                     <div id="DZ_W_Notification1" class="widget-media dlab-scroll p-3" style="height:380px;">
 										<ul class="timeline">
 											<?php
-											$notifications = getNotificationsyndic(5, $GLOBALS["copropriete"][0]["id"], $connection);
-											foreach($notifications as $notification):
-											?>
+           $notifications = getNotificationsyndic(
+               5,
+               $GLOBALS["copropriete"][0]["id"],
+               $connection,
+           );
+           foreach ($notifications as $notification): ?>
 											<li>
-												<a href="./dashboard.php?page=<?=$notification["nomPage"]?>&action=update&id=<?=$notification["idPage"]?>">
+												<a href="./dashboard.php?page=<?= $notification[
+                "nomPage"
+            ] ?>&action=update&id=<?= $notification["idPage"] ?>">
 													<div class="timeline-panel">
-														<?php
-														if ($notification["nomPage"] == "reclamations")
-															echo '<div class="media me-2 media-danger"><i class="bi-megaphone"></i></div>';
-														elseif ($notification["nomPage"] == "echeances")
-															echo '<div class="media me-2 media-success"><i class="bi-stopwatch"></i></div>';
-														?>
+														<?php if ($notification["nomPage"] == "reclamations") {
+                  echo '<div class="media me-2 media-danger"><i class="bi-megaphone"></i></div>';
+              } elseif ($notification["nomPage"] == "echeances") {
+                  echo '<div class="media me-2 media-success"><i class="bi-stopwatch"></i></div>';
+              } ?>
 														<div class="media-body">
-															<h6 class="mb-1 text-break"><?=substr($notification["description"], 0, 24)?>...</h6>
-															<small class="d-block"><?=date("d/m/Y", strtotime($notification["date"]))?></small>
+															<h6 class="mb-1 text-break"><?= substr(
+                   $notification["description"],
+                   0,
+                   24,
+               ) ?>...</h6>
+															<small class="d-block"><?= date(
+                   "d/m/Y",
+                   strtotime($notification["date"]),
+               ) ?></small>
 														</div>
 													</div>
 												</a>
 											</li>
-											<?php
-											endforeach;
-											?>
+											<?php endforeach;
+           ?>
 										</ul>
 									</div>
                                     <a class="all-notification" href="./dashboard.php?page=notifications">Voir toutes les notifications <i class="ti-arrow-end"></i></a>
                                 </div>
                             </li>
-							<?php
-							endif;
-							?>
-							<?php
-							if ($_SESSION['id_usertype'] === "1" || $_SESSION['id_usertype'] === "2") :
-							?>
+							<?php endif; ?>
+							<?php if (
+           $_SESSION["id_usertype"] === "1" ||
+           $_SESSION["id_usertype"] === "2"
+       ): ?>
 							<li class="nav-item">
                                 <a class="nav-link " href="./syndics.php">
 									 <svg xmlns="http://www.w3.org/2000/svg" width="23.262" height="24" viewBox="0 0 23.262 24">
@@ -158,23 +168,34 @@
 									</svg>
                                 </a>
 							</li>
-							<?php
-							endif;
-							?>
+							<?php endif; ?>
 							<li class="nav-item dropdown header-profile">
                                 <a class="nav-link" href="javascript:void(0);" role="button" data-bs-toggle="dropdown">
                                     <?php
-									$image = "";
-									if (file_exists('images/profile/'.$_SESSION['id'].'.jpg')) {
-										$image = 'images/profile/'.$_SESSION['id'].'.jpg?'.uniqid();
-									} else {
-										$image = 'images/profile/0.jpg?'.uniqid();
-									}
-									?>
-									<img src="<?=$image?>" width="20" alt="">
+                                    $image = "";
+                                    if (
+                                        file_exists(
+                                            "images/profile/" .
+                                                $_SESSION["id"] .
+                                                ".jpg",
+                                        )
+                                    ) {
+                                        $image =
+                                            "images/profile/" .
+                                            $_SESSION["id"] .
+                                            ".jpg?" .
+                                            uniqid();
+                                    } else {
+                                        $image =
+                                            "images/profile/0.jpg?" . uniqid();
+                                    }
+                                    ?>
+									<img src="<?= $image ?>" width="20" alt="">
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-end">
-                                    <a href="syndics.php?action=update&id=<?=$_SESSION['id']?>" class="dropdown-item ai-icon">
+                                    <a href="syndics.php?action=update&id=<?= $_SESSION[
+                                        "id"
+                                    ] ?>" class="dropdown-item ai-icon">
                                         <svg id="icon-user2" xmlns="http://www.w3.org/2000/svg" class="text-primary" width="18" height="18" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                                         <span class="ms-2">Profile </span>
                                     </a>

@@ -52,45 +52,39 @@ a:0:{}
 a:0:{}
 */
 
-include_once(__DIR__.'/../config/db.php');
-include_once(__DIR__.'/../controllers/functions.php');
+include_once __DIR__ . "/../config/db.php";
+include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
-header('Content-Type: application/json; charset=utf-8');
-if ( !isset($_GET['token']) ) :
-?>
+header("Content-Type: application/json; charset=utf-8");
+if (!isset($_GET["token"])): ?>
 {}
-<?php
-else :
-	if ( $_GET['token'] == "" ) :
-?>
+<?php else:if ($_GET["token"] == ""): ?>
 {}
-<?php
-	else :
-		$token = $_GET['token'];
+<?php else:$token = $_GET["token"];
         $token = mysqli_real_escape_string($connection, $token);
         $sql = "SELECT * From lot WHERE token = '{$token}' ";
         $query = mysqli_query($connection, $sql);
         $rowCount = mysqli_num_rows($query);
-		if(!$query) :
-?>
+        if (!$query): ?>
 {}
-<?php
-		endif;
-		if($rowCount <= 0) :
-?>
+<?php endif;
+        if ($rowCount <= 0): ?>
 {}
-<?php
-        else :
-			while($row = mysqli_fetch_array($query)) {
-				$id_lot = $row['id'];
-			}
-			$lot = getLot($id_lot, null, null, $connection);
-			$proprietaire = getProprietaire($lot[0]["id_proprietaire"], null, $connection);
-?>
+<?php else:
+            while ($row = mysqli_fetch_array($query)) {
+                $id_lot = $row["id"];
+            }
+            $lot = getLot($id_lot, null, null, $connection);
+            $proprietaire = getProprietaire(
+                $lot[0]["id_proprietaire"],
+                null,
+                $connection,
+            );
+            ?>
 {
-    "civilite": "<?=$proprietaire[0]["civilite"]?>",
-    "nom": "<?=$proprietaire[0]["nom"]?>",
-    "prenom": "<?=$proprietaire[0]["prenom"]?>",
+    "civilite": "<?= $proprietaire[0]["civilite"] ?>",
+    "nom": "<?= $proprietaire[0]["nom"] ?>",
+    "prenom": "<?= $proprietaire[0]["prenom"] ?>",
     "situation": [
         {
             "date": "01/02/2023",
@@ -98,8 +92,5 @@ else :
         }
     ]
 }
-<?php
-		endif;
-	endif;
-endif;
+<?php endif;endif;endif;
 ?>

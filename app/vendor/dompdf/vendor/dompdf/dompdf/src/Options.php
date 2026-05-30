@@ -68,19 +68,19 @@ class Options
     private $chroot;
 
     /**
-    * Protocol whitelist
-    *
-    * Protocols and PHP wrappers allowed in URIs, and the validation rules
-    * that determine if a resouce may be loaded. Full support is not guaranteed
-    * for the protocols/wrappers specified
-    * by this array.
-    *
-    * @var array
-    */
+     * Protocol whitelist
+     *
+     * Protocols and PHP wrappers allowed in URIs, and the validation rules
+     * that determine if a resouce may be loaded. Full support is not guaranteed
+     * for the protocols/wrappers specified
+     * by this array.
+     *
+     * @var array
+     */
     private $allowedProtocols = [
         "file://" => ["rules" => []],
         "http://" => ["rules" => []],
-        "https://" => ["rules" => []]
+        "https://" => ["rules" => []],
     ];
 
     /**
@@ -312,14 +312,14 @@ class Options
     public function __construct(array $attributes = null)
     {
         $rootDir = realpath(__DIR__ . "/../");
-        $this->setChroot(array($rootDir));
+        $this->setChroot([$rootDir]);
         $this->setRootDir($rootDir);
         $this->setTempDir(sys_get_temp_dir());
         $this->setFontDir($rootDir . "/lib/fonts");
         $this->setFontCache($this->getFontDir());
 
         $ver = "";
-        $versionFile = realpath(__DIR__ . '/../VERSION');
+        $versionFile = realpath(__DIR__ . "/../VERSION");
         if (($version = file_get_contents($versionFile)) !== false) {
             $version = trim($version);
             if ($version !== '$Format:<%h>$') {
@@ -329,8 +329,8 @@ class Options
         $this->setHttpContext([
             "http" => [
                 "follow_location" => false,
-                "user_agent" => "Dompdf$ver https://github.com/dompdf/dompdf"
-            ]
+                "user_agent" => "Dompdf$ver https://github.com/dompdf/dompdf",
+            ],
         ]);
 
         $this->setAllowedProtocols(["file://", "http://", "https://"]);
@@ -351,61 +351,105 @@ class Options
             $attributes = [$attributes => $value];
         }
         foreach ($attributes as $key => $value) {
-            if ($key === 'tempDir' || $key === 'temp_dir') {
+            if ($key === "tempDir" || $key === "temp_dir") {
                 $this->setTempDir($value);
-            } elseif ($key === 'fontDir' || $key === 'font_dir') {
+            } elseif ($key === "fontDir" || $key === "font_dir") {
                 $this->setFontDir($value);
-            } elseif ($key === 'fontCache' || $key === 'font_cache') {
+            } elseif ($key === "fontCache" || $key === "font_cache") {
                 $this->setFontCache($value);
-            } elseif ($key === 'chroot') {
+            } elseif ($key === "chroot") {
                 $this->setChroot($value);
-            } elseif ($key === 'allowedProtocols') {
+            } elseif ($key === "allowedProtocols") {
                 $this->setAllowedProtocols($value);
-            } elseif ($key === 'logOutputFile' || $key === 'log_output_file') {
+            } elseif ($key === "logOutputFile" || $key === "log_output_file") {
                 $this->setLogOutputFile($value);
-            } elseif ($key === 'defaultMediaType' || $key === 'default_media_type') {
+            } elseif (
+                $key === "defaultMediaType" ||
+                $key === "default_media_type"
+            ) {
                 $this->setDefaultMediaType($value);
-            } elseif ($key === 'defaultPaperSize' || $key === 'default_paper_size') {
+            } elseif (
+                $key === "defaultPaperSize" ||
+                $key === "default_paper_size"
+            ) {
                 $this->setDefaultPaperSize($value);
-            } elseif ($key === 'defaultPaperOrientation' || $key === 'default_paper_orientation') {
+            } elseif (
+                $key === "defaultPaperOrientation" ||
+                $key === "default_paper_orientation"
+            ) {
                 $this->setDefaultPaperOrientation($value);
-            } elseif ($key === 'defaultFont' || $key === 'default_font') {
+            } elseif ($key === "defaultFont" || $key === "default_font") {
                 $this->setDefaultFont($value);
-            } elseif ($key === 'dpi') {
+            } elseif ($key === "dpi") {
                 $this->setDpi($value);
-            } elseif ($key === 'fontHeightRatio' || $key === 'font_height_ratio') {
+            } elseif (
+                $key === "fontHeightRatio" ||
+                $key === "font_height_ratio"
+            ) {
                 $this->setFontHeightRatio($value);
-            } elseif ($key === 'isPhpEnabled' || $key === 'is_php_enabled' || $key === 'enable_php') {
+            } elseif (
+                $key === "isPhpEnabled" ||
+                $key === "is_php_enabled" ||
+                $key === "enable_php"
+            ) {
                 $this->setIsPhpEnabled($value);
-            } elseif ($key === 'isRemoteEnabled' || $key === 'is_remote_enabled' || $key === 'enable_remote') {
+            } elseif (
+                $key === "isRemoteEnabled" ||
+                $key === "is_remote_enabled" ||
+                $key === "enable_remote"
+            ) {
                 $this->setIsRemoteEnabled($value);
-            } elseif ($key === 'isJavascriptEnabled' || $key === 'is_javascript_enabled' || $key === 'enable_javascript') {
+            } elseif (
+                $key === "isJavascriptEnabled" ||
+                $key === "is_javascript_enabled" ||
+                $key === "enable_javascript"
+            ) {
                 $this->setIsJavascriptEnabled($value);
-            } elseif ($key === 'isHtml5ParserEnabled' || $key === 'is_html5_parser_enabled' || $key === 'enable_html5_parser') {
+            } elseif (
+                $key === "isHtml5ParserEnabled" ||
+                $key === "is_html5_parser_enabled" ||
+                $key === "enable_html5_parser"
+            ) {
                 $this->setIsHtml5ParserEnabled($value);
-            } elseif ($key === 'isFontSubsettingEnabled' || $key === 'is_font_subsetting_enabled' || $key === 'enable_font_subsetting') {
+            } elseif (
+                $key === "isFontSubsettingEnabled" ||
+                $key === "is_font_subsetting_enabled" ||
+                $key === "enable_font_subsetting"
+            ) {
                 $this->setIsFontSubsettingEnabled($value);
-            } elseif ($key === 'debugPng' || $key === 'debug_png') {
+            } elseif ($key === "debugPng" || $key === "debug_png") {
                 $this->setDebugPng($value);
-            } elseif ($key === 'debugKeepTemp' || $key === 'debug_keep_temp') {
+            } elseif ($key === "debugKeepTemp" || $key === "debug_keep_temp") {
                 $this->setDebugKeepTemp($value);
-            } elseif ($key === 'debugCss' || $key === 'debug_css') {
+            } elseif ($key === "debugCss" || $key === "debug_css") {
                 $this->setDebugCss($value);
-            } elseif ($key === 'debugLayout' || $key === 'debug_layout') {
+            } elseif ($key === "debugLayout" || $key === "debug_layout") {
                 $this->setDebugLayout($value);
-            } elseif ($key === 'debugLayoutLines' || $key === 'debug_layout_lines') {
+            } elseif (
+                $key === "debugLayoutLines" ||
+                $key === "debug_layout_lines"
+            ) {
                 $this->setDebugLayoutLines($value);
-            } elseif ($key === 'debugLayoutBlocks' || $key === 'debug_layout_blocks') {
+            } elseif (
+                $key === "debugLayoutBlocks" ||
+                $key === "debug_layout_blocks"
+            ) {
                 $this->setDebugLayoutBlocks($value);
-            } elseif ($key === 'debugLayoutInline' || $key === 'debug_layout_inline') {
+            } elseif (
+                $key === "debugLayoutInline" ||
+                $key === "debug_layout_inline"
+            ) {
                 $this->setDebugLayoutInline($value);
-            } elseif ($key === 'debugLayoutPaddingBox' || $key === 'debug_layout_padding_box') {
+            } elseif (
+                $key === "debugLayoutPaddingBox" ||
+                $key === "debug_layout_padding_box"
+            ) {
                 $this->setDebugLayoutPaddingBox($value);
-            } elseif ($key === 'pdfBackend' || $key === 'pdf_backend') {
+            } elseif ($key === "pdfBackend" || $key === "pdf_backend") {
                 $this->setPdfBackend($value);
-            } elseif ($key === 'pdflibLicense' || $key === 'pdflib_license') {
+            } elseif ($key === "pdflibLicense" || $key === "pdflib_license") {
                 $this->setPdflibLicense($value);
-            } elseif ($key === 'httpContext' || $key === 'http_context') {
+            } elseif ($key === "httpContext" || $key === "http_context") {
                 $this->setHttpContext($value);
             }
         }
@@ -418,61 +462,102 @@ class Options
      */
     public function get($key)
     {
-        if ($key === 'tempDir' || $key === 'temp_dir') {
+        if ($key === "tempDir" || $key === "temp_dir") {
             return $this->getTempDir();
-        } elseif ($key === 'fontDir' || $key === 'font_dir') {
+        } elseif ($key === "fontDir" || $key === "font_dir") {
             return $this->getFontDir();
-        } elseif ($key === 'fontCache' || $key === 'font_cache') {
+        } elseif ($key === "fontCache" || $key === "font_cache") {
             return $this->getFontCache();
-        } elseif ($key === 'chroot') {
+        } elseif ($key === "chroot") {
             return $this->getChroot();
-        } elseif ($key === 'allowedProtocols') {
+        } elseif ($key === "allowedProtocols") {
             return $this->getAllowedProtocols();
-        } elseif ($key === 'logOutputFile' || $key === 'log_output_file') {
+        } elseif ($key === "logOutputFile" || $key === "log_output_file") {
             return $this->getLogOutputFile();
-        } elseif ($key === 'defaultMediaType' || $key === 'default_media_type') {
+        } elseif (
+            $key === "defaultMediaType" ||
+            $key === "default_media_type"
+        ) {
             return $this->getDefaultMediaType();
-        } elseif ($key === 'defaultPaperSize' || $key === 'default_paper_size') {
+        } elseif (
+            $key === "defaultPaperSize" ||
+            $key === "default_paper_size"
+        ) {
             return $this->getDefaultPaperSize();
-        } elseif ($key === 'defaultPaperOrientation' || $key === 'default_paper_orientation') {
+        } elseif (
+            $key === "defaultPaperOrientation" ||
+            $key === "default_paper_orientation"
+        ) {
             return $this->getDefaultPaperOrientation();
-        } elseif ($key === 'defaultFont' || $key === 'default_font') {
+        } elseif ($key === "defaultFont" || $key === "default_font") {
             return $this->getDefaultFont();
-        } elseif ($key === 'dpi') {
+        } elseif ($key === "dpi") {
             return $this->getDpi();
-        } elseif ($key === 'fontHeightRatio' || $key === 'font_height_ratio') {
+        } elseif ($key === "fontHeightRatio" || $key === "font_height_ratio") {
             return $this->getFontHeightRatio();
-        } elseif ($key === 'isPhpEnabled' || $key === 'is_php_enabled' || $key === 'enable_php') {
+        } elseif (
+            $key === "isPhpEnabled" ||
+            $key === "is_php_enabled" ||
+            $key === "enable_php"
+        ) {
             return $this->getIsPhpEnabled();
-        } elseif ($key === 'isRemoteEnabled' || $key === 'is_remote_enabled' || $key === 'enable_remote') {
+        } elseif (
+            $key === "isRemoteEnabled" ||
+            $key === "is_remote_enabled" ||
+            $key === "enable_remote"
+        ) {
             return $this->getIsRemoteEnabled();
-        } elseif ($key === 'isJavascriptEnabled' || $key === 'is_javascript_enabled' || $key === 'enable_javascript') {
+        } elseif (
+            $key === "isJavascriptEnabled" ||
+            $key === "is_javascript_enabled" ||
+            $key === "enable_javascript"
+        ) {
             return $this->getIsJavascriptEnabled();
-        } elseif ($key === 'isHtml5ParserEnabled' || $key === 'is_html5_parser_enabled' || $key === 'enable_html5_parser') {
+        } elseif (
+            $key === "isHtml5ParserEnabled" ||
+            $key === "is_html5_parser_enabled" ||
+            $key === "enable_html5_parser"
+        ) {
             return $this->getIsHtml5ParserEnabled();
-        } elseif ($key === 'isFontSubsettingEnabled' || $key === 'is_font_subsetting_enabled' || $key === 'enable_font_subsetting') {
+        } elseif (
+            $key === "isFontSubsettingEnabled" ||
+            $key === "is_font_subsetting_enabled" ||
+            $key === "enable_font_subsetting"
+        ) {
             return $this->getIsFontSubsettingEnabled();
-        } elseif ($key === 'debugPng' || $key === 'debug_png') {
+        } elseif ($key === "debugPng" || $key === "debug_png") {
             return $this->getDebugPng();
-        } elseif ($key === 'debugKeepTemp' || $key === 'debug_keep_temp') {
+        } elseif ($key === "debugKeepTemp" || $key === "debug_keep_temp") {
             return $this->getDebugKeepTemp();
-        } elseif ($key === 'debugCss' || $key === 'debug_css') {
+        } elseif ($key === "debugCss" || $key === "debug_css") {
             return $this->getDebugCss();
-        } elseif ($key === 'debugLayout' || $key === 'debug_layout') {
+        } elseif ($key === "debugLayout" || $key === "debug_layout") {
             return $this->getDebugLayout();
-        } elseif ($key === 'debugLayoutLines' || $key === 'debug_layout_lines') {
+        } elseif (
+            $key === "debugLayoutLines" ||
+            $key === "debug_layout_lines"
+        ) {
             return $this->getDebugLayoutLines();
-        } elseif ($key === 'debugLayoutBlocks' || $key === 'debug_layout_blocks') {
+        } elseif (
+            $key === "debugLayoutBlocks" ||
+            $key === "debug_layout_blocks"
+        ) {
             return $this->getDebugLayoutBlocks();
-        } elseif ($key === 'debugLayoutInline' || $key === 'debug_layout_inline') {
+        } elseif (
+            $key === "debugLayoutInline" ||
+            $key === "debug_layout_inline"
+        ) {
             return $this->getDebugLayoutInline();
-        } elseif ($key === 'debugLayoutPaddingBox' || $key === 'debug_layout_padding_box') {
+        } elseif (
+            $key === "debugLayoutPaddingBox" ||
+            $key === "debug_layout_padding_box"
+        ) {
             return $this->getDebugLayoutPaddingBox();
-        } elseif ($key === 'pdfBackend' || $key === 'pdf_backend') {
+        } elseif ($key === "pdfBackend" || $key === "pdf_backend") {
             return $this->getPdfBackend();
-        } elseif ($key === 'pdflibLicense' || $key === 'pdflib_license') {
+        } elseif ($key === "pdflibLicense" || $key === "pdflib_license") {
             return $this->getPdflibLicense();
-        } elseif ($key === 'httpContext' || $key === 'http_context') {
+        } elseif ($key === "httpContext" || $key === "http_context") {
             return $this->getHttpContext();
         }
         return null;
@@ -518,7 +603,7 @@ class Options
      * @param array|string $chroot
      * @return $this
      */
-    public function setChroot($chroot, $delimiter = ',')
+    public function setChroot($chroot, $delimiter = ",")
     {
         if (is_string($chroot)) {
             $this->chroot = explode($delimiter, $chroot);
@@ -558,7 +643,7 @@ class Options
         }
         $this->allowedProtocols = [];
         foreach ($protocols as $protocol => $config) {
-            $this->addAllowedProtocol($protocol, ...($config["rules"] ?? []));
+            $this->addAllowedProtocol($protocol, ...$config["rules"] ?? []);
         }
         return $this;
     }
@@ -802,8 +887,9 @@ class Options
      * @param string $defaultPaperOrientation
      * @return $this
      */
-    public function setDefaultPaperOrientation(string $defaultPaperOrientation): self
-    {
+    public function setDefaultPaperOrientation(
+        string $defaultPaperOrientation,
+    ): self {
         $this->defaultPaperOrientation = $defaultPaperOrientation;
         return $this;
     }
@@ -1091,7 +1177,9 @@ class Options
      */
     public function setHttpContext($httpContext)
     {
-        $this->httpContext = is_array($httpContext) ? stream_context_create($httpContext) : $httpContext;
+        $this->httpContext = is_array($httpContext)
+            ? stream_context_create($httpContext)
+            : $httpContext;
         return $this;
     }
 
@@ -1124,7 +1212,10 @@ class Options
             }
         }
         if ($chrootValid !== true) {
-            return [false, "Permission denied. The file could not be found under the paths specified by Options::chroot."];
+            return [
+                false,
+                "Permission denied. The file could not be found under the paths specified by Options::chroot.",
+            ];
         }
 
         if (!$realfile) {
@@ -1151,7 +1242,10 @@ class Options
         }
 
         if (!$this->isRemoteEnabled) {
-            return [false, "Remote file requested, but remote file download is disabled."];
+            return [
+                false,
+                "Remote file requested, but remote file download is disabled.",
+            ];
         }
 
         return [true, null];

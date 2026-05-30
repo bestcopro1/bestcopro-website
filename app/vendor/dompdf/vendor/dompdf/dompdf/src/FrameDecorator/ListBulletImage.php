@@ -18,7 +18,6 @@ use Dompdf\Image\Cache;
  */
 class ListBulletImage extends ListBullet
 {
-
     /**
      * The underlying image frame
      *

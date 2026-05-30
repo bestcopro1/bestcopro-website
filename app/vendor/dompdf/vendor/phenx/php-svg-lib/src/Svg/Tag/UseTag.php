@@ -20,18 +20,18 @@ class UseTag extends AbstractTag
 
     protected function before($attributes)
     {
-        if (isset($attributes['x'])) {
-            $this->x = $attributes['x'];
+        if (isset($attributes["x"])) {
+            $this->x = $attributes["x"];
         }
-        if (isset($attributes['y'])) {
-            $this->y = $attributes['y'];
+        if (isset($attributes["y"])) {
+            $this->y = $attributes["y"];
         }
 
-        if (isset($attributes['width'])) {
-            $this->width = $attributes['width'];
+        if (isset($attributes["width"])) {
+            $this->width = $attributes["width"];
         }
-        if (isset($attributes['height'])) {
-            $this->height = $attributes['height'];
+        if (isset($attributes["height"])) {
+            $this->height = $attributes["height"];
         }
 
         parent::before($attributes);
@@ -51,7 +51,8 @@ class UseTag extends AbstractTag
         $surface->translate($this->x, $this->y);
     }
 
-    protected function after() {
+    protected function after()
+    {
         parent::after();
 
         if ($this->reference) {
@@ -70,9 +71,12 @@ class UseTag extends AbstractTag
         }
 
         $mergedAttributes = $this->reference->attributes;
-        $attributesToNotMerge = ['x', 'y', 'width', 'height'];
+        $attributesToNotMerge = ["x", "y", "width", "height"];
         foreach ($attributes as $attrKey => $attrVal) {
-            if (!in_array($attrKey, $attributesToNotMerge) && !isset($mergedAttributes[$attrKey])) {
+            if (
+                !in_array($attrKey, $attributesToNotMerge) &&
+                !isset($mergedAttributes[$attrKey])
+            ) {
                 $mergedAttributes[$attrKey] = $attrVal;
             }
         }
@@ -99,4 +103,4 @@ class UseTag extends AbstractTag
             $_child->handleEnd();
         }
     }
-} 
+}

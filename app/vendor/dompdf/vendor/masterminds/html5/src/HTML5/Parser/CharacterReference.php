@@ -11,12 +11,7 @@ use Masterminds\HTML5\Entities;
  */
 class CharacterReference
 {
-    protected static $numeric_mask = array(
-        0x0,
-        0x2FFFF,
-        0,
-        0xFFFF,
-    );
+    protected static $numeric_mask = [0x0, 0x2ffff, 0, 0xffff];
 
     /**
      * Given a name (e.g. 'amp'), lookup the UTF-8 character ('&').
@@ -28,7 +23,9 @@ class CharacterReference
     public static function lookupName($name)
     {
         // Do we really want to return NULL here? or FFFD
-        return isset(Entities::$byName[$name]) ? Entities::$byName[$name] : null;
+        return isset(Entities::$byName[$name])
+            ? Entities::$byName[$name]
+            : null;
     }
 
     /**
@@ -40,11 +37,11 @@ class CharacterReference
      */
     public static function lookupDecimal($int)
     {
-        $entity = '&#' . $int . ';';
+        $entity = "&#" . $int . ";";
 
         // UNTESTED: This may fail on some planes. Couldn't find full documentation
         // on the value of the mask array.
-        return mb_decode_numericentity($entity, static::$numeric_mask, 'utf-8');
+        return mb_decode_numericentity($entity, static::$numeric_mask, "utf-8");
     }
 
     /**

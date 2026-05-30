@@ -12,22 +12,22 @@ class CssLength
      * @var string[]
      */
     protected static $units = [
-        'vmax',
-        'vmin',
-        'rem',
-        'px',
-        'pt',
-        'cm',
-        'mm',
-        'in',
-        'pc',
-        'em',
-        'ex',
-        'ch',
-        'vw',
-        'vh',
-        '%',
-        'q',
+        "vmax",
+        "vmin",
+        "rem",
+        "px",
+        "pt",
+        "cm",
+        "mm",
+        "in",
+        "pc",
+        "em",
+        "ex",
+        "ch",
+        "vw",
+        "vh",
+        "%",
+        "q",
     ];
 
     /**
@@ -36,12 +36,12 @@ class CssLength
      * @var array<string, float>
      */
     protected static $inchDivisions = [
-        'in' => 1,
-        'cm' => 2.54,
-        'mm' => 25.4,
-        'q' => 101.6,
-        'pc' => 6,
-        'pt' => 72,
+        "in" => 1,
+        "cm" => 2.54,
+        "mm" => 25.4,
+        "q" => 101.6,
+        "pc" => 6,
+        "pt" => 72,
     ];
 
     /**
@@ -50,7 +50,7 @@ class CssLength
      *
      * @var string
      */
-    protected $unit = '';
+    protected $unit = "";
 
     /**
      * The numeric value of the given length.
@@ -88,7 +88,7 @@ class CssLength
             }
         }
 
-        $this->unit = '';
+        $this->unit = "";
         $this->value = floatval($length);
     }
 
@@ -111,15 +111,17 @@ class CssLength
      *
      * @return float
      */
-    public function toPixels(float $referenceSize = 11.0, float $dpi = 96.0): float
-    {
+    public function toPixels(
+        float $referenceSize = 11.0,
+        float $dpi = 96.0,
+    ): float {
         // Standard relative units
-        if (in_array($this->unit, ['em', 'rem', 'ex', 'ch'])) {
+        if (in_array($this->unit, ["em", "rem", "ex", "ch"])) {
             return $this->value * $referenceSize;
         }
 
         // Percentage relative units
-        if (in_array($this->unit, ['%', 'vw', 'vh', 'vmin', 'vmax'])) {
+        if (in_array($this->unit, ["%", "vw", "vh", "vmin", "vmax"])) {
             return $this->value * ($referenceSize / 100);
         }
 

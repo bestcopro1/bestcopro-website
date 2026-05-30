@@ -15,7 +15,6 @@ use Dompdf\Frame;
  */
 class TableRowGroup extends Block
 {
-
     /**
      * @param Frame $frame
      */

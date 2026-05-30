@@ -52,35 +52,51 @@ a:0:{}
 a:0:{}
 */
 
-include_once(__DIR__.'/../config/db.php');
-include_once(__DIR__.'/../controllers/functions.php');
+include_once __DIR__ . "/../config/db.php";
+include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
-header('Content-Type: application/json; charset=utf-8');
+header("Content-Type: application/json; charset=utf-8");
 $token = "";
-if (isset($_GET["token"], $_GET["Nom"], $_GET["Prenom"], $_GET["Telephone"], $_GET["Email"], $_GET["Adresse"])) {
-	$token = filter_input(INPUT_GET, 'token', FILTER_SANITIZE_STRING);
-	$nom = filter_input(INPUT_GET, 'Nom', FILTER_SANITIZE_STRING);
-	$prenom = filter_input(INPUT_GET, 'Prenom', FILTER_SANITIZE_STRING);
-	$telephone = filter_input(INPUT_GET, 'Telephone', FILTER_SANITIZE_STRING);
-	$email = filter_input(INPUT_GET, 'Email', FILTER_SANITIZE_STRING);
-	$adresse = filter_input(INPUT_GET, 'Adresse', FILTER_SANITIZE_STRING);
-	
-	$sql = "SELECT * From lot WHERE token = '{$token}' ";
-	$query = mysqli_query($connection, $sql);
-	$rowCount = mysqli_num_rows($query);
-	while($row = mysqli_fetch_array($query)) {
-		$id_lot = $row['id'];
-	}
-	$lot = getLot($id_lot, null, null, $connection);
-	$request = "UPDATE proprietaire SET email=?, telephone=?, adresse=? WHERE id=?";
-	if ($insert_stmt = $connection->prepare($request)) {
-		$insert_stmt->bind_param('ssss', $email, $telephone, $adresse, $lot[0]["id_proprietaire"]);
-		// Execute the prepared query.
-		if (! $insert_stmt->execute()) {
-			echo $connection->error;
-			exit();
-		}
-	}
+if (
+    isset(
+        $_GET["token"],
+        $_GET["Nom"],
+        $_GET["Prenom"],
+        $_GET["Telephone"],
+        $_GET["Email"],
+        $_GET["Adresse"],
+    )
+) {
+    $token = filter_input(INPUT_GET, "token", FILTER_SANITIZE_STRING);
+    $nom = filter_input(INPUT_GET, "Nom", FILTER_SANITIZE_STRING);
+    $prenom = filter_input(INPUT_GET, "Prenom", FILTER_SANITIZE_STRING);
+    $telephone = filter_input(INPUT_GET, "Telephone", FILTER_SANITIZE_STRING);
+    $email = filter_input(INPUT_GET, "Email", FILTER_SANITIZE_STRING);
+    $adresse = filter_input(INPUT_GET, "Adresse", FILTER_SANITIZE_STRING);
+
+    $sql = "SELECT * From lot WHERE token = '{$token}' ";
+    $query = mysqli_query($connection, $sql);
+    $rowCount = mysqli_num_rows($query);
+    while ($row = mysqli_fetch_array($query)) {
+        $id_lot = $row["id"];
+    }
+    $lot = getLot($id_lot, null, null, $connection);
+    $request =
+        "UPDATE proprietaire SET email=?, telephone=?, adresse=? WHERE id=?";
+    if ($insert_stmt = $connection->prepare($request)) {
+        $insert_stmt->bind_param(
+            "ssss",
+            $email,
+            $telephone,
+            $adresse,
+            $lot[0]["id_proprietaire"],
+        );
+        // Execute the prepared query.
+        if (!$insert_stmt->execute()) {
+            echo $connection->error;
+            exit();
+        }
+    }
 }
 ?>
 {

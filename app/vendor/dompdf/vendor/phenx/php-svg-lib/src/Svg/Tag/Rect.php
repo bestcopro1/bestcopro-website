@@ -24,27 +24,36 @@ class Rect extends Shape
         $width = $this->document->getWidth();
         $height = $this->document->getHeight();
 
-        if (isset($attributes['x'])) {
-            $this->x = $this->convertSize($attributes['x'], $width);
+        if (isset($attributes["x"])) {
+            $this->x = $this->convertSize($attributes["x"], $width);
         }
-        if (isset($attributes['y'])) {
-            $this->y = $this->convertSize($attributes['y'], $height);
-        }
-
-        if (isset($attributes['width'])) {
-            $this->width = $this->convertSize($attributes['width'], $width);
-        }
-        if (isset($attributes['height'])) {
-            $this->height = $this->convertSize($attributes['height'], $height);
+        if (isset($attributes["y"])) {
+            $this->y = $this->convertSize($attributes["y"], $height);
         }
 
-        if (isset($attributes['rx'])) {
-            $this->rx = $attributes['rx'];
+        if (isset($attributes["width"])) {
+            $this->width = $this->convertSize($attributes["width"], $width);
         }
-        if (isset($attributes['ry'])) {
-            $this->ry = $attributes['ry'];
+        if (isset($attributes["height"])) {
+            $this->height = $this->convertSize($attributes["height"], $height);
         }
 
-        $this->document->getSurface()->rect($this->x, $this->y, $this->width, $this->height, $this->rx, $this->ry);
+        if (isset($attributes["rx"])) {
+            $this->rx = $attributes["rx"];
+        }
+        if (isset($attributes["ry"])) {
+            $this->ry = $attributes["ry"];
+        }
+
+        $this->document
+            ->getSurface()
+            ->rect(
+                $this->x,
+                $this->y,
+                $this->width,
+                $this->height,
+                $this->rx,
+                $this->ry,
+            );
     }
-} 
+}

@@ -26,20 +26,20 @@ class CalcFunction extends CSSFunction
      */
     public static function parse(ParserState $oParserState)
     {
-        $aOperators = ['+', '-', '*', '/'];
-        $sFunction = trim($oParserState->consumeUntil('(', false, true));
+        $aOperators = ["+", "-", "*", "/"];
+        $sFunction = trim($oParserState->consumeUntil("(", false, true));
         $oCalcList = new CalcRuleValueList($oParserState->currentLine());
-        $oList = new RuleValueList(',', $oParserState->currentLine());
+        $oList = new RuleValueList(",", $oParserState->currentLine());
         $iNestingLevel = 0;
         $iLastComponentType = null;
-        while (!$oParserState->comes(')') || $iNestingLevel > 0) {
+        while (!$oParserState->comes(")") || $iNestingLevel > 0) {
             $oParserState->consumeWhiteSpace();
-            if ($oParserState->comes('(')) {
+            if ($oParserState->comes("(")) {
                 $iNestingLevel++;
                 $oCalcList->addListComponent($oParserState->consume(1));
                 $oParserState->consumeWhiteSpace();
                 continue;
-            } elseif ($oParserState->comes(')')) {
+            } elseif ($oParserState->comes(")")) {
                 $iNestingLevel--;
                 $oCalcList->addListComponent($oParserState->consume(1));
                 $oParserState->consumeWhiteSpace();
@@ -51,17 +51,23 @@ class CalcFunction extends CSSFunction
                 $iLastComponentType = CalcFunction::T_OPERAND;
             } else {
                 if (in_array($oParserState->peek(), $aOperators)) {
-                    if (($oParserState->comes('-') || $oParserState->comes('+'))) {
+                    if (
+                        $oParserState->comes("-") ||
+                        $oParserState->comes("+")
+                    ) {
                         if (
-                            $oParserState->peek(1, -1) != ' '
-                            || !($oParserState->comes('- ')
-                                || $oParserState->comes('+ '))
+                            $oParserState->peek(1, -1) != " " ||
+                            !(
+                                $oParserState->comes("- ") ||
+                                $oParserState->comes("+ ")
+                            )
                         ) {
                             throw new UnexpectedTokenException(
                                 " {$oParserState->peek()} ",
-                                $oParserState->peek(1, -1) . $oParserState->peek(2),
-                                'literal',
-                                $oParserState->currentLine()
+                                $oParserState->peek(1, -1) .
+                                    $oParserState->peek(2),
+                                "literal",
+                                $oParserState->currentLine(),
                             );
                         }
                     }
@@ -71,19 +77,24 @@ class CalcFunction extends CSSFunction
                     throw new UnexpectedTokenException(
                         sprintf(
                             'Next token was expected to be an operand of type %s. Instead "%s" was found.',
-                            implode(', ', $aOperators),
-                            $oVal
+                            implode(", ", $aOperators),
+                            $oVal,
                         ),
-                        '',
-                        'custom',
-                        $oParserState->currentLine()
+                        "",
+                        "custom",
+                        $oParserState->currentLine(),
                     );
                 }
             }
             $oParserState->consumeWhiteSpace();
         }
         $oList->addListComponent($oCalcList);
-        $oParserState->consume(')');
-        return new CalcFunction($sFunction, $oList, ',', $oParserState->currentLine());
+        $oParserState->consume(")");
+        return new CalcFunction(
+            $sFunction,
+            $oList,
+            ",",
+            $oParserState->currentLine(),
+        );
     }
 }

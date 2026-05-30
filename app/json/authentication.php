@@ -51,64 +51,49 @@ a:0:{}
  --------------------------------------------------------------------------------------------------------------- 
 a:0:{}
 */
-include_once(__DIR__.'/../config/db.php');
-include_once(__DIR__.'/../controllers/functions.php');
+include_once __DIR__ . "/../config/db.php";
+include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
-header('Content-Type: application/json; charset=utf-8');
-if ( !isset($_GET['username'], $_GET['password']) ) :
-?>
+header("Content-Type: application/json; charset=utf-8");
+if (!isset($_GET["username"], $_GET["password"])): ?>
 {
     "statut": "OK",
     "token": "",
     "message": "Accès interdit"
 }
-<?php
-else :
-	if ( $_GET['username'] == "" || $_GET['password'] == "" ) :
-?>
+<?php else:if ($_GET["username"] == "" || $_GET["password"] == ""): ?>
 {
     "statut": "OK",
     "token": "",
     "message": "Identifiant et/ou mot de passe incorrect!"
 }
-<?php
-	else :
-		$username_signin = $_GET['username'];
-        $password_signin = $_GET['password'];
-		$username = mysqli_real_escape_string($connection, $username_signin);
-		$pswd = mysqli_real_escape_string($connection, $password_signin);
-		$sql = "SELECT * From lot WHERE code LIKE '{$username}' AND password = '{$pswd}' AND id_copropriete IN (SELECT id FROM copropriete WHERE display = 1)";
+<?php else:$username_signin = $_GET["username"];
+        $password_signin = $_GET["password"];
+        $username = mysqli_real_escape_string($connection, $username_signin);
+        $pswd = mysqli_real_escape_string($connection, $password_signin);
+        $sql = "SELECT * From lot WHERE code LIKE '{$username}' AND password = '{$pswd}' AND id_copropriete IN (SELECT id FROM copropriete WHERE display = 1)";
         $query = mysqli_query($connection, $sql);
         $rowCount = mysqli_num_rows($query);
-		if(!$query) :
-?>
+        if (!$query): ?>
 {
     "statut": "OK",
     "token": "",
     "message": "Accès interdit"
 }
-<?php
-		endif;
-		if($rowCount <= 0) :
-?>
+<?php endif;
+        if ($rowCount <= 0): ?>
 {
     "statut": "OK",
     "token": "",
     "message": "Identifiant et/ou mot de passe incorrect!"
 }
-<?php
-        else :
-			while($row = mysqli_fetch_array($query)) {
-				$pass_word     = $row['password'];
-				$token         = $row['token'];
-			}
-?>
+<?php else:while ($row = mysqli_fetch_array($query)) {
+                $pass_word = $row["password"];
+                $token = $row["token"];
+            } ?>
 {
     "statut": "OK",
-    "token": "<?=$token?>",
+    "token": "<?= $token ?>",
     "message": ""
 }
-<?php
-		endif;
-	endif;
-endif;
+<?php endif;endif;endif;

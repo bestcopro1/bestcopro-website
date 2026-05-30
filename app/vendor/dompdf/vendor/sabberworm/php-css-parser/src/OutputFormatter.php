@@ -42,7 +42,7 @@ class OutputFormatter
      */
     public function spaceAfterRuleName()
     {
-        return $this->space('AfterRuleName');
+        return $this->space("AfterRuleName");
     }
 
     /**
@@ -50,7 +50,7 @@ class OutputFormatter
      */
     public function spaceBeforeRules()
     {
-        return $this->space('BeforeRules');
+        return $this->space("BeforeRules");
     }
 
     /**
@@ -58,7 +58,7 @@ class OutputFormatter
      */
     public function spaceAfterRules()
     {
-        return $this->space('AfterRules');
+        return $this->space("AfterRules");
     }
 
     /**
@@ -66,7 +66,7 @@ class OutputFormatter
      */
     public function spaceBetweenRules()
     {
-        return $this->space('BetweenRules');
+        return $this->space("BetweenRules");
     }
 
     /**
@@ -74,7 +74,7 @@ class OutputFormatter
      */
     public function spaceBeforeBlocks()
     {
-        return $this->space('BeforeBlocks');
+        return $this->space("BeforeBlocks");
     }
 
     /**
@@ -82,7 +82,7 @@ class OutputFormatter
      */
     public function spaceAfterBlocks()
     {
-        return $this->space('AfterBlocks');
+        return $this->space("AfterBlocks");
     }
 
     /**
@@ -90,7 +90,7 @@ class OutputFormatter
      */
     public function spaceBetweenBlocks()
     {
-        return $this->space('BetweenBlocks');
+        return $this->space("BetweenBlocks");
     }
 
     /**
@@ -98,7 +98,7 @@ class OutputFormatter
      */
     public function spaceBeforeSelectorSeparator()
     {
-        return $this->space('BeforeSelectorSeparator');
+        return $this->space("BeforeSelectorSeparator");
     }
 
     /**
@@ -106,7 +106,7 @@ class OutputFormatter
      */
     public function spaceAfterSelectorSeparator()
     {
-        return $this->space('AfterSelectorSeparator');
+        return $this->space("AfterSelectorSeparator");
     }
 
     /**
@@ -116,7 +116,7 @@ class OutputFormatter
      */
     public function spaceBeforeListArgumentSeparator($sSeparator)
     {
-        return $this->space('BeforeListArgumentSeparator', $sSeparator);
+        return $this->space("BeforeListArgumentSeparator", $sSeparator);
     }
 
     /**
@@ -126,7 +126,7 @@ class OutputFormatter
      */
     public function spaceAfterListArgumentSeparator($sSeparator)
     {
-        return $this->space('AfterListArgumentSeparator', $sSeparator);
+        return $this->space("AfterListArgumentSeparator", $sSeparator);
     }
 
     /**
@@ -134,7 +134,7 @@ class OutputFormatter
      */
     public function spaceBeforeOpeningBrace()
     {
-        return $this->space('BeforeOpeningBrace');
+        return $this->space("BeforeOpeningBrace");
     }
 
     /**
@@ -146,7 +146,7 @@ class OutputFormatter
      */
     public function safely($cCode)
     {
-        if ($this->oFormat->get('IgnoreExceptions')) {
+        if ($this->oFormat->get("IgnoreExceptions")) {
             // If output exceptions are ignored, run the code with exception guards
             try {
                 return $cCode();
@@ -168,9 +168,12 @@ class OutputFormatter
      *
      * @return string
      */
-    public function implode($sSeparator, array $aValues, $bIncreaseLevel = false)
-    {
-        $sResult = '';
+    public function implode(
+        $sSeparator,
+        array $aValues,
+        $bIncreaseLevel = false,
+    ) {
+        $sResult = "";
         $oFormat = $this->oFormat;
         if ($bIncreaseLevel) {
             $oFormat = $oFormat->nextLevel();
@@ -198,17 +201,17 @@ class OutputFormatter
      */
     public function removeLastSemicolon($sString)
     {
-        if ($this->oFormat->get('SemicolonAfterLastRule')) {
+        if ($this->oFormat->get("SemicolonAfterLastRule")) {
             return $sString;
         }
-        $sString = explode(';', $sString);
+        $sString = explode(";", $sString);
         if (count($sString) < 2) {
             return $sString[0];
         }
         $sLast = array_pop($sString);
         $sNextToLast = array_pop($sString);
         array_push($sString, $sNextToLast . $sLast);
-        return implode(';', $sString);
+        return implode(";", $sString);
     }
 
     /**
@@ -226,6 +229,9 @@ class OutputFormatter
      */
     private function indent()
     {
-        return str_repeat($this->oFormat->sIndentation, $this->oFormat->level());
+        return str_repeat(
+            $this->oFormat->sIndentation,
+            $this->oFormat->level(),
+        );
     }
 }

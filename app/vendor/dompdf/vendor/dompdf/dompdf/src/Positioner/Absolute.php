@@ -14,7 +14,6 @@ use Dompdf\FrameReflower\Block;
  */
 class Absolute extends AbstractPositioner
 {
-
     /**
      * @param AbstractFrameDecorator $frame
      */
@@ -37,9 +36,12 @@ class Absolute extends AbstractPositioner
             $style = $frame->get_style();
             $block_parent = $frame->find_block_parent();
             $current_line = $block_parent->get_current_line_box();
-    
-            list($x, $y, $w, $h) = $frame->get_containing_block();
-            $inflow_x = $block_parent->get_content_box()["x"] + $current_line->left + $current_line->w;
+
+            [$x, $y, $w, $h] = $frame->get_containing_block();
+            $inflow_x =
+                $block_parent->get_content_box()["x"] +
+                $current_line->left +
+                $current_line->w;
             $inflow_y = $current_line->y;
 
             $top = $style->length_in_pt($style->top, $h);
@@ -47,7 +49,10 @@ class Absolute extends AbstractPositioner
             $bottom = $style->length_in_pt($style->bottom, $h);
             $left = $style->length_in_pt($style->left, $w);
 
-            list($width, $height) = [$frame->get_margin_width(), $frame->get_margin_height()];
+            [$width, $height] = [
+                $frame->get_margin_width(),
+                $frame->get_margin_height(),
+            ];
 
             $orig_width = $style->get_specified("width");
             $orig_height = $style->get_specified("height");
@@ -81,14 +86,14 @@ class Absolute extends AbstractPositioner
             } else {
                 if ($right === "auto") {
                     // B or F
-                    $x += (float)$left;
+                    $x += (float) $left;
                 } else {
                     if ($orig_width === "auto") {
                         // D - TODO change width
-                        $x += (float)$left;
+                        $x += (float) $left;
                     } else {
                         // H - Everything is fixed: left + width win
-                        $x += (float)$left;
+                        $x += (float) $left;
                     }
                 }
             }
@@ -101,23 +106,23 @@ class Absolute extends AbstractPositioner
                 } else {
                     if ($orig_height === "auto") {
                         // C
-                        $y += (float)$h - $height - (float)$bottom;
+                        $y += (float) $h - $height - (float) $bottom;
                     } else {
                         // G
-                        $y += (float)$h - $height - (float)$bottom;
+                        $y += (float) $h - $height - (float) $bottom;
                     }
                 }
             } else {
                 if ($bottom === "auto") {
                     // B or F
-                    $y += (float)$top;
+                    $y += (float) $top;
                 } else {
                     if ($orig_height === "auto") {
                         // D - TODO change height
-                        $y += (float)$top;
+                        $y += (float) $top;
                     } else {
                         // H - Everything is fixed: top + height win
-                        $y += (float)$top;
+                        $y += (float) $top;
                     }
                 }
             }

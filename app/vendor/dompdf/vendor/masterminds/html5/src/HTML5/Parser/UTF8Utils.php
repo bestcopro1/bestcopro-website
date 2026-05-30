@@ -47,15 +47,15 @@ class UTF8Utils
     public static function countChars($string)
     {
         // Get the length for the string we need.
-        if (function_exists('mb_strlen')) {
-            return mb_strlen($string, 'utf-8');
+        if (function_exists("mb_strlen")) {
+            return mb_strlen($string, "utf-8");
         }
 
-        if (function_exists('iconv_strlen')) {
-            return iconv_strlen($string, 'utf-8');
+        if (function_exists("iconv_strlen")) {
+            return iconv_strlen($string, "utf-8");
         }
 
-        if (function_exists('utf8_decode')) {
+        if (function_exists("utf8_decode")) {
             // MPB: Will this work? Won't certain decodes lead to two chars
             // extrapolated out of 2-byte chars?
             return strlen(utf8_decode($string));
@@ -65,7 +65,8 @@ class UTF8Utils
 
         // 0x80 = 0x7F - 0 + 1 (one added to get inclusive range)
         // 0x33 = 0xF4 - 0x2C + 1 (one added to get inclusive range)
-        return array_sum(array_slice($count, 0, 0x80)) + array_sum(array_slice($count, 0xC2, 0x33));
+        return array_sum(array_slice($count, 0, 0x80)) +
+            array_sum(array_slice($count, 0xc2, 0x33));
     }
 
     /**
@@ -79,7 +80,7 @@ class UTF8Utils
      *
      * @return string
      */
-    public static function convertToUTF8($data, $encoding = 'UTF-8')
+    public static function convertToUTF8($data, $encoding = "UTF-8")
     {
         /*
          * From the HTML5 spec: Given an encoding, the bytes in the input stream must be converted
@@ -94,7 +95,7 @@ class UTF8Utils
         // details for the bug are on http://us1.php.net/manual/en/function.iconv.php#108643
         // which contains links to the actual but reports as well as work around
         // details.
-        if (function_exists('mb_convert_encoding')) {
+        if (function_exists("mb_convert_encoding")) {
             // mb library has the following behaviors:
             // - UTF-16 surrogates result in false.
             // - Overlongs and outside Plane 16 result in empty strings.
@@ -105,20 +106,22 @@ class UTF8Utils
             // to our needs, and then change it back when we are done. This feels
             // a little excessive and it would be great if there was a better way.
             $save = mb_substitute_character();
-            mb_substitute_character('none');
-            $data = mb_convert_encoding($data, 'UTF-8', $encoding);
+            mb_substitute_character("none");
+            $data = mb_convert_encoding($data, "UTF-8", $encoding);
             mb_substitute_character($save);
         }
         // @todo Get iconv running in at least some environments if that is possible.
-        elseif (function_exists('iconv') && 'auto' !== $encoding) {
+        elseif (function_exists("iconv") && "auto" !== $encoding) {
             // fprintf(STDOUT, "iconv found\n");
             // iconv has the following behaviors:
             // - Overlong representations are ignored.
             // - Beyond Plane 16 is replaced with a lower char.
             // - Incomplete sequences generate a warning.
-            $data = @iconv($encoding, 'UTF-8//IGNORE', $data);
+            $data = @iconv($encoding, "UTF-8//IGNORE", $data);
         } else {
-            throw new Exception('Not implemented, please install mbstring or iconv');
+            throw new Exception(
+                "Not implemented, please install mbstring or iconv",
+            );
         }
 
         /*
@@ -141,14 +144,14 @@ class UTF8Utils
     public static function checkForIllegalCodepoints($data)
     {
         // Vestigal error handling.
-        $errors = array();
+        $errors = [];
 
         /*
          * All U+0000 null characters in the input must be replaced by U+FFFD REPLACEMENT CHARACTERs.
          * Any occurrences of such characters is a parse error.
          */
         for ($i = 0, $count = substr_count($data, "\0"); $i < $count; ++$i) {
-            $errors[] = 'null-character';
+            $errors[] = "null-character";
         }
 
         /*
@@ -173,9 +176,12 @@ class UTF8Utils
         \xEF\xBF[\xBE\xBF] # U+FFFE and U+FFFF
       |
         [\xF0-\xF4][\x8F-\xBF]\xBF[\xBE\xBF] # U+nFFFE and U+nFFFF (1 <= n <= 10_{16})
-      )/x', $data, $matches);
+      )/x',
+            $data,
+            $matches,
+        );
         for ($i = 0; $i < $count; ++$i) {
-            $errors[] = 'invalid-codepoint';
+            $errors[] = "invalid-codepoint";
         }
 
         return $errors;

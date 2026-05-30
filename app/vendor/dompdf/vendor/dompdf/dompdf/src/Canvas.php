@@ -27,7 +27,11 @@ interface Canvas
      * @param string         $orientation The paper orientation, either `portrait` or `landscape`.
      * @param Dompdf|null    $dompdf      The Dompdf instance.
      */
-    public function __construct($paper = "letter", string $orientation = "portrait", ?Dompdf $dompdf = null);
+    public function __construct(
+        $paper = "letter",
+        string $orientation = "portrait",
+        ?Dompdf $dompdf = null,
+    );
 
     /**
      * @return Dompdf
@@ -71,7 +75,16 @@ interface Canvas
      * @param array  $style
      * @param string $cap   `butt`, `round`, or `square`
      */
-    function line($x1, $y1, $x2, $y2, $color, $width, $style = [], $cap = "butt");
+    function line(
+        $x1,
+        $y1,
+        $x2,
+        $y2,
+        $color,
+        $width,
+        $style = [],
+        $cap = "butt",
+    );
 
     /**
      * Draws an arc
@@ -91,7 +104,18 @@ interface Canvas
      * @param array  $style
      * @param string $cap   `butt`, `round`, or `square`
      */
-    function arc($x, $y, $r1, $r2, $astart, $aend, $color, $width, $style = [], $cap = "butt");
+    function arc(
+        $x,
+        $y,
+        $r1,
+        $r2,
+        $astart,
+        $aend,
+        $color,
+        $width,
+        $style = [],
+        $cap = "butt",
+    );
 
     /**
      * Draws a rectangle at x1,y1 with width w and height h
@@ -109,7 +133,16 @@ interface Canvas
      * @param array  $style
      * @param string $cap   `butt`, `round`, or `square`
      */
-    function rectangle($x1, $y1, $w, $h, $color, $width, $style = [], $cap = "butt");
+    function rectangle(
+        $x1,
+        $y1,
+        $w,
+        $h,
+        $color,
+        $width,
+        $style = [],
+        $cap = "butt",
+    );
 
     /**
      * Draws a filled rectangle at x1,y1 with width w and height h
@@ -190,7 +223,17 @@ interface Canvas
      * @param float  $char_space Char spacing adjustment
      * @param float  $angle      Angle to write the text at, measured clockwise starting from the x-axis
      */
-    public function page_text($x, $y, $text, $font, $size, $color = [0, 0, 0], $word_space = 0.0, $char_space = 0.0, $angle = 0.0);
+    public function page_text(
+        $x,
+        $y,
+        $text,
+        $font,
+        $size,
+        $color = [0, 0, 0],
+        $word_space = 0.0,
+        $char_space = 0.0,
+        $angle = 0.0,
+    );
 
     /**
      * Draws a line at the specified coordinates on every page.
@@ -289,7 +332,13 @@ interface Canvas
      * @param array $style
      * @param bool  $fill   Fills the polygon if true
      */
-    function polygon($points, $color, $width = null, $style = [], $fill = false);
+    function polygon(
+        $points,
+        $color,
+        $width = null,
+        $style = [],
+        $fill = false,
+    );
 
     /**
      * Draws a circle at $x,$y with radius $r
@@ -306,7 +355,15 @@ interface Canvas
      * @param array $style
      * @param bool  $fill  Fills the circle if true
      */
-    function circle($x, $y, $r, $color, $width = null, $style = [], $fill = false);
+    function circle(
+        $x,
+        $y,
+        $r,
+        $color,
+        $width = null,
+        $style = [],
+        $fill = false,
+    );
 
     /**
      * Add an image to the pdf.
@@ -337,7 +394,17 @@ interface Canvas
      * @param float  $char_space  Char spacing adjustment
      * @param float  $angle       Angle to write the text at, measured clockwise starting from the x-axis
      */
-    function text($x, $y, $text, $font, $size, $color = [0, 0, 0], $word_space = 0.0, $char_space = 0.0, $angle = 0.0);
+    function text(
+        $x,
+        $y,
+        $text,
+        $font,
+        $size,
+        $color = [0, 0, 0],
+        $word_space = 0.0,
+        $char_space = 0.0,
+        $angle = 0.0,
+    );
 
     /**
      * Add a named destination (similar to <a name="foo">...</a> in html)
@@ -376,7 +443,13 @@ interface Canvas
      *
      * @return float
      */
-    function get_text_width($text, $font, $size, $word_spacing = 0.0, $char_spacing = 0.0);
+    function get_text_width(
+        $text,
+        $font,
+        $size,
+        $word_spacing = 0.0,
+        $char_spacing = 0.0,
+    );
 
     /**
      * Calculates font height, in points

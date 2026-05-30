@@ -24,19 +24,30 @@ class Ellipse extends Shape
         $width = $this->document->getWidth();
         $height = $this->document->getHeight();
 
-        if (isset($attributes['cx'])) {
-            $this->cx = $this->convertSize($attributes['cx'], $width);
+        if (isset($attributes["cx"])) {
+            $this->cx = $this->convertSize($attributes["cx"], $width);
         }
-        if (isset($attributes['cy'])) {
-            $this->cy = $this->convertSize($attributes['cy'], $height);
+        if (isset($attributes["cy"])) {
+            $this->cy = $this->convertSize($attributes["cy"], $height);
         }
-        if (isset($attributes['rx'])) {
-            $this->rx = $this->convertSize($attributes['rx'], $width);
+        if (isset($attributes["rx"])) {
+            $this->rx = $this->convertSize($attributes["rx"], $width);
         }
-        if (isset($attributes['ry'])) {
-            $this->ry = $this->convertSize($attributes['ry'], $height);
+        if (isset($attributes["ry"])) {
+            $this->ry = $this->convertSize($attributes["ry"], $height);
         }
 
-        $this->document->getSurface()->ellipse($this->cx, $this->cy, $this->rx, $this->ry, 0, 0, 360, false);
+        $this->document
+            ->getSurface()
+            ->ellipse(
+                $this->cx,
+                $this->cy,
+                $this->rx,
+                $this->ry,
+                0,
+                0,
+                360,
+                false,
+            );
     }
-} 
+}

@@ -17,7 +17,6 @@ use Dompdf\Helpers;
  */
 class Block extends AbstractRenderer
 {
-
     /**
      * @param Frame $frame
      */
@@ -46,8 +45,14 @@ class Block extends AbstractRenderer
         $this->_render_outline($frame, $border_box);
 
         // Handle anchors & links
-        if ($node->nodeName === "a" && $href = $node->getAttribute("href")) {
-            $href = Helpers::build_url($dompdf->getProtocol(), $dompdf->getBaseHost(), $dompdf->getBasePath(), $href) ?? $href;
+        if ($node->nodeName === "a" && ($href = $node->getAttribute("href"))) {
+            $href =
+                Helpers::build_url(
+                    $dompdf->getProtocol(),
+                    $dompdf->getBaseHost(),
+                    $dompdf->getBasePath(),
+                    $href,
+                ) ?? $href;
             $this->_canvas->add_link($href, $x, $y, $w, $h);
         }
 
@@ -59,8 +64,11 @@ class Block extends AbstractRenderer
         $this->debugBlockLayout($frame, "red", false);
     }
 
-    protected function debugBlockLayout(Frame $frame, ?string $color, bool $lines = false): void
-    {
+    protected function debugBlockLayout(
+        Frame $frame,
+        ?string $color,
+        bool $lines = false,
+    ): void {
         $options = $this->_dompdf->getOptions();
         $debugLayout = $options->getDebugLayout();
 
@@ -72,16 +80,26 @@ class Block extends AbstractRenderer
             $this->_debug_layout($frame->get_border_box(), $color);
 
             if ($options->getDebugLayoutPaddingBox()) {
-                $this->_debug_layout($frame->get_padding_box(), $color, [0.5, 0.5]);
+                $this->_debug_layout($frame->get_padding_box(), $color, [
+                    0.5,
+                    0.5,
+                ]);
             }
         }
 
-        if ($lines && $options->getDebugLayoutLines() && $frame instanceof BlockFrameDecorator) {
+        if (
+            $lines &&
+            $options->getDebugLayoutLines() &&
+            $frame instanceof BlockFrameDecorator
+        ) {
             [$cx, , $cw] = $frame->get_content_box();
 
             foreach ($frame->get_line_boxes() as $line) {
                 $lw = $cw - $line->left - $line->right;
-                $this->_debug_layout([$cx + $line->left, $line->y, $lw, $line->h], "orange");
+                $this->_debug_layout(
+                    [$cx + $line->left, $line->y, $lw, $line->h],
+                    "orange",
+                );
             }
         }
     }

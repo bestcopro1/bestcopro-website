@@ -1,32 +1,40 @@
 ﻿<?php
- if(!isset($_SESSION)) {
-	session_start();
+if (!isset($_SESSION)) {
+    session_start();
 }
 // If the user is not logged in redirect to the login page...
-if (!isset($_SESSION['loggedin'], $_SESSION['id']) || (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] !== "ImIn") || (isset($_SESSION['id']) && !is_int(intval($_SESSION['id'])))) {
-	header('Location: ./login.php');
-	exit;
+if (
+    !isset($_SESSION["loggedin"], $_SESSION["id"]) ||
+    (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] !== "ImIn") ||
+    (isset($_SESSION["id"]) && !is_int(intval($_SESSION["id"])))
+) {
+    header("Location: ./login.php");
+    exit();
 }
-if ($_SESSION['id_usertype'] !== "1" && $_SESSION['id_usertype'] !== "2" && $_SESSION['id_usertype'] !== "3") {
-	header('Location: ./index.php');
-	exit;
+if (
+    $_SESSION["id_usertype"] !== "1" &&
+    $_SESSION["id_usertype"] !== "2" &&
+    $_SESSION["id_usertype"] !== "3"
+) {
+    header("Location: ./index.php");
+    exit();
 }
-include_once(__DIR__.'/config/db.php');
-include_once(__DIR__.'/controllers/functions.php');
+include_once __DIR__ . "/config/db.php";
+include_once __DIR__ . "/controllers/functions.php";
 
 $rubriquesFonctTemplates = getRubrique(null, null, 1, $connection);
 $rubriquesInvestTemplates = getRubrique(null, null, 2, $connection);
 
 $allPostesTemplates = [];
-foreach($rubriquesFonctTemplates as $r) {
-	$postes = getPoste(null, null, $r['libelle'], $connection);
-	$allPostesTemplates[$r['libelle']] = array_column($postes, 'libelle');
+foreach ($rubriquesFonctTemplates as $r) {
+    $postes = getPoste(null, null, $r["libelle"], $connection);
+    $allPostesTemplates[$r["libelle"]] = array_column($postes, "libelle");
 }
-foreach($rubriquesInvestTemplates as $r) {
-	if (!isset($allPostesTemplates[$r['libelle']])) {
-		$postes = getPoste(null, null, $r['libelle'], $connection);
-		$allPostesTemplates[$r['libelle']] = array_column($postes, 'libelle');
-	}
+foreach ($rubriquesInvestTemplates as $r) {
+    if (!isset($allPostesTemplates[$r["libelle"]])) {
+        $postes = getPoste(null, null, $r["libelle"], $connection);
+        $allPostesTemplates[$r["libelle"]] = array_column($postes, "libelle");
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -120,7 +128,7 @@ foreach($rubriquesInvestTemplates as $r) {
     ***********************************-->
     <div id="main-wrapper">
 	
-		<?php include('./header.php'); ?>
+		<?php include "./header.php"; ?>
 		
 		<!--**********************************
             Content body start
@@ -206,9 +214,9 @@ foreach($rubriquesInvestTemplates as $r) {
 														<input type="month" name="dateExercice" class="form-control input-rounded input-default mb-3" placeholder="mm/yyyy" required="">
 													</div>
 												</div>
-												<input type="hidden" name="id_syndic" value="<?=$_SESSION['id']?>">
+												<input type="hidden" name="id_syndic" value="<?= $_SESSION["id"] ?>">
 												<?php
-												/*
+/*
 												<div class="col-lg-6 mb-2">
 													<div class="form-group">
 														<label class="text-label">Syndic*</label>
@@ -225,7 +233,7 @@ foreach($rubriquesInvestTemplates as $r) {
 													</div>
 												</div>
 												*/
-												?>
+?>
 												<div class="col-lg-6 mb-2">
 													<div class="form-group">
 														<label class="text-label">Préfixe*</label>
@@ -263,8 +271,10 @@ foreach($rubriquesInvestTemplates as $r) {
 																	<label class="form-label">Choisir une rubrique de fonctionnement</label>
 																	<select id="select_rubrique_fonct" class="form-control default-select wide">
 																		<option value="">-- Choisir une rubrique --</option>
-																		<?php foreach($rubriquesFonctTemplates as $r): ?>
-																			<option value="<?=htmlspecialchars($r['libelle'])?>"><?=htmlspecialchars($r['libelle'])?></option>
+																		<?php foreach ($rubriquesFonctTemplates as $r): ?>
+																			<option value="<?= htmlspecialchars($r["libelle"]) ?>"><?= htmlspecialchars(
+    $r["libelle"],
+) ?></option>
 																		<?php endforeach; ?>
 																		<option value="NEW">-- Autre (Nouvelle rubrique) --</option>
 																	</select>
@@ -286,8 +296,10 @@ foreach($rubriquesInvestTemplates as $r) {
 																	<label class="form-label">Choisir une rubrique d'investissement</label>
 																	<select id="select_rubrique_invest" class="form-control default-select wide">
 																		<option value="">-- Choisir une rubrique --</option>
-																		<?php foreach($rubriquesInvestTemplates as $r): ?>
-																			<option value="<?=htmlspecialchars($r['libelle'])?>"><?=htmlspecialchars($r['libelle'])?></option>
+																		<?php foreach ($rubriquesInvestTemplates as $r): ?>
+																			<option value="<?= htmlspecialchars($r["libelle"]) ?>"><?= htmlspecialchars(
+    $r["libelle"],
+) ?></option>
 																		<?php endforeach; ?>
 																		<option value="NEW">-- Autre (Nouvelle rubrique) --</option>
 																	</select>
@@ -362,13 +374,11 @@ foreach($rubriquesInvestTemplates as $r) {
 																					<label class="text-label">Type du lot*</label>
 																					<select name="id_typeLot" class="default-select form-control input-rounded wide mb-3">
 																						<?php
-																						$typelots = getTypelot(null, $GLOBALS["connection"]);
-																						foreach($typelots as $typelot):
-																						?>
-																						<option value="<?=$typelot["id"]?>"><?=$typelot["libelle"]?></option>
-																						<?php
-																						endforeach;
-																						?>
+                      $typelots = getTypelot(null, $GLOBALS["connection"]);
+                      foreach ($typelots as $typelot): ?>
+																						<option value="<?= $typelot["id"] ?>"><?= $typelot["libelle"] ?></option>
+																						<?php endforeach;
+                      ?>
 																					</select>
 																				</div>
 																			</div>
@@ -425,13 +435,16 @@ foreach($rubriquesInvestTemplates as $r) {
 																					<label class="text-label">Type*</label>
 																					<select name="id_typeProprietaire" class="default-select form-control input-rounded wide mb-3">
 																						<?php
-																						$typeproprietaires = getTypeproprietaire(null, $GLOBALS["connection"]);
-																						foreach($typeproprietaires as $typeproprietaire):
-																						?>
-																						<option value="<?=$typeproprietaire["id"]?>"><?=$typeproprietaire["libelle"]?></option>
-																						<?php
-																						endforeach;
-																						?>
+                      $typeproprietaires = getTypeproprietaire(
+                          null,
+                          $GLOBALS["connection"],
+                      );
+                      foreach ($typeproprietaires as $typeproprietaire): ?>
+																						<option value="<?= $typeproprietaire["id"] ?>"><?= $typeproprietaire[
+    "libelle"
+] ?></option>
+																						<?php endforeach;
+                      ?>
 																					</select>
 																				</div>
 																			</div>
@@ -612,13 +625,16 @@ foreach($rubriquesInvestTemplates as $r) {
 																<label class="text-label">Période de paiement*</label>
 																<select name="id_periodePaiement" class="default-select form-control input-rounded wide mb-3">
 																	<?php
-																	$periodepaiements = getPeriodepaiement(null, $GLOBALS["connection"]);
-																	foreach($periodepaiements as $periodepaiement):
-																	?>
-																	<option value="<?=$periodepaiement["id"]?>"><?=$periodepaiement["libelle"]?></option>
-																	<?php
-																	endforeach;
-																	?>
+                 $periodepaiements = getPeriodepaiement(
+                     null,
+                     $GLOBALS["connection"],
+                 );
+                 foreach ($periodepaiements as $periodepaiement): ?>
+																	<option value="<?= $periodepaiement["id"] ?>"><?= $periodepaiement[
+    "libelle"
+] ?></option>
+																	<?php endforeach;
+                 ?>
 																</select>
 															</div>
 														</div>
@@ -627,13 +643,16 @@ foreach($rubriquesInvestTemplates as $r) {
 																<label class="text-label">Mode de répartition des charges de fonctionnement*</label>
 																<select id="id_repartitionFonct" name="id_repartitionFonct" class="default-select form-control input-rounded wide mb-3">
 																	<?php
-																	$repartitionfoncts = getRepartitionfonct(null, $GLOBALS["connection"]);
-																	foreach($repartitionfoncts as $repartitionfonct):
-																	?>
-																	<option value="<?=$repartitionfonct["id"]?>"><?=$repartitionfonct["libelle"]?></option>
-																	<?php
-																	endforeach;
-																	?>
+                 $repartitionfoncts = getRepartitionfonct(
+                     null,
+                     $GLOBALS["connection"],
+                 );
+                 foreach ($repartitionfoncts as $repartitionfonct): ?>
+																	<option value="<?= $repartitionfonct["id"] ?>"><?= $repartitionfonct[
+    "libelle"
+] ?></option>
+																	<?php endforeach;
+                 ?>
 																</select>
 															</div>
 														</div>
@@ -642,13 +661,16 @@ foreach($rubriquesInvestTemplates as $r) {
 																<label class="text-label">Mode de répartition des charges d'investissement*</label>
 																<select id="id_repartitionInvest" name="id_repartitionInvest" class="default-select form-control input-rounded wide mb-3">
 																	<?php
-																	$repartitioninvests = getRepartitioninvest(null, $GLOBALS["connection"]);
-																	foreach($repartitioninvests as $repartitioninvest):
-																	?>
-																	<option value="<?=$repartitioninvest["id"]?>"><?=$repartitioninvest["libelle"]?></option>
-																	<?php
-																	endforeach;
-																	?>
+                 $repartitioninvests = getRepartitioninvest(
+                     null,
+                     $GLOBALS["connection"],
+                 );
+                 foreach ($repartitioninvests as $repartitioninvest): ?>
+																	<option value="<?= $repartitioninvest["id"] ?>"><?= $repartitioninvest[
+    "libelle"
+] ?></option>
+																	<?php endforeach;
+                 ?>
 																</select>
 															</div>
 														</div>
@@ -690,7 +712,7 @@ foreach($rubriquesInvestTemplates as $r) {
             Content body end
         ***********************************-->
 
-		<?php include('./footer.php'); ?>
+		<?php include "./footer.php"; ?>
 
 
     </div>
@@ -731,7 +753,7 @@ foreach($rubriquesInvestTemplates as $r) {
 	<script src="js\demo.js"></script>
 	<script>
 		$(document).ready(function(){
-			var budgetPostesTemplates = <?=json_encode($allPostesTemplates)?>;
+			var budgetPostesTemplates = <?= json_encode($allPostesTemplates) ?>;
 
 			function addRubriqueUI(type, name, templatePostes) {
 				var rubrique_count_selector = (type == 1) ? '#rubrique_count_fonct' : '#rubrique_count_invest';

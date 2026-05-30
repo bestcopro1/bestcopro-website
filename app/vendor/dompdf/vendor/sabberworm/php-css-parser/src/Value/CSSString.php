@@ -48,7 +48,9 @@ class CSSString extends PrimitiveValue
         $sContent = null;
         if ($sQuote === null) {
             // Unquoted strings end in whitespace or with braces, brackets, parentheses
-            while (!preg_match('/[\\s{}()<>\\[\\]]/isu', $oParserState->peek())) {
+            while (
+                !preg_match("/[\\s{}()<>\\[\\]]/isu", $oParserState->peek())
+            ) {
                 $sResult .= $oParserState->parseCharacter(false);
             }
         } else {
@@ -56,8 +58,10 @@ class CSSString extends PrimitiveValue
                 $sContent = $oParserState->parseCharacter(false);
                 if ($sContent === null) {
                     throw new SourceException(
-                        "Non-well-formed quoted string {$oParserState->peek(3)}",
-                        $oParserState->currentLine()
+                        "Non-well-formed quoted string {$oParserState->peek(
+                            3,
+                        )}",
+                        $oParserState->currentLine(),
                     );
                 }
                 $sResult .= $sContent;
@@ -99,7 +103,9 @@ class CSSString extends PrimitiveValue
     public function render(OutputFormat $oOutputFormat)
     {
         $sString = addslashes($this->sString);
-        $sString = str_replace("\n", '\A', $sString);
-        return $oOutputFormat->getStringQuotingType() . $sString . $oOutputFormat->getStringQuotingType();
+        $sString = str_replace("\n", "\A", $sString);
+        return $oOutputFormat->getStringQuotingType() .
+            $sString .
+            $oOutputFormat->getStringQuotingType();
     }
 }

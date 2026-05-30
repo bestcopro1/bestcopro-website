@@ -39,32 +39,32 @@ class OutputFormat
      * Any newline character will be indented according to the current level.
      * The triples (After, Before, Between) can be set using a wildcard (e.g. `$oFormat->set('Space*Rules', "\n");`)
      */
-    public $sSpaceAfterRuleName = ' ';
+    public $sSpaceAfterRuleName = " ";
 
     /**
      * @var string
      */
-    public $sSpaceBeforeRules = '';
+    public $sSpaceBeforeRules = "";
 
     /**
      * @var string
      */
-    public $sSpaceAfterRules = '';
+    public $sSpaceAfterRules = "";
 
     /**
      * @var string
      */
-    public $sSpaceBetweenRules = '';
+    public $sSpaceBetweenRules = "";
 
     /**
      * @var string
      */
-    public $sSpaceBeforeBlocks = '';
+    public $sSpaceBeforeBlocks = "";
 
     /**
      * @var string
      */
-    public $sSpaceAfterBlocks = '';
+    public $sSpaceAfterBlocks = "";
 
     /**
      * @var string
@@ -76,58 +76,58 @@ class OutputFormat
      *
      * @var string
      */
-    public $sBeforeAtRuleBlock = '';
+    public $sBeforeAtRuleBlock = "";
 
     /**
      * @var string
      */
-    public $sAfterAtRuleBlock = '';
+    public $sAfterAtRuleBlock = "";
 
     /**
      * This is what’s printed before and after the comma if a declaration block contains multiple selectors.
      *
      * @var string
      */
-    public $sSpaceBeforeSelectorSeparator = '';
+    public $sSpaceBeforeSelectorSeparator = "";
 
     /**
      * @var string
      */
-    public $sSpaceAfterSelectorSeparator = ' ';
+    public $sSpaceAfterSelectorSeparator = " ";
 
     /**
      * This is what’s printed after the comma of value lists
      *
      * @var string
      */
-    public $sSpaceBeforeListArgumentSeparator = '';
+    public $sSpaceBeforeListArgumentSeparator = "";
 
     /**
      * @var string
      */
-    public $sSpaceAfterListArgumentSeparator = '';
+    public $sSpaceAfterListArgumentSeparator = "";
 
     /**
      * @var string
      */
-    public $sSpaceBeforeOpeningBrace = ' ';
+    public $sSpaceBeforeOpeningBrace = " ";
 
     /**
      * Content injected in and around declaration blocks.
      *
      * @var string
      */
-    public $sBeforeDeclarationBlock = '';
+    public $sBeforeDeclarationBlock = "";
 
     /**
      * @var string
      */
-    public $sAfterDeclarationBlockSelectors = '';
+    public $sAfterDeclarationBlockSelectors = "";
 
     /**
      * @var string
      */
-    public $sAfterDeclarationBlock = '';
+    public $sAfterDeclarationBlock = "";
 
     /**
      * Indentation character(s) per level. Only applicable if newlines are used in any of the spacing settings.
@@ -158,9 +158,7 @@ class OutputFormat
      */
     private $iIndentationLevel = 0;
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     /**
      * @param string $sName
@@ -169,7 +167,7 @@ class OutputFormat
      */
     public function get($sName)
     {
-        $aVarPrefixes = ['a', 's', 'm', 'b', 'f', 'o', 'c', 'i'];
+        $aVarPrefixes = ["a", "s", "m", "b", "f", "o", "c", "i"];
         foreach ($aVarPrefixes as $sPrefix) {
             $sFieldName = $sPrefix . ucfirst($sName);
             if (isset($this->$sFieldName)) {
@@ -187,14 +185,13 @@ class OutputFormat
      */
     public function set($aNames, $mValue)
     {
-        $aVarPrefixes = ['a', 's', 'm', 'b', 'f', 'o', 'c', 'i'];
-        if (is_string($aNames) && strpos($aNames, '*') !== false) {
-            $aNames =
-                [
-                    str_replace('*', 'Before', $aNames),
-                    str_replace('*', 'Between', $aNames),
-                    str_replace('*', 'After', $aNames),
-                ];
+        $aVarPrefixes = ["a", "s", "m", "b", "f", "o", "c", "i"];
+        if (is_string($aNames) && strpos($aNames, "*") !== false) {
+            $aNames = [
+                str_replace("*", "Before", $aNames),
+                str_replace("*", "Between", $aNames),
+                str_replace("*", "After", $aNames),
+            ];
         } elseif (!is_array($aNames)) {
             $aNames = [$aNames];
         }
@@ -225,14 +222,19 @@ class OutputFormat
      */
     public function __call($sMethodName, array $aArguments)
     {
-        if (strpos($sMethodName, 'set') === 0) {
+        if (strpos($sMethodName, "set") === 0) {
             return $this->set(substr($sMethodName, 3), $aArguments[0]);
-        } elseif (strpos($sMethodName, 'get') === 0) {
+        } elseif (strpos($sMethodName, "get") === 0) {
             return $this->get(substr($sMethodName, 3));
         } elseif (method_exists(OutputFormatter::class, $sMethodName)) {
-            return call_user_func_array([$this->getFormatter(), $sMethodName], $aArguments);
+            return call_user_func_array(
+                [$this->getFormatter(), $sMethodName],
+                $aArguments,
+            );
         } else {
-            throw new \Exception('Unknown OutputFormat method called: ' . $sMethodName);
+            throw new \Exception(
+                "Unknown OutputFormat method called: " . $sMethodName,
+            );
         }
     }
 
@@ -314,8 +316,12 @@ class OutputFormat
     public static function createCompact()
     {
         $format = self::create();
-        $format->set('Space*Rules', "")->set('Space*Blocks', "")->setSpaceAfterRuleName('')
-            ->setSpaceBeforeOpeningBrace('')->setSpaceAfterSelectorSeparator('');
+        $format
+            ->set("Space*Rules", "")
+            ->set("Space*Blocks", "")
+            ->setSpaceAfterRuleName("")
+            ->setSpaceBeforeOpeningBrace("")
+            ->setSpaceAfterSelectorSeparator("");
         return $format;
     }
 
@@ -327,8 +333,14 @@ class OutputFormat
     public static function createPretty()
     {
         $format = self::create();
-        $format->set('Space*Rules', "\n")->set('Space*Blocks', "\n")
-            ->setSpaceBetweenBlocks("\n\n")->set('SpaceAfterListArgumentSeparator', ['default' => '', ',' => ' ']);
+        $format
+            ->set("Space*Rules", "\n")
+            ->set("Space*Blocks", "\n")
+            ->setSpaceBetweenBlocks("\n\n")
+            ->set("SpaceAfterListArgumentSeparator", [
+                "default" => "",
+                "," => " ",
+            ]);
         return $format;
     }
 }

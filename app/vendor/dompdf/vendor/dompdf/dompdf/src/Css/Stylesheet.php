@@ -149,8 +149,32 @@ class Stylesheet
      * (Previous version $ACCEPTED_MEDIA_TYPES = $ACCEPTED_GENERIC_MEDIA_TYPES + $ACCEPTED_DEFAULT_MEDIA_TYPE)
      */
     static $ACCEPTED_DEFAULT_MEDIA_TYPE = "print";
-    static $ACCEPTED_GENERIC_MEDIA_TYPES = ["all", "static", "visual", "bitmap", "paged", "dompdf"];
-    static $VALID_MEDIA_TYPES = ["all", "aural", "bitmap", "braille", "dompdf", "embossed", "handheld", "paged", "print", "projection", "screen", "speech", "static", "tty", "tv", "visual"];
+    static $ACCEPTED_GENERIC_MEDIA_TYPES = [
+        "all",
+        "static",
+        "visual",
+        "bitmap",
+        "paged",
+        "dompdf",
+    ];
+    static $VALID_MEDIA_TYPES = [
+        "all",
+        "aural",
+        "bitmap",
+        "braille",
+        "dompdf",
+        "embossed",
+        "handheld",
+        "paged",
+        "print",
+        "projection",
+        "screen",
+        "speech",
+        "static",
+        "tty",
+        "tv",
+        "visual",
+    ];
 
     /**
      * @var FontMetrics
@@ -173,7 +197,11 @@ class Stylesheet
         if (isset($_SERVER["SCRIPT_FILENAME"])) {
             $script = $_SERVER["SCRIPT_FILENAME"];
         }
-        list($this->_protocol, $this->_base_host, $this->_base_path) = Helpers::explode_url($script);
+        [
+            $this->_protocol,
+            $this->_base_host,
+            $this->_base_path,
+        ] = Helpers::explode_url($script);
         $this->_page_styles = ["base" => new Style($this)];
     }
 
@@ -330,38 +358,68 @@ class Stylesheet
             if ($file !== $this->getDefaultStylesheet()) {
                 $allowed_protocols = $options->getAllowedProtocols();
                 if (!array_key_exists($protocol, $allowed_protocols)) {
-                    Helpers::record_warnings(E_USER_WARNING, "Permission denied on $file. The communication protocol is not supported.", __FILE__, __LINE__);
+                    Helpers::record_warnings(
+                        E_USER_WARNING,
+                        "Permission denied on $file. The communication protocol is not supported.",
+                        __FILE__,
+                        __LINE__,
+                    );
                     return;
                 }
                 foreach ($allowed_protocols[$protocol]["rules"] as $rule) {
                     [$result, $message] = $rule($file);
                     if (!$result) {
-                        Helpers::record_warnings(E_USER_WARNING, "Error loading $file: $message", __FILE__, __LINE__);
+                        Helpers::record_warnings(
+                            E_USER_WARNING,
+                            "Error loading $file: $message",
+                            __FILE__,
+                            __LINE__,
+                        );
                         return;
                     }
                 }
             }
 
-            [$css, $http_response_header] = Helpers::getFileContent($file, $this->_dompdf->getHttpContext());
+            [$css, $http_response_header] = Helpers::getFileContent(
+                $file,
+                $this->_dompdf->getHttpContext(),
+            );
 
             $good_mime_type = true;
 
             // See http://the-stickman.com/web-development/php/getting-http-response-headers-when-using-file_get_contents/
-            if (isset($http_response_header) && !$this->_dompdf->getQuirksmode()) {
+            if (
+                isset($http_response_header) &&
+                !$this->_dompdf->getQuirksmode()
+            ) {
                 foreach ($http_response_header as $_header) {
-                    if (preg_match("@Content-Type:\s*([\w/]+)@i", $_header, $matches) &&
-                        ($matches[1] !== "text/css")
+                    if (
+                        preg_match(
+                            "@Content-Type:\s*([\w/]+)@i",
+                            $_header,
+                            $matches,
+                        ) &&
+                        $matches[1] !== "text/css"
                     ) {
                         $good_mime_type = false;
                     }
                 }
             }
             if (!$good_mime_type || $css === null) {
-                Helpers::record_warnings(E_USER_WARNING, "Unable to load css file $file", __FILE__, __LINE__);
+                Helpers::record_warnings(
+                    E_USER_WARNING,
+                    "Unable to load css file $file",
+                    __FILE__,
+                    __LINE__,
+                );
                 return;
             }
 
-            [$this->_protocol, $this->_base_host, $this->_base_path] = $parsed_url;
+            [
+                $this->_protocol,
+                $this->_base_host,
+                $this->_base_path,
+            ] = $parsed_url;
         }
 
         $this->_parse_css($css);
@@ -378,23 +436,31 @@ class Stylesheet
      *
      * @return int
      */
-    protected function specificity(string $selector, int $origin = self::ORIG_AUTHOR): int
-    {
-        $a = ($selector === "!attr") ? 1 : 0;
+    protected function specificity(
+        string $selector,
+        int $origin = self::ORIG_AUTHOR,
+    ): int {
+        $a = $selector === "!attr" ? 1 : 0;
 
         $b = min(mb_substr_count($selector, "#"), 255);
 
-        $c = min(mb_substr_count($selector, ".") +
-            mb_substr_count($selector, "[") +
-            mb_substr_count($selector, ":") -
-            2 * mb_substr_count($selector, "::"), 255);
+        $c = min(
+            mb_substr_count($selector, ".") +
+                mb_substr_count($selector, "[") +
+                mb_substr_count($selector, ":") -
+                2 * mb_substr_count($selector, "::"),
+            255,
+        );
 
-        $d = min(mb_substr_count($selector, " ") +
-            mb_substr_count($selector, ">") +
-            mb_substr_count($selector, "+") +
-            mb_substr_count($selector, "~") -
-            mb_substr_count($selector, "~=") +
-            mb_substr_count($selector, "::"), 255);
+        $d = min(
+            mb_substr_count($selector, " ") +
+                mb_substr_count($selector, ">") +
+                mb_substr_count($selector, "+") +
+                mb_substr_count($selector, "~") -
+                mb_substr_count($selector, "~=") +
+                mb_substr_count($selector, "::"),
+            255,
+        );
 
         //If a normal element name is at the beginning of the string,
         //a leading whitespace might have been removed on whitespace collapsing and removal
@@ -402,7 +468,14 @@ class Stylesheet
         //this can lead to a too small specificity
         //see selectorToXpath
 
-        if (!in_array($selector[0], [" ", ">", ".", "#", "+", "~", ":", "["], true) && $selector !== "*") {
+        if (
+            !in_array(
+                $selector[0],
+                [" ", ">", ".", "#", "+", "~", ":", "["],
+                true,
+            ) &&
+            $selector !== "*"
+        ) {
             $d++;
         }
 
@@ -410,12 +483,18 @@ class Stylesheet
             /*DEBUGCSS*/
             print "<pre>\n";
             /*DEBUGCSS*/
-            printf("specificity(): 0x%08x \"%s\"\n", self::$_stylesheet_origins[$origin] + (($a << 24) | ($b << 16) | ($c << 8) | ($d)), $selector);
+            printf(
+                "specificity(): 0x%08x \"%s\"\n",
+                self::$_stylesheet_origins[$origin] +
+                    (($a << 24) | ($b << 16) | ($c << 8) | $d),
+                $selector,
+            );
             /*DEBUGCSS*/
             print "</pre>";
         }
 
-        return self::$_stylesheet_origins[$origin] + (($a << 24) | ($b << 16) | ($c << 8) | ($d));
+        return self::$_stylesheet_origins[$origin] +
+            (($a << 24) | ($b << 16) | ($c << 8) | $d);
     }
 
     /**
@@ -426,8 +505,10 @@ class Stylesheet
      *
      * @return array|null
      */
-    protected function selectorToXpath(string $selector, bool $firstPass = false): ?array
-    {
+    protected function selectorToXpath(
+        string $selector,
+        bool $firstPass = false,
+    ): ?array {
         // Collapse white space and strip whitespace around delimiters
         //$search = array("/\\s+/", "/\\s+([.>#+:])\\s+/");
         //$replace = array(" ", "\\1");
@@ -455,7 +536,6 @@ class Stylesheet
         $i = 0;
 
         while ($i < $len) {
-
             $s = $selector[$i];
             $i++;
 
@@ -468,7 +548,12 @@ class Stylesheet
                 $c = $selector[$i];
                 $c_prev = $selector[$i - 1];
 
-                if (!$in_func && !$in_attr && in_array($c, $delimiters, true) && !($c === $c_prev && $c === ":")) {
+                if (
+                    !$in_func &&
+                    !$in_attr &&
+                    in_array($c, $delimiters, true) &&
+                    !($c === $c_prev && $c === ":")
+                ) {
                     break;
                 }
 
@@ -492,7 +577,6 @@ class Stylesheet
             }
 
             switch ($s) {
-
                 case " ":
                 case ">":
                     // All elements matching the next token that are descendants
@@ -566,7 +650,6 @@ class Stylesheet
 
                     // Pseudo-classes
                     switch ($tok) {
-
                         case "root":
                             $query .= "[not(parent::*)]";
                             break;
@@ -580,7 +663,8 @@ class Stylesheet
                             break;
 
                         case "only-child":
-                            $query .= "[not(preceding-sibling::*) and not(following-sibling::*)]";
+                            $query .=
+                                "[not(preceding-sibling::*) and not(following-sibling::*)]";
                             break;
 
                         // https://www.w3.org/TR/selectors-3/#nth-child-pseudo
@@ -589,12 +673,21 @@ class Stylesheet
                             $last = true;
                         case "nth-child":
                             $p = $i + 1;
-                            $nth = trim(mb_substr($selector, $p, strpos($selector, ")", $i) - $p));
+                            $nth = trim(
+                                mb_substr(
+                                    $selector,
+                                    $p,
+                                    strpos($selector, ")", $i) - $p,
+                                ),
+                            );
                             $position = $last
                                 ? "(count(following-sibling::*) + 1)"
                                 : "(count(preceding-sibling::*) + 1)";
 
-                            $condition = $this->selectorAnPlusB($nth, $position);
+                            $condition = $this->selectorAnPlusB(
+                                $nth,
+                                $position,
+                            );
                             $query .= "[$condition]";
                             break;
 
@@ -620,12 +713,21 @@ class Stylesheet
                             $last = true;
                         case "nth-of-type":
                             $p = $i + 1;
-                            $nth = trim(mb_substr($selector, $p, strpos($selector, ")", $i) - $p));
+                            $nth = trim(
+                                mb_substr(
+                                    $selector,
+                                    $p,
+                                    strpos($selector, ")", $i) - $p,
+                                ),
+                            );
                             $position = $last
                                 ? "(count(following-sibling::$name) + 1)"
                                 : "(count(preceding-sibling::$name) + 1)";
 
-                            $condition = $this->selectorAnPlusB($nth, $position);
+                            $condition = $this->selectorAnPlusB(
+                                $nth,
+                                $position,
+                            );
                             $query .= "[$condition]";
                             break;
 
@@ -637,10 +739,19 @@ class Stylesheet
                         // TODO: bit of a hack attempt at matches support, currently only matches against elements
                         case "matches":
                             $p = $i + 1;
-                            $matchList = trim(mb_substr($selector, $p, strpos($selector, ")", $i) - $p));
+                            $matchList = trim(
+                                mb_substr(
+                                    $selector,
+                                    $p,
+                                    strpos($selector, ")", $i) - $p,
+                                ),
+                            );
 
                             // Tag names are case-insensitive
-                            $elements = array_map("trim", explode(",", strtolower($matchList)));
+                            $elements = array_map(
+                                "trim",
+                                explode(",", strtolower($matchList)),
+                            );
                             foreach ($elements as &$element) {
                                 $element = "name() = '$element'";
                             }
@@ -739,7 +850,6 @@ class Stylesheet
                     }
 
                     switch ($tok[$j]) {
-
                         case "~":
                         case "|":
                         case "^":
@@ -758,7 +868,6 @@ class Stylesheet
                         case "=":
                             $op = "=";
                             break;
-
                     }
 
                     // Read the attribute value, if required
@@ -780,7 +889,6 @@ class Stylesheet
                     $value = trim($value, "\"'");
 
                     switch ($op) {
-
                         case "":
                             $query .= "[@$attr]";
                             break;
@@ -792,9 +900,10 @@ class Stylesheet
                         case "~=":
                             // FIXME: this will break if $value contains quoted strings
                             // (e.g. [type~="a b c" "d e f"])
-                            $query .= $value !== "" && !preg_match("/\s+/", $value)
-                                ? "[contains(concat(' ', normalize-space(@$attr), ' '), concat(' ', \"$value\", ' '))]"
-                                : "[false()]";
+                            $query .=
+                                $value !== "" && !preg_match("/\s+/", $value)
+                                    ? "[contains(concat(' ', normalize-space(@$attr), ' '), concat(' ', \"$value\", ' '))]"
+                                    : "[false()]";
                             break;
 
                         case "|=":
@@ -809,21 +918,26 @@ class Stylesheet
                             break;
 
                         case "^=":
-                            $query .= $value !== ""
-                                ? "[starts-with(@$attr,\"$value\")]"
-                                : "[false()]";
+                            $query .=
+                                $value !== ""
+                                    ? "[starts-with(@$attr,\"$value\")]"
+                                    : "[false()]";
                             break;
 
                         case "$=":
-                            $query .= $value !== ""
-                                ? "[substring(@$attr, string-length(@$attr)-" . (strlen($value) - 1) . ")=\"$value\"]"
-                                : "[false()]";
+                            $query .=
+                                $value !== ""
+                                    ? "[substring(@$attr, string-length(@$attr)-" .
+                                        (strlen($value) - 1) .
+                                        ")=\"$value\"]"
+                                    : "[false()]";
                             break;
 
                         case "*=":
-                            $query .= $value !== ""
-                                ? "[contains(@$attr,\"$value\")]"
-                                : "[false()]";
+                            $query .=
+                                $value !== ""
+                                    ? "[contains(@$attr,\"$value\")]"
+                                    : "[false()]";
                             break;
                     }
 
@@ -849,10 +963,12 @@ class Stylesheet
         // odd
         if ($expr === "odd") {
             return "($position mod 2) = 1";
-        } // even
+        }
+        // even
         elseif ($expr === "even") {
             return "($position mod 2) = 0";
-        } // b
+        }
+        // b
         elseif (preg_match("/^\d+$/", $expr)) {
             return "$position = $expr";
         }
@@ -860,22 +976,38 @@ class Stylesheet
         // an+b
         // https://github.com/tenderlove/nokogiri/blob/master/lib/nokogiri/css/xpath_visitor.rb
         $expr = preg_replace("/\s/", "", $expr);
-        if (!preg_match("/^(?P<a>-?[0-9]*)?n(?P<b>[-+]?[0-9]+)?$/", $expr, $matches)) {
+        if (
+            !preg_match(
+                "/^(?P<a>-?[0-9]*)?n(?P<b>[-+]?[0-9]+)?$/",
+                $expr,
+                $matches,
+            )
+        ) {
             return "false()";
         }
 
-        $a = (isset($matches["a"]) && $matches["a"] !== "") ? ($matches["a"] !== "-" ? intval($matches["a"]) : -1) : 1;
-        $b = (isset($matches["b"]) && $matches["b"] !== "") ? intval($matches["b"]) : 0;
+        $a =
+            isset($matches["a"]) && $matches["a"] !== ""
+                ? ($matches["a"] !== "-"
+                    ? intval($matches["a"])
+                    : -1)
+                : 1;
+        $b =
+            isset($matches["b"]) && $matches["b"] !== ""
+                ? intval($matches["b"])
+                : 0;
 
         if ($b === 0) {
             return "($position mod $a) = 0";
         } else {
-            $compare = ($a < 0) ? "<=" : ">=";
+            $compare = $a < 0 ? "<=" : ">=";
             $b2 = -$b;
             if ($b2 >= 0) {
                 $b2 = "+$b2";
             }
-            return "($position $compare $b) and ((($position $b2) mod " . abs($a) . ") = 0)";
+            return "($position $compare $b) and ((($position $b2) mod " .
+                abs($a) .
+                ") = 0)";
         }
     }
 
@@ -908,21 +1040,34 @@ class Stylesheet
 
         // Add generated content
         foreach ($this->_styles as $selector => $selector_styles) {
-            if (strpos($selector, ":before") === false && strpos($selector, ":after") === false) {
+            if (
+                strpos($selector, ":before") === false &&
+                strpos($selector, ":after") === false
+            ) {
                 continue;
             }
 
             $query = $this->selectorToXpath($selector, true);
             if ($query === null) {
-                Helpers::record_warnings(E_USER_WARNING, "The CSS selector '$selector' is not valid", __FILE__, __LINE__);
+                Helpers::record_warnings(
+                    E_USER_WARNING,
+                    "The CSS selector '$selector' is not valid",
+                    __FILE__,
+                    __LINE__,
+                );
                 continue;
             }
 
             // Retrieve the nodes, limit to body for generated content
             // TODO: If we use a context node can we remove the leading dot?
-            $nodes = @$xp->query('.' . $query["query"]);
+            $nodes = @$xp->query("." . $query["query"]);
             if ($nodes === false) {
-                Helpers::record_warnings(E_USER_WARNING, "The CSS selector '$selector' is not valid", __FILE__, __LINE__);
+                Helpers::record_warnings(
+                    E_USER_WARNING,
+                    "The CSS selector '$selector' is not valid",
+                    __FILE__,
+                    __LINE__,
+                );
                 continue;
             }
 
@@ -933,7 +1078,10 @@ class Stylesheet
                         continue;
                     }
 
-                    foreach (array_keys($query["pseudo_elements"], true, true) as $pos) {
+                    foreach (
+                        array_keys($query["pseudo_elements"], true, true)
+                        as $pos
+                    ) {
                         // Do not add a new pseudo element if another one already matched
                         if ($node->hasAttribute("dompdf_{$pos}_frame_id")) {
                             continue;
@@ -949,15 +1097,26 @@ class Stylesheet
                         }
 
                         if (($src = $this->resolve_url($content)) !== "none") {
-                            $new_node = $node->ownerDocument->createElement("img_generated");
+                            $new_node = $node->ownerDocument->createElement(
+                                "img_generated",
+                            );
                             $new_node->setAttribute("src", $src);
                         } else {
-                            $new_node = $node->ownerDocument->createElement("dompdf_generated");
+                            $new_node = $node->ownerDocument->createElement(
+                                "dompdf_generated",
+                            );
                         }
 
                         $new_node->setAttribute($pos, $pos);
-                        $new_frame_id = $tree->insert_node($node, $new_node, $pos);
-                        $node->setAttribute("dompdf_{$pos}_frame_id", $new_frame_id);
+                        $new_frame_id = $tree->insert_node(
+                            $node,
+                            $new_node,
+                            $pos,
+                        );
+                        $node->setAttribute(
+                            "dompdf_{$pos}_frame_id",
+                            $new_frame_id,
+                        );
                     }
                 }
             }
@@ -967,14 +1126,24 @@ class Stylesheet
         foreach ($this->_styles as $selector => $selector_styles) {
             $query = $this->selectorToXpath($selector);
             if ($query === null) {
-                Helpers::record_warnings(E_USER_WARNING, "The CSS selector '$selector' is not valid", __FILE__, __LINE__);
+                Helpers::record_warnings(
+                    E_USER_WARNING,
+                    "The CSS selector '$selector' is not valid",
+                    __FILE__,
+                    __LINE__,
+                );
                 continue;
             }
 
             // Retrieve the nodes
             $nodes = @$xp->query($query["query"]);
             if ($nodes === false) {
-                Helpers::record_warnings(E_USER_WARNING, "The CSS selector '$selector' is not valid", __FILE__, __LINE__);
+                Helpers::record_warnings(
+                    E_USER_WARNING,
+                    "The CSS selector '$selector' is not valid",
+                    __FILE__,
+                    __LINE__,
+                );
                 continue;
             }
 
@@ -999,12 +1168,17 @@ class Stylesheet
         $canvas = $this->_dompdf->getCanvas();
         $paper_width = $canvas->get_width();
         $paper_height = $canvas->get_height();
-        $paper_orientation = ($paper_width > $paper_height ? "landscape" : "portrait");
+        $paper_orientation =
+            $paper_width > $paper_height ? "landscape" : "portrait";
 
-        if ($this->_page_styles["base"] && is_array($this->_page_styles["base"]->size)) {
-            $paper_width = $this->_page_styles['base']->size[0];
-            $paper_height = $this->_page_styles['base']->size[1];
-            $paper_orientation = ($paper_width > $paper_height ? "landscape" : "portrait");
+        if (
+            $this->_page_styles["base"] &&
+            is_array($this->_page_styles["base"]->size)
+        ) {
+            $paper_width = $this->_page_styles["base"]->size[0];
+            $paper_height = $this->_page_styles["base"]->size[1];
+            $paper_orientation =
+                $paper_width > $paper_height ? "landscape" : "portrait";
         }
 
         // Now create the styles and assign them to the appropriate frames. (We
@@ -1038,8 +1212,14 @@ class Stylesheet
 
             // Handle HTML 4.0 attributes
             AttributeTranslator::translate_attributes($frame);
-            if (($str = $frame->get_node()->getAttribute(AttributeTranslator::$_style_attr)) !== "") {
-                $styles[$id][self::SPEC_NON_CSS][] = $this->_parse_properties($str);
+            if (
+                ($str = $frame
+                    ->get_node()
+                    ->getAttribute(AttributeTranslator::$_style_attr)) !== ""
+            ) {
+                $styles[$id][self::SPEC_NON_CSS][] = $this->_parse_properties(
+                    $str,
+                );
             }
 
             // Locate any additional style attributes
@@ -1053,7 +1233,6 @@ class Stylesheet
 
             // Grab the applicable styles
             if (isset($styles[$id])) {
-
                 /** @var array[][] $applied_styles */
                 $applied_styles = $styles[$id];
 
@@ -1076,60 +1255,116 @@ class Stylesheet
 
                 // Merge the new styles with the inherited styles
                 $acceptedmedia = self::$ACCEPTED_GENERIC_MEDIA_TYPES;
-                $acceptedmedia[] = $this->_dompdf->getOptions()->getDefaultMediaType();
+                $acceptedmedia[] = $this->_dompdf
+                    ->getOptions()
+                    ->getDefaultMediaType();
                 foreach ($applied_styles as $arr) {
                     /** @var Style $s */
                     foreach ($arr as $s) {
                         $media_queries = $s->get_media_queries();
                         foreach ($media_queries as $media_query) {
-                            list($media_query_feature, $media_query_value) = $media_query;
+                            [
+                                $media_query_feature,
+                                $media_query_value,
+                            ] = $media_query;
                             // if any of the Style's media queries fail then do not apply the style
                             //TODO: When the media query logic is fully developed we should not apply the Style when any of the media queries fail or are bad, per https://www.w3.org/TR/css3-mediaqueries/#error-handling
-                            if (in_array($media_query_feature, self::$VALID_MEDIA_TYPES)) {
-                                if ((strlen($media_query_feature) === 0 && !in_array($media_query, $acceptedmedia)) || (in_array($media_query, $acceptedmedia) && $media_query_value == "not")) {
-                                    continue (3);
+                            if (
+                                in_array(
+                                    $media_query_feature,
+                                    self::$VALID_MEDIA_TYPES,
+                                )
+                            ) {
+                                if (
+                                    (strlen($media_query_feature) === 0 &&
+                                        !in_array(
+                                            $media_query,
+                                            $acceptedmedia,
+                                        )) ||
+                                    (in_array($media_query, $acceptedmedia) &&
+                                        $media_query_value == "not")
+                                ) {
+                                    continue 3;
                                 }
                             } else {
                                 switch ($media_query_feature) {
                                     case "height":
-                                        if ($paper_height !== (float)$style->length_in_pt($media_query_value)) {
-                                            continue (3);
+                                        if (
+                                            $paper_height !==
+                                            (float) $style->length_in_pt(
+                                                $media_query_value,
+                                            )
+                                        ) {
+                                            continue 3;
                                         }
                                         break;
                                     case "min-height":
-                                        if ($paper_height < (float)$style->length_in_pt($media_query_value)) {
-                                            continue (3);
+                                        if (
+                                            $paper_height <
+                                            (float) $style->length_in_pt(
+                                                $media_query_value,
+                                            )
+                                        ) {
+                                            continue 3;
                                         }
                                         break;
                                     case "max-height":
-                                        if ($paper_height > (float)$style->length_in_pt($media_query_value)) {
-                                            continue (3);
+                                        if (
+                                            $paper_height >
+                                            (float) $style->length_in_pt(
+                                                $media_query_value,
+                                            )
+                                        ) {
+                                            continue 3;
                                         }
                                         break;
                                     case "width":
-                                        if ($paper_width !== (float)$style->length_in_pt($media_query_value)) {
-                                            continue (3);
+                                        if (
+                                            $paper_width !==
+                                            (float) $style->length_in_pt(
+                                                $media_query_value,
+                                            )
+                                        ) {
+                                            continue 3;
                                         }
                                         break;
                                     case "min-width":
                                         //if (min($paper_width, $media_query_width) === $paper_width) {
-                                        if ($paper_width < (float)$style->length_in_pt($media_query_value)) {
-                                            continue (3);
+                                        if (
+                                            $paper_width <
+                                            (float) $style->length_in_pt(
+                                                $media_query_value,
+                                            )
+                                        ) {
+                                            continue 3;
                                         }
                                         break;
                                     case "max-width":
                                         //if (max($paper_width, $media_query_width) === $paper_width) {
-                                        if ($paper_width > (float)$style->length_in_pt($media_query_value)) {
-                                            continue (3);
+                                        if (
+                                            $paper_width >
+                                            (float) $style->length_in_pt(
+                                                $media_query_value,
+                                            )
+                                        ) {
+                                            continue 3;
                                         }
                                         break;
                                     case "orientation":
-                                        if ($paper_orientation !== $media_query_value) {
-                                            continue (3);
+                                        if (
+                                            $paper_orientation !==
+                                            $media_query_value
+                                        ) {
+                                            continue 3;
                                         }
                                         break;
                                     default:
-                                        Helpers::record_warnings(E_USER_WARNING, "Unknown media query: $media_query_feature", __FILE__, __LINE__);
+                                        Helpers::record_warnings(
+                                            E_USER_WARNING,
+                                            "Unknown media query: $media_query_feature",
+                                            __FILE__,
+                                            __LINE__,
+                                        );
                                         break;
                                 }
                             }
@@ -1164,11 +1399,18 @@ class Stylesheet
 
                 // set the page width, height, and orientation based on the parsed page style
                 if ($style->size !== "auto") {
-                    list($paper_width, $paper_height) = $style->size;
+                    [$paper_width, $paper_height] = $style->size;
                 }
-                $paper_width = $paper_width - (float)$style->length_in_pt($style->margin_left) - (float)$style->length_in_pt($style->margin_right);
-                $paper_height = $paper_height - (float)$style->length_in_pt($style->margin_top) - (float)$style->length_in_pt($style->margin_bottom);
-                $paper_orientation = ($paper_width > $paper_height ? "landscape" : "portrait");
+                $paper_width =
+                    $paper_width -
+                    (float) $style->length_in_pt($style->margin_left) -
+                    (float) $style->length_in_pt($style->margin_right);
+                $paper_height =
+                    $paper_height -
+                    (float) $style->length_in_pt($style->margin_top) -
+                    (float) $style->length_in_pt($style->margin_bottom);
+                $paper_orientation =
+                    $paper_width > $paper_height ? "landscape" : "portrait";
             }
         }
 
@@ -1193,11 +1435,7 @@ class Stylesheet
         $str = trim($str);
 
         // Destroy comments and remove HTML comments
-        $css = preg_replace([
-            "'/\*.*?\*/'si",
-            "/^<!--/",
-            "/-->$/"
-        ], "", $str);
+        $css = preg_replace(["'/\*.*?\*/'si", "/^<!--/", "/-->$/"], "", $str);
 
         // FIXME: handle '{' within strings, e.g. [attr="string {}"]
 
@@ -1217,7 +1455,9 @@ class Stylesheet
 
         if (preg_match_all($re, $css, $matches, PREG_SET_ORDER) === false) {
             // An error occurred
-            throw new Exception("Error parsing css file: preg_match_all() failed.");
+            throw new Exception(
+                "Error parsing css file: preg_match_all() failed.",
+            );
         }
 
         // After matching, the array indices are set as follows:
@@ -1232,7 +1472,10 @@ class Stylesheet
         // [7] => individual rules, outside of media rules
         //
 
-        $media_query_regex = "/(?:((only|not)?\s*(" . implode("|", self::$VALID_MEDIA_TYPES) . "))|(\s*\(\s*((?:(min|max)-)?([\w\-]+))\s*(?:\:\s*(.*?)\s*)?\)))/isx";
+        $media_query_regex =
+            "/(?:((only|not)?\s*(" .
+            implode("|", self::$VALID_MEDIA_TYPES) .
+            "))|(\s*\(\s*((?:(min|max)-)?([\w\-]+))\s*(?:\:\s*(.*?)\s*)?\)))/isx";
 
         //Helpers::pre_r($matches);
         foreach ($matches as $match) {
@@ -1241,34 +1484,78 @@ class Stylesheet
             if ($match[2] !== "") {
                 // Handle @rules
                 switch ($match[2]) {
-
                     case "import":
                         $this->_parse_import($match[3]);
                         break;
 
                     case "media":
                         $acceptedmedia = self::$ACCEPTED_GENERIC_MEDIA_TYPES;
-                        $acceptedmedia[] = $this->_dompdf->getOptions()->getDefaultMediaType();
+                        $acceptedmedia[] = $this->_dompdf
+                            ->getOptions()
+                            ->getDefaultMediaType();
 
-                        $media_queries = preg_split("/\s*,\s*/", mb_strtolower(trim($match[3])));
+                        $media_queries = preg_split(
+                            "/\s*,\s*/",
+                            mb_strtolower(trim($match[3])),
+                        );
                         foreach ($media_queries as $media_query) {
                             if (in_array($media_query, $acceptedmedia)) {
                                 //if we have a media type match go ahead and parse the stylesheet
                                 $this->_parse_sections($match[5]);
                                 break;
-                            } elseif (!in_array($media_query, self::$VALID_MEDIA_TYPES)) {
+                            } elseif (
+                                !in_array(
+                                    $media_query,
+                                    self::$VALID_MEDIA_TYPES,
+                                )
+                            ) {
                                 // otherwise conditionally parse the stylesheet assuming there are parseable media queries
-                                if (preg_match_all($media_query_regex, $media_query, $media_query_matches, PREG_SET_ORDER) !== false) {
+                                if (
+                                    preg_match_all(
+                                        $media_query_regex,
+                                        $media_query,
+                                        $media_query_matches,
+                                        PREG_SET_ORDER,
+                                    ) !== false
+                                ) {
                                     $mq = [];
-                                    foreach ($media_query_matches as $media_query_match) {
-                                        if (empty($media_query_match[1]) === false) {
-                                            $media_query_feature = strtolower($media_query_match[3]);
-                                            $media_query_value = strtolower($media_query_match[2]);
-                                            $mq[] = [$media_query_feature, $media_query_value];
-                                        } elseif (empty($media_query_match[4]) === false) {
-                                            $media_query_feature = strtolower($media_query_match[5]);
-                                            $media_query_value = (array_key_exists(8, $media_query_match) ? strtolower($media_query_match[8]) : null);
-                                            $mq[] = [$media_query_feature, $media_query_value];
+                                    foreach (
+                                        $media_query_matches
+                                        as $media_query_match
+                                    ) {
+                                        if (
+                                            empty($media_query_match[1]) ===
+                                            false
+                                        ) {
+                                            $media_query_feature = strtolower(
+                                                $media_query_match[3],
+                                            );
+                                            $media_query_value = strtolower(
+                                                $media_query_match[2],
+                                            );
+                                            $mq[] = [
+                                                $media_query_feature,
+                                                $media_query_value,
+                                            ];
+                                        } elseif (
+                                            empty($media_query_match[4]) ===
+                                            false
+                                        ) {
+                                            $media_query_feature = strtolower(
+                                                $media_query_match[5],
+                                            );
+                                            $media_query_value = array_key_exists(
+                                                8,
+                                                $media_query_match,
+                                            )
+                                                ? strtolower(
+                                                    $media_query_match[8],
+                                                )
+                                                : null;
+                                            $mq[] = [
+                                                $media_query_feature,
+                                                $media_query_value,
+                                            ];
                                         }
                                     }
                                     $this->_parse_sections($match[5], $mq);
@@ -1322,9 +1609,13 @@ class Stylesheet
 
                         // Store the style for later...
                         if (empty($this->_page_styles[$key])) {
-                            $this->_page_styles[$key] = $this->_parse_properties($match[5]);
+                            $this->_page_styles[
+                                $key
+                            ] = $this->_parse_properties($match[5]);
                         } else {
-                            $this->_page_styles[$key]->merge($this->_parse_properties($match[5]));
+                            $this->_page_styles[$key]->merge(
+                                $this->_parse_properties($match[5]),
+                            );
                         }
                         break;
 
@@ -1363,13 +1654,19 @@ class Stylesheet
         } elseif (mb_strpos($val, "url") === false) {
             $path = "none"; //Don't resolve no image -> otherwise would prefix path and no longer recognize as none
         } else {
-            $val = preg_replace("/url\(\s*['\"]?([^'\")]+)['\"]?\s*\)/", "\\1", trim($val));
+            $val = preg_replace(
+                "/url\(\s*['\"]?([^'\")]+)['\"]?\s*\)/",
+                "\\1",
+                trim($val),
+            );
 
             // Resolve the url now in the context of the current stylesheet
-            $path = Helpers::build_url($this->_protocol,
+            $path = Helpers::build_url(
+                $this->_protocol,
                 $this->_base_host,
                 $this->_base_path,
-                $val);
+                $val,
+            );
             if ($path === null) {
                 $path = "none";
             }
@@ -1378,7 +1675,12 @@ class Stylesheet
             $parsed_url = Helpers::explode_url($path);
             print "<pre>[_image\n";
             print_r($parsed_url);
-            print $this->_protocol . "\n" . $this->_base_path . "\n" . $path . "\n";
+            print $this->_protocol .
+                "\n" .
+                $this->_base_path .
+                "\n" .
+                $path .
+                "\n";
             print "_image]</pre>";
         }
         return $path;
@@ -1397,7 +1699,9 @@ class Stylesheet
 
         if (count($arr) > 0) {
             $acceptedmedia = self::$ACCEPTED_GENERIC_MEDIA_TYPES;
-            $acceptedmedia[] = $this->_dompdf->getOptions()->getDefaultMediaType();
+            $acceptedmedia[] = $this->_dompdf
+                ->getOptions()
+                ->getDefaultMediaType();
 
             // @import url media_type [media_type...]
             foreach ($arr as $type) {
@@ -1406,7 +1710,6 @@ class Stylesheet
                     break;
                 }
             }
-
         } else {
             // unconditional import
             $accept = true;
@@ -1445,7 +1748,11 @@ class Stylesheet
     {
         $descriptors = $this->_parse_properties($str);
 
-        preg_match_all("/(url|local)\s*\(\s*[\"\']?([^\"\'\)]+)[\"\']?\s*\)\s*(format\s*\(\s*[\"\']?([^\"\'\)]+)[\"\']?\s*\))?/i", $descriptors->src, $src);
+        preg_match_all(
+            "/(url|local)\s*\(\s*[\"\']?([^\"\'\)]+)[\"\']?\s*\)\s*(format\s*\(\s*[\"\']?([^\"\'\)]+)[\"\']?\s*\))?/i",
+            $descriptors->src,
+            $src,
+        );
 
         $valid_sources = [];
         foreach ($src[0] as $i => $value) {
@@ -1453,10 +1760,19 @@ class Stylesheet
                 "local" => strtolower($src[1][$i]) === "local",
                 "uri" => $src[2][$i],
                 "format" => strtolower($src[4][$i]),
-                "path" => Helpers::build_url($this->_protocol, $this->_base_host, $this->_base_path, $src[2][$i]),
+                "path" => Helpers::build_url(
+                    $this->_protocol,
+                    $this->_base_host,
+                    $this->_base_path,
+                    $src[2][$i],
+                ),
             ];
 
-            if (!$source["local"] && in_array($source["format"], ["", "truetype"]) && $source["path"] !== null) {
+            if (
+                !$source["local"] &&
+                in_array($source["format"], ["", "truetype"]) &&
+                $source["path"] !== null
+            ) {
                 $valid_sources[] = $source;
             }
         }
@@ -1472,7 +1788,11 @@ class Stylesheet
             "style" => $descriptors->font_style,
         ];
 
-        $this->getFontMetrics()->registerFont($style, $valid_sources[0]["path"], $this->_dompdf->getHttpContext());
+        $this->getFontMetrics()->registerFont(
+            $style,
+            $valid_sources[0]["path"],
+            $this->_dompdf->getHttpContext(),
+        );
     }
 
     /**
@@ -1486,11 +1806,14 @@ class Stylesheet
      */
     private function _parse_properties($str)
     {
-        $properties = preg_split("/;(?=(?:[^\(]*\([^\)]*\))*(?![^\)]*\)))/", $str);
+        $properties = preg_split(
+            "/;(?=(?:[^\(]*\([^\)]*\))*(?![^\)]*\)))/",
+            $str,
+        );
         $DEBUGCSS = $this->_dompdf->getOptions()->getDebugCss();
 
         if ($DEBUGCSS) {
-            print '[_parse_properties';
+            print "[_parse_properties";
         }
 
         // Create the style
@@ -1514,39 +1837,53 @@ class Stylesheet
             }
             $prop = trim($prop);
             */
-            if ($DEBUGCSS) print '(';
+            if ($DEBUGCSS) {
+                print "(";
+            }
 
             $important = false;
             $prop = trim($prop);
 
-            if (substr($prop, -9) === 'important') {
+            if (substr($prop, -9) === "important") {
                 $prop_tmp = rtrim(substr($prop, 0, -9));
 
-                if (substr($prop_tmp, -1) === '!') {
+                if (substr($prop_tmp, -1) === "!") {
                     $prop = rtrim(substr($prop_tmp, 0, -1));
                     $important = true;
                 }
             }
 
             if ($prop === "") {
-                if ($DEBUGCSS) print 'empty)';
+                if ($DEBUGCSS) {
+                    print "empty)";
+                }
                 continue;
             }
 
             $i = mb_strpos($prop, ":");
             if ($i === false) {
-                if ($DEBUGCSS) print 'novalue' . $prop . ')';
+                if ($DEBUGCSS) {
+                    print "novalue" . $prop . ")";
+                }
                 continue;
             }
 
             $prop_name = rtrim(mb_strtolower(mb_substr($prop, 0, $i)));
             $value = ltrim(mb_substr($prop, $i + 1));
 
-            if ($DEBUGCSS) print $prop_name . ':=' . $value . ($important ? '!IMPORTANT' : '') . ')';
+            if ($DEBUGCSS) {
+                print $prop_name .
+                    ":=" .
+                    $value .
+                    ($important ? "!IMPORTANT" : "") .
+                    ")";
+            }
 
             $style->set_prop($prop_name, $value, $important, false);
         }
-        if ($DEBUGCSS) print '_parse_properties]';
+        if ($DEBUGCSS) {
+            print "_parse_properties]";
+        }
 
         return $style;
     }
@@ -1566,15 +1903,30 @@ class Stylesheet
         $DEBUGCSS = $this->_dompdf->getOptions()->getDebugCss();
 
         $sections = explode("}", $str);
-        if ($DEBUGCSS) print '[_parse_sections';
+        if ($DEBUGCSS) {
+            print "[_parse_sections";
+        }
         foreach ($sections as $sect) {
             $i = mb_strpos($sect, "{");
-            if ($i === false) { continue; }
+            if ($i === false) {
+                continue;
+            }
 
-            if ($DEBUGCSS) print '[section';
+            if ($DEBUGCSS) {
+                print "[section";
+            }
 
-            $selector_str = preg_replace($patterns, $replacements, mb_substr($sect, 0, $i));
-            $selectors = preg_split("/,(?![^\(]*\))/", $selector_str, 0, PREG_SPLIT_NO_EMPTY);
+            $selector_str = preg_replace(
+                $patterns,
+                $replacements,
+                mb_substr($sect, 0, $i),
+            );
+            $selectors = preg_split(
+                "/,(?![^\(]*\))/",
+                $selector_str,
+                0,
+                PREG_SPLIT_NO_EMPTY,
+            );
             $style = $this->_parse_properties(trim(mb_substr($sect, $i + 1)));
 
             // Assign it to the selected elements
@@ -1582,10 +1934,14 @@ class Stylesheet
                 $selector = trim($selector);
 
                 if ($selector === "") {
-                    if ($DEBUGCSS) print '#empty#';
+                    if ($DEBUGCSS) {
+                        print "#empty#";
+                    }
                     continue;
                 }
-                if ($DEBUGCSS) print '#' . $selector . '#';
+                if ($DEBUGCSS) {
+                    print "#" . $selector . "#";
+                }
                 //if ($DEBUGCSS) { if (strpos($selector,'p') !== false) print '!!!p!!!#'; }
 
                 //FIXME: tag the selector with a hash of the media query to separate it from non-conditional styles (?), xpath comments are probably not what we want to do here
@@ -1596,7 +1952,7 @@ class Stylesheet
             }
 
             if ($DEBUGCSS) {
-                print 'section]';
+                print "section]";
             }
         }
 
@@ -1612,7 +1968,12 @@ class Stylesheet
     {
         $options = $this->_dompdf->getOptions();
         $rootDir = realpath($options->getRootDir());
-        return Helpers::build_url("file://", "", $rootDir, $rootDir . self::DEFAULT_STYLESHEET);
+        return Helpers::build_url(
+            "file://",
+            "",
+            $rootDir,
+            $rootDir . self::DEFAULT_STYLESHEET,
+        );
     }
 
     /**

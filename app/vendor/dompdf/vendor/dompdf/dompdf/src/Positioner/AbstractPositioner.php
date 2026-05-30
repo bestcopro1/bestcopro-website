@@ -17,7 +17,6 @@ use Dompdf\FrameDecorator\AbstractFrameDecorator;
  */
 abstract class AbstractPositioner
 {
-
     /**
      * @param AbstractFrameDecorator $frame
      */
@@ -33,7 +32,7 @@ abstract class AbstractPositioner
         AbstractFrameDecorator $frame,
         float $offset_x,
         float $offset_y,
-        bool $ignore_self = false
+        bool $ignore_self = false,
     ): void {
         [$x, $y] = $frame->get_position();
 

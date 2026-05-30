@@ -88,7 +88,7 @@ class Charset implements AtRule
      */
     public function atRuleName()
     {
-        return 'charset';
+        return "charset";
     }
 
     /**

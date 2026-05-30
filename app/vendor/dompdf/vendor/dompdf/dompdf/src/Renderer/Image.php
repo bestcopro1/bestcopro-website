@@ -38,8 +38,9 @@ class Image extends Block
         $src = $frame->get_image_url();
         $alt = null;
 
-        if (Cache::is_broken($src) &&
-            $alt = $frame->get_node()->getAttribute("alt")
+        if (
+            Cache::is_broken($src) &&
+            ($alt = $frame->get_node()->getAttribute("alt"))
         ) {
             $font = $style->font_family;
             $size = $style->font_size;
@@ -54,15 +55,34 @@ class Image extends Block
                 $size,
                 $style->color,
                 $word_spacing,
-                $letter_spacing
+                $letter_spacing,
             );
         } elseif ($w > 0 && $h > 0) {
             if ($style->has_border_radius()) {
-                [$tl, $tr, $br, $bl] = $style->resolve_border_radius($border_box, $content_box);
-                $this->_canvas->clipping_roundrectangle($x, $y, $w, $h, $tl, $tr, $br, $bl);
+                [$tl, $tr, $br, $bl] = $style->resolve_border_radius(
+                    $border_box,
+                    $content_box,
+                );
+                $this->_canvas->clipping_roundrectangle(
+                    $x,
+                    $y,
+                    $w,
+                    $h,
+                    $tl,
+                    $tr,
+                    $br,
+                    $bl,
+                );
             }
 
-            $this->_canvas->image($src, $x, $y, $w, $h, $style->image_resolution);
+            $this->_canvas->image(
+                $src,
+                $x,
+                $y,
+                $w,
+                $h,
+                $style->image_resolution,
+            );
 
             if ($style->has_border_radius()) {
                 $this->_canvas->clipping_end();
@@ -76,7 +96,14 @@ class Image extends Block
             $_y = $alt ? $y + $h - count($parts) * $height : $y;
 
             foreach ($parts as $i => $_part) {
-                $this->_canvas->text($x, $_y + $i * $height, $_part, $font, $height * 0.8, [0.5, 0.5, 0.5]);
+                $this->_canvas->text(
+                    $x,
+                    $_y + $i * $height,
+                    $_part,
+                    $font,
+                    $height * 0.8,
+                    [0.5, 0.5, 0.5],
+                );
             }
         }
 

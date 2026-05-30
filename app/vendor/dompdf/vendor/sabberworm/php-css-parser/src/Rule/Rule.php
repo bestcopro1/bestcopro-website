@@ -81,30 +81,33 @@ class Rule implements Renderable, Commentable
         $oRule = new Rule(
             $oParserState->parseIdentifier(!$oParserState->comes("--")),
             $oParserState->currentLine(),
-            $oParserState->currentColumn()
+            $oParserState->currentColumn(),
         );
         $oRule->setComments($aComments);
         $oRule->addComments($oParserState->consumeWhiteSpace());
-        $oParserState->consume(':');
-        $oValue = Value::parseValue($oParserState, self::listDelimiterForRule($oRule->getRule()));
+        $oParserState->consume(":");
+        $oValue = Value::parseValue(
+            $oParserState,
+            self::listDelimiterForRule($oRule->getRule()),
+        );
         $oRule->setValue($oValue);
         if ($oParserState->getSettings()->bLenientParsing) {
-            while ($oParserState->comes('\\')) {
-                $oParserState->consume('\\');
+            while ($oParserState->comes("\\")) {
+                $oParserState->consume("\\");
                 $oRule->addIeHack($oParserState->consume());
                 $oParserState->consumeWhiteSpace();
             }
         }
         $oParserState->consumeWhiteSpace();
-        if ($oParserState->comes('!')) {
-            $oParserState->consume('!');
+        if ($oParserState->comes("!")) {
+            $oParserState->consume("!");
             $oParserState->consumeWhiteSpace();
-            $oParserState->consume('important');
+            $oParserState->consume("important");
             $oRule->setIsImportant(true);
         }
         $oParserState->consumeWhiteSpace();
-        while ($oParserState->comes(';')) {
-            $oParserState->consume(';');
+        while ($oParserState->comes(";")) {
+            $oParserState->consume(";");
         }
         $oParserState->consumeWhiteSpace();
 
@@ -119,9 +122,9 @@ class Rule implements Renderable, Commentable
     private static function listDelimiterForRule($sRule)
     {
         if (preg_match('/^font($|-)/', $sRule)) {
-            return [',', '/', ' '];
+            return [",", "/", " "];
         }
-        return [',', ' ', '/'];
+        return [",", " ", "/"];
     }
 
     /**
@@ -201,12 +204,12 @@ class Rule implements Renderable, Commentable
     {
         $oSpaceSeparatedList = null;
         if (count($aSpaceSeparatedValues) > 1) {
-            $oSpaceSeparatedList = new RuleValueList(' ', $this->iLineNo);
+            $oSpaceSeparatedList = new RuleValueList(" ", $this->iLineNo);
         }
         foreach ($aSpaceSeparatedValues as $aCommaSeparatedValues) {
             $oCommaSeparatedList = null;
             if (count($aCommaSeparatedValues) > 1) {
-                $oCommaSeparatedList = new RuleValueList(',', $this->iLineNo);
+                $oCommaSeparatedList = new RuleValueList(",", $this->iLineNo);
             }
             foreach ($aCommaSeparatedValues as $mValue) {
                 if (!$oSpaceSeparatedList && !$oCommaSeparatedList) {
@@ -239,19 +242,25 @@ class Rule implements Renderable, Commentable
      */
     public function getValues()
     {
-        if (!$this->mValue instanceof RuleValueList) {
+        if (!($this->mValue instanceof RuleValueList)) {
             return [[$this->mValue]];
         }
-        if ($this->mValue->getListSeparator() === ',') {
+        if ($this->mValue->getListSeparator() === ",") {
             return [$this->mValue->getListComponents()];
         }
         $aResult = [];
         foreach ($this->mValue->getListComponents() as $mValue) {
-            if (!$mValue instanceof RuleValueList || $mValue->getListSeparator() !== ',') {
+            if (
+                !($mValue instanceof RuleValueList) ||
+                $mValue->getListSeparator() !== ","
+            ) {
                 $aResult[] = [$mValue];
                 continue;
             }
-            if ($this->mValue->getListSeparator() === ' ' || count($aResult) === 0) {
+            if (
+                $this->mValue->getListSeparator() === " " ||
+                count($aResult) === 0
+            ) {
                 $aResult[] = [];
             }
             foreach ($mValue->getListComponents() as $mValue) {
@@ -270,12 +279,15 @@ class Rule implements Renderable, Commentable
      *
      * @return void
      */
-    public function addValue($mValue, $sType = ' ')
+    public function addValue($mValue, $sType = " ")
     {
         if (!is_array($mValue)) {
             $mValue = [$mValue];
         }
-        if (!$this->mValue instanceof RuleValueList || $this->mValue->getListSeparator() !== $sType) {
+        if (
+            !($this->mValue instanceof RuleValueList) ||
+            $this->mValue->getListSeparator() !== $sType
+        ) {
             $mCurrentValue = $this->mValue;
             $this->mValue = new RuleValueList($sType, $this->iLineNo);
             if ($mCurrentValue) {
@@ -347,18 +359,19 @@ class Rule implements Renderable, Commentable
     public function render(OutputFormat $oOutputFormat)
     {
         $sResult = "{$this->sRule}:{$oOutputFormat->spaceAfterRuleName()}";
-        if ($this->mValue instanceof Value) { //Can also be a ValueList
+        if ($this->mValue instanceof Value) {
+            //Can also be a ValueList
             $sResult .= $this->mValue->render($oOutputFormat);
         } else {
             $sResult .= $this->mValue;
         }
         if (!empty($this->aIeHack)) {
-            $sResult .= ' \\' . implode('\\', $this->aIeHack);
+            $sResult .= " \\" . implode("\\", $this->aIeHack);
         }
         if ($this->bIsImportant) {
-            $sResult .= ' !important';
+            $sResult .= " !important";
         }
-        $sResult .= ';';
+        $sResult .= ";";
         return $sResult;
     }
 

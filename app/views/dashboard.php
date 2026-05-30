@@ -1,111 +1,107 @@
 <?php
-include_once(__DIR__.'/../config/db.php');
-include_once(__DIR__.'/../controllers/functions.php');
+include_once __DIR__ . "/../config/db.php";
+include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
-function getRubriqueByPoste($id_poste, $connection){
-    $request = "SELECT id, libelle, id_exercice, id_typeRubrique FROM rubrique WHERE id = (SELECT id_rubrique FROM poste WHERE id = ?)";
-	if ($stmt = $connection->prepare($request)) {
-		$stmt->bind_param('s', $id_poste);
-		$stmt->execute();
-		$stmt->store_result();
+function getRubriqueByPoste($id_poste, $connection)
+{
+    $request =
+        "SELECT id, libelle, id_exercice, id_typeRubrique FROM rubrique WHERE id = (SELECT id_rubrique FROM poste WHERE id = ?)";
+    if ($stmt = $connection->prepare($request)) {
+        $stmt->bind_param("s", $id_poste);
+        $stmt->execute();
+        $stmt->store_result();
 
-		if ($stmt->num_rows > 0) {
-			$stmt->bind_result(
-				$id, 
-				$libelle,
-				$id_exercice, 
-				$id_typeRubrique
-			);
-			while($stmt->fetch()){
-				$result[] = 
-					array(
-						"id" => $id, 
-						"libelle" => $libelle,
-						"id_exercice" => $id_exercice, 
-						"id_typeRubrique" => $id_typeRubrique
-						
-					);
-			}
-			return $result;
-		} else {
-			return [];
-		}
-	}
+        if ($stmt->num_rows > 0) {
+            $stmt->bind_result($id, $libelle, $id_exercice, $id_typeRubrique);
+            while ($stmt->fetch()) {
+                $result[] = [
+                    "id" => $id,
+                    "libelle" => $libelle,
+                    "id_exercice" => $id_exercice,
+                    "id_typeRubrique" => $id_typeRubrique,
+                ];
+            }
+            return $result;
+        } else {
+            return [];
+        }
+    }
 }
-function getDepenseByDates($id_exercice, $from, $to, $connection){
-    $request = "SELECT id, id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic FROM depense WHERE id_exercice = ? AND CAST(date as date) BETWEEN ? AND ?";
-	if ($stmt = $connection->prepare($request)) {
-		$stmt->bind_param('sss', $id_exercice, $from, $to);
-		$stmt->execute();
-		$stmt->store_result();
+function getDepenseByDates($id_exercice, $from, $to, $connection)
+{
+    $request =
+        "SELECT id, id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic FROM depense WHERE id_exercice = ? AND CAST(date as date) BETWEEN ? AND ?";
+    if ($stmt = $connection->prepare($request)) {
+        $stmt->bind_param("sss", $id_exercice, $from, $to);
+        $stmt->execute();
+        $stmt->store_result();
 
-		if ($stmt->num_rows > 0) {
-			$stmt->bind_result(
-				$id, 
-				$id_poste, 
-				$date, 
-				$montant, 
-				$id_fournisseur, 
-				$id_modePaiement, 
-				$commentaire,
-				$id_exercice,
-				$id_syndic
-			);
-			while($stmt->fetch()){
-				$result[] = 
-					array(
-						"id" => $id, 
-						"id_poste" => $id_poste, 
-						"date" => $date, 
-						"montant" => $montant, 
-						"id_fournisseur" => $id_fournisseur, 
-						"id_modePaiement" => $id_modePaiement, 
-						"commentaire" => $commentaire, 
-						"id_exercice" => $id_exercice,
-						"id_syndic" => $id_syndic
-					);
-			}
-			return $result;
-		} else {
-			return [];
-		}
-	}
+        if ($stmt->num_rows > 0) {
+            $stmt->bind_result(
+                $id,
+                $id_poste,
+                $date,
+                $montant,
+                $id_fournisseur,
+                $id_modePaiement,
+                $commentaire,
+                $id_exercice,
+                $id_syndic,
+            );
+            while ($stmt->fetch()) {
+                $result[] = [
+                    "id" => $id,
+                    "id_poste" => $id_poste,
+                    "date" => $date,
+                    "montant" => $montant,
+                    "id_fournisseur" => $id_fournisseur,
+                    "id_modePaiement" => $id_modePaiement,
+                    "commentaire" => $commentaire,
+                    "id_exercice" => $id_exercice,
+                    "id_syndic" => $id_syndic,
+                ];
+            }
+            return $result;
+        } else {
+            return [];
+        }
+    }
 }
-function getPaiementByDates($id_copropriete, $from, $to, $connection){
-   $request = "SELECT id, id_lot, date, montant, id_modePaiement, commentaire, id_syndic FROM paiement WHERE id_lot IN (SELECT id FROM lot WHERE id_copropriete = ?) AND CAST(date as date) BETWEEN ? AND ?";
-	if ($stmt = $connection->prepare($request)) {
-		$stmt->bind_param('sss', $id_copropriete, $from, $to);
-		$stmt->execute();
-		$stmt->store_result();
+function getPaiementByDates($id_copropriete, $from, $to, $connection)
+{
+    $request =
+        "SELECT id, id_lot, date, montant, id_modePaiement, commentaire, id_syndic FROM paiement WHERE id_lot IN (SELECT id FROM lot WHERE id_copropriete = ?) AND CAST(date as date) BETWEEN ? AND ?";
+    if ($stmt = $connection->prepare($request)) {
+        $stmt->bind_param("sss", $id_copropriete, $from, $to);
+        $stmt->execute();
+        $stmt->store_result();
 
-		if ($stmt->num_rows > 0) {
-			$stmt->bind_result(
-				$id, 
-				$id_lot,
-				$date,
-				$montant, 
-				$id_modePaiement, 
-				$commentaire,
-				$id_syndic
-			);
-			while($stmt->fetch()){
-				$result[] = 
-					array(
-						"id" => $id, 
-						"id_lot" => $id_lot, 
-						"date" => $date,
-						"montant" => $montant, 
-						"id_modePaiement" => $id_modePaiement, 
-						"commentaire" => $commentaire,
-						"id_syndic" => $id_syndic
-						
-					);
-			}
-			return $result;
-		} else {
-			return [];
-		}
-	}
+        if ($stmt->num_rows > 0) {
+            $stmt->bind_result(
+                $id,
+                $id_lot,
+                $date,
+                $montant,
+                $id_modePaiement,
+                $commentaire,
+                $id_syndic,
+            );
+            while ($stmt->fetch()) {
+                $result[] = [
+                    "id" => $id,
+                    "id_lot" => $id_lot,
+                    "date" => $date,
+                    "montant" => $montant,
+                    "id_modePaiement" => $id_modePaiement,
+                    "commentaire" => $commentaire,
+                    "id_syndic" => $id_syndic,
+                ];
+            }
+            return $result;
+        } else {
+            return [];
+        }
+    }
 }
 ?>
 		<div class="content-body">
@@ -114,23 +110,28 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection){
 				<div class="d-flex justify-content-between align-items-center flex-wrap">
 					<div class="mb-4">
 						<h2 class="text-primary font-w600 mb-0">Tableau de bord</h2>
-						<p class="mb-0"><?=$GLOBALS["copropriete"][0]["nom"]?></p>
+						<p class="mb-0"><?= $GLOBALS["copropriete"][0]["nom"] ?></p>
 					</div>
 					<div class="d-flex mt-sm-0 mt-3">
 						<select class="default-select dashboard-select changeExercice">
-							<?php 
-							$currentExercice = getExercice($GLOBALS["id_exercice"], null, $connection);
-							?>
-							<option value="<?=$currentExercice[0]["id"]?>" data-display="<?=getNameexercice($currentExercice[0]["dateDebut"])?>"><?=getNameexercice($currentExercice[0]["dateDebut"])?></option>
+							<?php $currentExercice = getExercice(
+           $GLOBALS["id_exercice"],
+           null,
+           $connection,
+       ); ?>
+							<option value="<?= $currentExercice[0][
+           "id"
+       ] ?>" data-display="<?= getNameexercice(
+    $currentExercice[0]["dateDebut"],
+) ?>"><?= getNameexercice($currentExercice[0]["dateDebut"]) ?></option>
 							<?php
-							$exercices = getExercice(null, $GLOBALS["id_copropriete"], $connection);
-							foreach($exercices as $exercice): 
-								
-							?>
-							<option value="<?=$exercice["id"]?>"><?=getNameexercice($exercice["dateDebut"])?></option>
-							<?php
-							endforeach;
-							?>
+       $exercices = getExercice(null, $GLOBALS["id_copropriete"], $connection);
+       foreach ($exercices as $exercice): ?>
+							<option value="<?= $exercice["id"] ?>"><?= getNameexercice(
+    $exercice["dateDebut"],
+) ?></option>
+							<?php endforeach;
+       ?>
 						</select>
 					</div>
 				</div>
@@ -141,39 +142,58 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection){
 								<div class="row shapreter-row">
 									<div class="col-xl-3 col-lg-3 col-sm-3 col-6">
 										<div class="static-icon">
-											<h3 class="count"><?=number_format($currentExercice[0]["montantFonct"],2)?></h3>
+											<h3 class="count"><?= number_format(
+               $currentExercice[0]["montantFonct"],
+               2,
+           ) ?></h3>
 											<span class="fs-14">Budget annuel du fonctionnement</span>
 										</div>
 									</div>
 									<div class="col-xl-3 col-lg-3 col-sm-3 col-6">
 										<div class="static-icon">
-											<h3 class="count"><?=number_format($currentExercice[0]["montantInvest"],2)?></h3>
+											<h3 class="count"><?= number_format(
+               $currentExercice[0]["montantInvest"],
+               2,
+           ) ?></h3>
 											<span class="fs-14">Budget annuel d'investissement</span>
 										</div>
 									</div>
 									<div class="col-xl-3 col-lg-3 col-sm-3 col-6">
 										<div class="static-icon">
 											<?php
-											$depenses = getDepense(null, $GLOBALS["id_exercice"], $connection);
-											$totalDepenses = 0;
-											foreach($depenses as $depense)
-												$totalDepenses += $depense["montant"];
-											?>
-											<h3 class="count"><?=number_format($totalDepenses,2)?></h3>
+           $depenses = getDepense(null, $GLOBALS["id_exercice"], $connection);
+           $totalDepenses = 0;
+           foreach ($depenses as $depense) {
+               $totalDepenses += $depense["montant"];
+           }
+           ?>
+											<h3 class="count"><?= number_format($totalDepenses, 2) ?></h3>
 											<span class="fs-14">Total des dépenses</span>
 										</div>
 									</div>
 									<div class="col-xl-3 col-lg-3 col-sm-3 col-6">
 										<div class="static-icon">
 											<?php
-											$from = date("Y-m-d", strtotime($currentExercice[0]["dateDebut"]));
-											$to = date("Y-m-d",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + 1 year"));
-											$allPaiements = getPaiementByDates($GLOBALS["id_copropriete"], $from, $to, $connection);
-											$totalPaiements = 0;
-											foreach($allPaiements as $paiement)
-												$totalPaiements += $paiement["montant"];
-											?>
-											<h3 class="count"><?=number_format($totalPaiements,2)?></h3>
+           $from = date("Y-m-d", strtotime($currentExercice[0]["dateDebut"]));
+           $to = date(
+               "Y-m-d",
+               strtotime(
+                   date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) .
+                       " + 1 year",
+               ),
+           );
+           $allPaiements = getPaiementByDates(
+               $GLOBALS["id_copropriete"],
+               $from,
+               $to,
+               $connection,
+           );
+           $totalPaiements = 0;
+           foreach ($allPaiements as $paiement) {
+               $totalPaiements += $paiement["montant"];
+           }
+           ?>
+											<h3 class="count"><?= number_format($totalPaiements, 2) ?></h3>
 											<span class="fs-14">Total des cotisations</span>
 										</div>
 									</div>
@@ -197,37 +217,90 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection){
 							</div>
 							<div class="card-body">
 								<div class="owl-carousel owl-carousel owl-loaded front-view-slider ">
-									<?php
-									for ($i = 0; $i < 12; $i++) :
-										$monthYear = date("m/Y",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + ".$i." month"));
-										$from = date("Y-m-d",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + ".$i." month"));
-										$to = date("Y-m-d",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + ".($i + 1)." month -1 day"));
-										$allDepenses = getDepenseByDates($currentExercice[0]["id"], $from, $to, $connection);
-										$totalDepenses = 0;
-										foreach($allDepenses as $depense)
-											$totalDepenses += $depense["montant"];
-										$montantDepenses = (floatval($currentExercice[0]["montantFonct"]) + floatval($currentExercice[0]["montantInvest"])) / 12;
-									?>
-									<div class="items" data-bs-toggle="modal" data-bs-target="#mois-<?=$i?>-d">
+									<?php for ($i = 0; $i < 12; $i++):
+
+             $monthYear = date(
+                 "m/Y",
+                 strtotime(
+                     date(
+                         "Y-m-d",
+                         strtotime($currentExercice[0]["dateDebut"]),
+                     ) .
+                         " + " .
+                         $i .
+                         " month",
+                 ),
+             );
+             $from = date(
+                 "Y-m-d",
+                 strtotime(
+                     date(
+                         "Y-m-d",
+                         strtotime($currentExercice[0]["dateDebut"]),
+                     ) .
+                         " + " .
+                         $i .
+                         " month",
+                 ),
+             );
+             $to = date(
+                 "Y-m-d",
+                 strtotime(
+                     date(
+                         "Y-m-d",
+                         strtotime($currentExercice[0]["dateDebut"]),
+                     ) .
+                         " + " .
+                         ($i + 1) .
+                         " month -1 day",
+                 ),
+             );
+             $allDepenses = getDepenseByDates(
+                 $currentExercice[0]["id"],
+                 $from,
+                 $to,
+                 $connection,
+             );
+             $totalDepenses = 0;
+             foreach ($allDepenses as $depense) {
+                 $totalDepenses += $depense["montant"];
+             }
+             $montantDepenses =
+                 (floatval($currentExercice[0]["montantFonct"]) +
+                     floatval($currentExercice[0]["montantInvest"])) /
+                 12;
+             ?>
+									<div class="items" data-bs-toggle="modal" data-bs-target="#mois-<?= $i ?>-d">
 										<div class="jobs">
 											<div class="text-center">
-												<span class="text-primary mb-0 d-block"><?=$monthYear?></span>
-												<h4 class="mb-3"><i class="fas fa-coins"></i> <?=number_format($totalDepenses,2)?></h4>
+												<span class="text-primary mb-0 d-block"><?= $monthYear ?></span>
+												<h4 class="mb-3"><i class="fas fa-coins"></i> <?= number_format(
+                $totalDepenses,
+                2,
+            ) ?></h4>
 											</div>
 											<div>
-												<?php
-												if (($totalDepenses - $montantDepenses) <= 0) echo '<span class="d-block mb-1 text-success text-end">'.number_format($totalDepenses - $montantDepenses,2).'</span>';
-												else echo '<span class="d-block mb-1 text-danger text-end">'.number_format($totalDepenses - $montantDepenses,2).'</span>';
-												?>
+												<?php if ($totalDepenses - $montantDepenses <= 0) {
+                echo '<span class="d-block mb-1 text-success text-end">' .
+                    number_format($totalDepenses - $montantDepenses, 2) .
+                    "</span>";
+            } else {
+                echo '<span class="d-block mb-1 text-danger text-end">' .
+                    number_format($totalDepenses - $montantDepenses, 2) .
+                    "</span>";
+            } ?>
 												<span>
 													<div class="progress" style="min-width:140px;">
-														<?php 
-														$depensePercent = ($totalDepenses * 100) / $montantDepenses;
-														if ($depensePercent <= 100) $progressbarColor = "success";
-														else $progressbarColor = "danger";
-														?>
-														<div class="progress-bar bg-<?=$progressbarColor?>" style="width: <?=$depensePercent?>%; height:6px;" role="progressbar">
-															<span class="sr-only"><?=$depensePercent?>%</span>
+														<?php
+              $depensePercent = ($totalDepenses * 100) / $montantDepenses;
+              if ($depensePercent <= 100) {
+                  $progressbarColor = "success";
+              } else {
+                  $progressbarColor = "danger";
+              }
+              ?>
+														<div class="progress-bar bg-<?= $progressbarColor ?>" style="width: <?= $depensePercent ?>%; height:6px;" role="progressbar">
+															<span class="sr-only"><?= $depensePercent ?>%</span>
 														</div>
 													</div>
 												</span>
@@ -235,18 +308,23 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection){
 										</div>	
 									</div>
 									<?php
-									endfor;
-									?>
+         endfor; ?>
 								</div>
-								<?php
-								for ($i = 0; $i < 12; $i++) :
-									$monthYear = date("m/Y",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + ".$i." month"));
-								?>
-								<div id="mois-<?=$i?>-d" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+								<?php for ($i = 0; $i < 12; $i++):
+            $monthYear = date(
+                "m/Y",
+                strtotime(
+                    date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) .
+                        " + " .
+                        $i .
+                        " month",
+                ),
+            ); ?>
+								<div id="mois-<?= $i ?>-d" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
 									<div class="modal-dialog modal-lg">
 										<div class="modal-content">
 											<div class="modal-header">
-												<h5 class="modal-title">Les dépenses du mois <?=$monthYear?></h5>
+												<h5 class="modal-title">Les dépenses du mois <?= $monthYear ?></h5>
 												<button type="button" class="btn-close" data-bs-dismiss="modal">
 												</button>
 											</div>
@@ -264,24 +342,66 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection){
 														</thead>
 														<tbody>
 															<?php
-															$from = date("Y-m-d",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + ".$i." month"));
-															$to = date("Y-m-d",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + ".($i + 1)." month -1 day"));
-															$allDepenses = getDepenseByDates($currentExercice[0]["id"], $from, $to, $connection);
-															if (count($allDepenses) == 0) echo '<td colspan="5" class="text-center">Aucune dépense pour ce mois</td>';
-															foreach($allDepenses as $depense):
-																$poste = getPoste($depense["id_poste"], null, null, $connection);
-																$rubrique = getRubriqueByPoste($depense["id_poste"], $connection)
-															?>
+               $from = date(
+                   "Y-m-d",
+                   strtotime(
+                       date(
+                           "Y-m-d",
+                           strtotime($currentExercice[0]["dateDebut"]),
+                       ) .
+                           " + " .
+                           $i .
+                           " month",
+                   ),
+               );
+               $to = date(
+                   "Y-m-d",
+                   strtotime(
+                       date(
+                           "Y-m-d",
+                           strtotime($currentExercice[0]["dateDebut"]),
+                       ) .
+                           " + " .
+                           ($i + 1) .
+                           " month -1 day",
+                   ),
+               );
+               $allDepenses = getDepenseByDates(
+                   $currentExercice[0]["id"],
+                   $from,
+                   $to,
+                   $connection,
+               );
+               if (count($allDepenses) == 0) {
+                   echo '<td colspan="5" class="text-center">Aucune dépense pour ce mois</td>';
+               }
+               foreach ($allDepenses as $depense):
+
+                   $poste = getPoste(
+                       $depense["id_poste"],
+                       null,
+                       null,
+                       $connection,
+                   );
+                   $rubrique = getRubriqueByPoste(
+                       $depense["id_poste"],
+                       $connection,
+                   );
+                   ?>
 															<tr>
-																<td><?=$rubrique[0]["libelle"]?></th>
-																<td><?=$poste[0]["libelle"]?></td>
-																<td><?=number_format(floatval($poste[0]["montant"]) / 12,2)?></td>
-																<td><?=$depense["montant"]?></td>
-																<td class="text-primary"><?=number_format((floatval($poste[0]["montant"]) / 12) - floatval($depense["montant"]),2)?></td>
+																<td><?= $rubrique[0]["libelle"] ?></th>
+																<td><?= $poste[0]["libelle"] ?></td>
+																<td><?= number_format(floatval($poste[0]["montant"]) / 12, 2) ?></td>
+																<td><?= $depense["montant"] ?></td>
+																<td class="text-primary"><?= number_format(
+                    floatval($poste[0]["montant"]) / 12 -
+                        floatval($depense["montant"]),
+                    2,
+                ) ?></td>
 															</tr>
 															<?php
-															endforeach;
-															?>
+               endforeach;
+               ?>
 														</tbody>
 													</table>
 												</div>
@@ -290,8 +410,7 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection){
 									</div>
 								</div>
 								<?php
-								endfor;
-								?>
+        endfor; ?>
 							</div>
 						</div>
 					</div>
@@ -304,37 +423,90 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection){
 							</div>
 							<div class="card-body">
 								<div class="owl-carousel owl-carousel owl-loaded front-view-slider ">
-									<?php
-									for ($i = 0; $i < 12; $i++) :
-										$monthYear = date("m/Y",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + ".$i." month"));
-										$from = date("Y-m-d",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + ".$i." month"));
-										$to = date("Y-m-d",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + ".($i + 1)." month -1 day"));
-										$allPaiements = getPaiementByDates($GLOBALS["id_copropriete"], $from, $to, $connection);
-										$totalPaiements = 0;
-										foreach($allPaiements as $paiement)
-											$totalPaiements += $paiement["montant"];
-										$montantPaiements = (floatval($currentExercice[0]["montantFonct"]) + floatval($currentExercice[0]["montantInvest"])) / 12;
-									?>
-									<div class="items" data-bs-toggle="modal" data-bs-target="#mois-<?=$i?>-p">
+									<?php for ($i = 0; $i < 12; $i++):
+
+             $monthYear = date(
+                 "m/Y",
+                 strtotime(
+                     date(
+                         "Y-m-d",
+                         strtotime($currentExercice[0]["dateDebut"]),
+                     ) .
+                         " + " .
+                         $i .
+                         " month",
+                 ),
+             );
+             $from = date(
+                 "Y-m-d",
+                 strtotime(
+                     date(
+                         "Y-m-d",
+                         strtotime($currentExercice[0]["dateDebut"]),
+                     ) .
+                         " + " .
+                         $i .
+                         " month",
+                 ),
+             );
+             $to = date(
+                 "Y-m-d",
+                 strtotime(
+                     date(
+                         "Y-m-d",
+                         strtotime($currentExercice[0]["dateDebut"]),
+                     ) .
+                         " + " .
+                         ($i + 1) .
+                         " month -1 day",
+                 ),
+             );
+             $allPaiements = getPaiementByDates(
+                 $GLOBALS["id_copropriete"],
+                 $from,
+                 $to,
+                 $connection,
+             );
+             $totalPaiements = 0;
+             foreach ($allPaiements as $paiement) {
+                 $totalPaiements += $paiement["montant"];
+             }
+             $montantPaiements =
+                 (floatval($currentExercice[0]["montantFonct"]) +
+                     floatval($currentExercice[0]["montantInvest"])) /
+                 12;
+             ?>
+									<div class="items" data-bs-toggle="modal" data-bs-target="#mois-<?= $i ?>-p">
 										<div class="jobs">
 											<div class="text-center">
-												<span class="text-primary mb-0 d-block"><?=$monthYear?></span>
-												<h4 class="mb-3"><i class="far fa-credit-card"></i> <?=number_format($totalPaiements,2)?></h4>
+												<span class="text-primary mb-0 d-block"><?= $monthYear ?></span>
+												<h4 class="mb-3"><i class="far fa-credit-card"></i> <?= number_format(
+                $totalPaiements,
+                2,
+            ) ?></h4>
 											</div>
 											<div>
-												<?php
-												if (($totalPaiements - $montantPaiements) <= 0) echo '<span class="d-block mb-1 text-danger text-end">'.number_format($totalPaiements - $montantPaiements,2).'</span>';
-												else echo '<span class="d-block mb-1 text-success text-end">'.number_format($totalPaiements - $montantPaiements,2).'</span>';
-												?>
+												<?php if ($totalPaiements - $montantPaiements <= 0) {
+                echo '<span class="d-block mb-1 text-danger text-end">' .
+                    number_format($totalPaiements - $montantPaiements, 2) .
+                    "</span>";
+            } else {
+                echo '<span class="d-block mb-1 text-success text-end">' .
+                    number_format($totalPaiements - $montantPaiements, 2) .
+                    "</span>";
+            } ?>
 												<span>
 													<div class="progress" style="min-width:140px;">
-														<?php 
-														$paiementPercent = ($totalPaiements * 100) / $montantPaiements;
-														if ($paiementPercent <= 100) $progressbarColor = "danger";
-														else $progressbarColor = "success";
-														?>
-														<div class="progress-bar bg-<?=$progressbarColor?>" style="width: <?=$paiementPercent?>%; height:6px;" role="progressbar">
-															<span class="sr-only"><?=$paiementPercent?>%</span>
+														<?php
+              $paiementPercent = ($totalPaiements * 100) / $montantPaiements;
+              if ($paiementPercent <= 100) {
+                  $progressbarColor = "danger";
+              } else {
+                  $progressbarColor = "success";
+              }
+              ?>
+														<div class="progress-bar bg-<?= $progressbarColor ?>" style="width: <?= $paiementPercent ?>%; height:6px;" role="progressbar">
+															<span class="sr-only"><?= $paiementPercent ?>%</span>
 														</div>
 													</div>
 												</span>
@@ -342,18 +514,23 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection){
 										</div>	
 									</div>
 									<?php
-									endfor;
-									?>
+         endfor; ?>
 								</div>
-								<?php
-								for ($i = 0; $i < 12; $i++) :
-									$monthYear = date("m/Y",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + ".$i." month"));
-								?>
-								<div id="mois-<?=$i?>-p" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+								<?php for ($i = 0; $i < 12; $i++):
+            $monthYear = date(
+                "m/Y",
+                strtotime(
+                    date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) .
+                        " + " .
+                        $i .
+                        " month",
+                ),
+            ); ?>
+								<div id="mois-<?= $i ?>-p" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
 									<div class="modal-dialog modal-lg">
 										<div class="modal-content">
 											<div class="modal-header">
-												<h5 class="modal-title">Les paiements du mois <?=$monthYear?></h5>
+												<h5 class="modal-title">Les paiements du mois <?= $monthYear ?></h5>
 												<button type="button" class="btn-close" data-bs-dismiss="modal">
 												</button>
 											</div>
@@ -370,24 +547,63 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection){
 														</thead>
 														<tbody>
 															<?php
-															$from = date("Y-m-d",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + ".$i." month"));
-															$to = date("Y-m-d",strtotime(date("Y-m-d", strtotime($currentExercice[0]["dateDebut"])) . " + ".($i + 1)." month -1 day"));
-															$allPaiements = getPaiementByDates($GLOBALS["id_copropriete"], $from, $to, $connection);
-															if (count($allPaiements) == 0) echo '<td colspan="5" class="text-center">Aucun paiement pour ce mois</td>';
-															$montantPaiements = ((floatval($currentExercice[0]["montantFonct"]) + floatval($currentExercice[0]["montantInvest"])) / 12) / intval($GLOBALS["copropriete"][0]["nbrLot"]);
-															foreach($allPaiements as $paiement):
-																$lot = getLot($paiement["id_lot"], null, null, $connection);
-																
-															?>
+               $from = date(
+                   "Y-m-d",
+                   strtotime(
+                       date(
+                           "Y-m-d",
+                           strtotime($currentExercice[0]["dateDebut"]),
+                       ) .
+                           " + " .
+                           $i .
+                           " month",
+                   ),
+               );
+               $to = date(
+                   "Y-m-d",
+                   strtotime(
+                       date(
+                           "Y-m-d",
+                           strtotime($currentExercice[0]["dateDebut"]),
+                       ) .
+                           " + " .
+                           ($i + 1) .
+                           " month -1 day",
+                   ),
+               );
+               $allPaiements = getPaiementByDates(
+                   $GLOBALS["id_copropriete"],
+                   $from,
+                   $to,
+                   $connection,
+               );
+               if (count($allPaiements) == 0) {
+                   echo '<td colspan="5" class="text-center">Aucun paiement pour ce mois</td>';
+               }
+               $montantPaiements =
+                   (floatval($currentExercice[0]["montantFonct"]) +
+                       floatval($currentExercice[0]["montantInvest"])) /
+                   12 /
+                   intval($GLOBALS["copropriete"][0]["nbrLot"]);
+               foreach ($allPaiements as $paiement):
+                   $lot = getLot(
+                       $paiement["id_lot"],
+                       null,
+                       null,
+                       $connection,
+                   ); ?>
 															<tr>
-																<td><?=$lot[0]["code"]?></td>
-																<td><?=number_format(floatval($montantPaiements),2)?></td>
-																<td><?=$paiement["montant"]?></td>
-																<td class="text-primary"><?=number_format(floatval($paiement["montant"]) - $montantPaiements,2)?></td>
+																<td><?= $lot[0]["code"] ?></td>
+																<td><?= number_format(floatval($montantPaiements), 2) ?></td>
+																<td><?= $paiement["montant"] ?></td>
+																<td class="text-primary"><?= number_format(
+                    floatval($paiement["montant"]) - $montantPaiements,
+                    2,
+                ) ?></td>
 															</tr>
 															<?php
-															endforeach;
-															?>
+               endforeach;
+               ?>
 														</tbody>
 													</table>
 												</div>
@@ -396,8 +612,7 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection){
 									</div>
 								</div>
 								<?php
-								endfor;
-								?>
+        endfor; ?>
 							</div>
 						</div>
 					</div>

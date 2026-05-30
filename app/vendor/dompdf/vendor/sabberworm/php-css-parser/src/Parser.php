@@ -21,12 +21,19 @@ class Parser
      * @param Settings|null $oParserSettings
      * @param int $iLineNo the line number (starting from 1, not from 0)
      */
-    public function __construct($sText, Settings $oParserSettings = null, $iLineNo = 1)
-    {
+    public function __construct(
+        $sText,
+        Settings $oParserSettings = null,
+        $iLineNo = 1,
+    ) {
         if ($oParserSettings === null) {
             $oParserSettings = Settings::create();
         }
-        $this->oParserState = new ParserState($sText, $oParserSettings, $iLineNo);
+        $this->oParserState = new ParserState(
+            $sText,
+            $oParserSettings,
+            $iLineNo,
+        );
     }
 
     /**

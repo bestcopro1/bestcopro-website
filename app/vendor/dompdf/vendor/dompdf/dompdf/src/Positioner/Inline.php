@@ -18,7 +18,6 @@ use Dompdf\Helpers;
  */
 class Inline extends AbstractPositioner
 {
-
     /**
      * @param AbstractFrameDecorator $frame
      * @throws Exception
@@ -35,7 +34,10 @@ class Inline extends AbstractPositioner
         $cb = $frame->get_containing_block();
         $line = $block->get_current_line_box();
 
-        if (!$frame->is_text_node() && !($frame instanceof InlineFrameDecorator)) {
+        if (
+            !$frame->is_text_node() &&
+            !($frame instanceof InlineFrameDecorator)
+        ) {
             // Atomic inline boxes and replaced inline elements
             // (inline-block, inline-table, img etc.)
             $width = $frame->get_margin_width();

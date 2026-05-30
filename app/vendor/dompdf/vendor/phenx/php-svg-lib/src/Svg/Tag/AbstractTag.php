@@ -22,12 +22,12 @@ abstract class AbstractTag
     /** @var Style */
     protected $style;
 
-    protected $attributes = array();
+    protected $attributes = [];
 
     protected $hasShape = true;
 
     /** @var self[] */
-    protected $children = array();
+    protected $children = [];
 
     public function __construct(Document $document, $tagName)
     {
@@ -35,16 +35,18 @@ abstract class AbstractTag
         $this->tagName = $tagName;
     }
 
-    public function getDocument(){
+    public function getDocument()
+    {
         return $this->document;
     }
 
     /**
      * @return Group|null
      */
-    public function getParentGroup() {
+    public function getParentGroup()
+    {
         $stack = $this->getDocument()->getStack();
-        for ($i = count($stack)-2; $i >= 0; $i--) {
+        for ($i = count($stack) - 2; $i >= 0; $i--) {
             $tag = $stack[$i];
 
             if ($tag instanceof Group || $tag instanceof Document) {
@@ -73,21 +75,13 @@ abstract class AbstractTag
         }
     }
 
-    protected function before($attributes)
-    {
-    }
+    protected function before($attributes) {}
 
-    protected function start($attributes)
-    {
-    }
+    protected function start($attributes) {}
 
-    protected function end()
-    {
-    }
+    protected function end() {}
 
-    protected function after()
-    {
-    }
+    protected function after() {}
 
     public function getAttributes()
     {
@@ -118,7 +112,8 @@ abstract class AbstractTag
      *
      * @return Style
      */
-    protected function makeStyle($attributes) {
+    protected function makeStyle($attributes)
+    {
         $style = new Style();
         $style->inherit($this);
         $style->fromStyleSheets($this, $attributes);
@@ -129,23 +124,22 @@ abstract class AbstractTag
 
     protected function applyTransform($attributes)
     {
-
         if (isset($attributes["transform"])) {
             $surface = $this->document->getSurface();
 
             $transform = $attributes["transform"];
 
-            $matches = array();
+            $matches = [];
             preg_match_all(
-                '/(matrix|translate|scale|rotate|skew|skewX|skewY)\((.*?)\)/is',
+                "/(matrix|translate|scale|rotate|skew|skewX|skewY)\((.*?)\)/is",
                 $transform,
                 $matches,
-                PREG_SET_ORDER
+                PREG_SET_ORDER,
             );
 
-            $transformations = array();
+            $transformations = [];
             foreach ($matches as $match) {
-                $arguments = preg_split('/[ ,]+/', $match[2]);
+                $arguments = preg_split("/[ ,]+/", $match[2]);
                 array_unshift($arguments, $match[1]);
                 $transformations[] = $arguments;
             }
@@ -153,7 +147,14 @@ abstract class AbstractTag
             foreach ($transformations as $t) {
                 switch ($t[0]) {
                     case "matrix":
-                        $surface->transform($t[1], $t[2], $t[3], $t[4], $t[5], $t[6]);
+                        $surface->transform(
+                            $t[1],
+                            $t[2],
+                            $t[3],
+                            $t[4],
+                            $t[5],
+                            $t[6],
+                        );
                         break;
 
                     case "translate":
@@ -210,7 +211,8 @@ abstract class AbstractTag
                 $reference = $this->style->fontSize ?? $defaultFontSize;
                 break;
             case "rem":
-                $reference = $this->document->style->fontSize ?? $defaultFontSize;
+                $reference =
+                    $this->document->style->fontSize ?? $defaultFontSize;
                 break;
             case "ex":
             case "ch":
@@ -224,13 +226,19 @@ abstract class AbstractTag
                 $reference = $this->getDocument()->getHeight();
                 break;
             case "vmin":
-                $reference = min($this->getDocument()->getHeight(), $this->getDocument()->getWidth());
+                $reference = min(
+                    $this->getDocument()->getHeight(),
+                    $this->getDocument()->getWidth(),
+                );
                 break;
             case "vmax":
-                $reference = max($this->getDocument()->getHeight(), $this->getDocument()->getWidth());
+                $reference = max(
+                    $this->getDocument()->getHeight(),
+                    $this->getDocument()->getWidth(),
+                );
                 break;
         }
 
-        return (new CssLength($size))->toPixels($reference);
+        return new CssLength($size)->toPixels($reference);
     }
-} 
+}

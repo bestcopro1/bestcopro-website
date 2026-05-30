@@ -23,7 +23,6 @@ use Dompdf\Renderer\Text;
  */
 class Renderer extends AbstractRenderer
 {
-
     /**
      * Array of renderers for specific frame types
      *
@@ -75,25 +74,34 @@ class Renderer extends AbstractRenderer
         // Starts the CSS transformation
         if ($hasTransform) {
             $this->_canvas->save();
-            list($x, $y) = $frame->get_padding_box();
+            [$x, $y] = $frame->get_padding_box();
             $origin = $style->transform_origin;
 
             foreach ($transformList as $transform) {
-                list($function, $values) = $transform;
+                [$function, $values] = $transform;
                 if ($function === "matrix") {
                     $function = "transform";
                 }
 
                 $values = array_map("floatval", $values);
-                $values[] = $x + (float)$style->length_in_pt($origin[0], (float)$style->length_in_pt($style->width));
-                $values[] = $y + (float)$style->length_in_pt($origin[1], (float)$style->length_in_pt($style->height));
+                $values[] =
+                    $x +
+                    (float) $style->length_in_pt(
+                        $origin[0],
+                        (float) $style->length_in_pt($style->width),
+                    );
+                $values[] =
+                    $y +
+                    (float) $style->length_in_pt(
+                        $origin[1],
+                        (float) $style->length_in_pt($style->height),
+                    );
 
                 call_user_func_array([$this->_canvas, $function], $values);
             }
         }
 
         switch ($display) {
-
             case "block":
             case "list-item":
             case "inline-block":
@@ -132,12 +140,14 @@ class Renderer extends AbstractRenderer
                 $node = $frame->get_node();
 
                 if ($node->nodeName === "script") {
-                    if ($node->getAttribute("type") === "text/php" ||
+                    if (
+                        $node->getAttribute("type") === "text/php" ||
                         $node->getAttribute("language") === "php"
                     ) {
                         // Evaluate embedded php scripts
                         $this->_render_frame("php", $frame);
-                    } elseif ($node->getAttribute("type") === "text/javascript" ||
+                    } elseif (
+                        $node->getAttribute("type") === "text/javascript" ||
                         $node->getAttribute("language") === "javascript"
                     ) {
                         // Insert JavaScript
@@ -150,7 +160,6 @@ class Renderer extends AbstractRenderer
 
             default:
                 break;
-
         }
 
         // Starts the overflow: hidden box
@@ -161,8 +170,20 @@ class Renderer extends AbstractRenderer
 
             if ($style->has_border_radius()) {
                 $border_box = $frame->get_border_box();
-                [$tl, $tr, $br, $bl] = $style->resolve_border_radius($border_box, $padding_box);
-                $this->_canvas->clipping_roundrectangle($x, $y, $w, $h, $tl, $tr, $br, $bl);
+                [$tl, $tr, $br, $bl] = $style->resolve_border_radius(
+                    $border_box,
+                    $padding_box,
+                );
+                $this->_canvas->clipping_roundrectangle(
+                    $x,
+                    $y,
+                    $w,
+                    $h,
+                    $tl,
+                    $tr,
+                    $br,
+                    $bl,
+                );
             } else {
                 $this->_canvas->clipping_rectangle($x, $y, $w, $h);
             }
@@ -181,7 +202,10 @@ class Renderer extends AbstractRenderer
 
             if ($child_z_index !== "auto") {
                 $z_index = $child_z_index + 1;
-            } elseif ($child_style->float !== "none" || $child->is_positioned()) {
+            } elseif (
+                $child_style->float !== "none" ||
+                $child->is_positioned()
+            ) {
                 $z_index = 1;
             }
 
@@ -243,16 +267,16 @@ class Renderer extends AbstractRenderer
      */
     protected function _render_frame($type, $frame)
     {
-
         if (!isset($this->_renderers[$type])) {
-
             switch ($type) {
                 case "block":
                     $this->_renderers[$type] = new Block($this->_dompdf);
                     break;
 
                 case "inline":
-                    $this->_renderers[$type] = new Renderer\Inline($this->_dompdf);
+                    $this->_renderers[$type] = new Renderer\Inline(
+                        $this->_dompdf,
+                    );
                     break;
 
                 case "text":
@@ -268,7 +292,9 @@ class Renderer extends AbstractRenderer
                     break;
 
                 case "table-row-group":
-                    $this->_renderers[$type] = new TableRowGroup($this->_dompdf);
+                    $this->_renderers[$type] = new TableRowGroup(
+                        $this->_dompdf,
+                    );
                     break;
 
                 case "list-bullet":
@@ -280,9 +306,10 @@ class Renderer extends AbstractRenderer
                     break;
 
                 case "javascript":
-                    $this->_renderers[$type] = new JavascriptEmbedder($this->_dompdf);
+                    $this->_renderers[$type] = new JavascriptEmbedder(
+                        $this->_dompdf,
+                    );
                     break;
-
             }
         }
 

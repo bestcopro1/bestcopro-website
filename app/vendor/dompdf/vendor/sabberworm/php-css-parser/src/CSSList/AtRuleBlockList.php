@@ -25,7 +25,7 @@ class AtRuleBlockList extends CSSBlockList implements AtRule
      * @param string $sArgs
      * @param int $iLineNo
      */
-    public function __construct($sType, $sArgs = '', $iLineNo = 0)
+    public function __construct($sType, $sArgs = "", $iLineNo = 0)
     {
         parent::__construct($iLineNo);
         $this->sType = $sType;
@@ -63,12 +63,12 @@ class AtRuleBlockList extends CSSBlockList implements AtRule
     {
         $sArgs = $this->sArgs;
         if ($sArgs) {
-            $sArgs = ' ' . $sArgs;
+            $sArgs = " " . $sArgs;
         }
         $sResult = $oOutputFormat->sBeforeAtRuleBlock;
         $sResult .= "@{$this->sType}$sArgs{$oOutputFormat->spaceBeforeOpeningBrace()}{";
         $sResult .= parent::render($oOutputFormat);
-        $sResult .= '}';
+        $sResult .= "}";
         $sResult .= $oOutputFormat->sAfterAtRuleBlock;
         return $sResult;
     }

@@ -14,54 +14,68 @@ class Path extends Shape
 {
     // kindly borrowed from fabric.util.parsePath.
     /* @see https://github.com/fabricjs/fabric.js/blob/master/src/util/path.js#L664 */
-    const NUMBER_PATTERN = '([-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?)\s*';
-    const COMMA_PATTERN = '(?:\s+,?\s*|,\s*)?';
-    const FLAG_PATTERN = '([01])';
-    const ARC_REGEXP = '/'
-        . self::NUMBER_PATTERN
-        . self::COMMA_PATTERN
-        . self::NUMBER_PATTERN
-        . self::COMMA_PATTERN
-        . self::NUMBER_PATTERN
-        . self::COMMA_PATTERN
-        . self::FLAG_PATTERN
-        . self::COMMA_PATTERN
-        . self::FLAG_PATTERN
-        . self::COMMA_PATTERN
-        . self::NUMBER_PATTERN
-        . self::COMMA_PATTERN
-        . self::NUMBER_PATTERN
-        . '/';
+    const NUMBER_PATTERN = "([-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?)\s*";
+    const COMMA_PATTERN = "(?:\s+,?\s*|,\s*)?";
+    const FLAG_PATTERN = "([01])";
+    const ARC_REGEXP =
+        "/" .
+        self::NUMBER_PATTERN .
+        self::COMMA_PATTERN .
+        self::NUMBER_PATTERN .
+        self::COMMA_PATTERN .
+        self::NUMBER_PATTERN .
+        self::COMMA_PATTERN .
+        self::FLAG_PATTERN .
+        self::COMMA_PATTERN .
+        self::FLAG_PATTERN .
+        self::COMMA_PATTERN .
+        self::NUMBER_PATTERN .
+        self::COMMA_PATTERN .
+        self::NUMBER_PATTERN .
+        "/";
 
-    static $commandLengths = array(
-        'm' => 2,
-        'l' => 2,
-        'h' => 1,
-        'v' => 1,
-        'c' => 6,
-        's' => 4,
-        'q' => 4,
-        't' => 2,
-        'a' => 7,
-    );
+    static $commandLengths = [
+        "m" => 2,
+        "l" => 2,
+        "h" => 1,
+        "v" => 1,
+        "c" => 6,
+        "s" => 4,
+        "q" => 4,
+        "t" => 2,
+        "a" => 7,
+    ];
 
-    static $repeatedCommands = array(
-        'm' => 'l',
-        'M' => 'L',
-    );
+    static $repeatedCommands = [
+        "m" => "l",
+        "M" => "L",
+    ];
 
     public static function parse(string $commandSequence): array
     {
-        $commands = array();
-        preg_match_all('/([MZLHVCSQTAmzlhvcsqta])([eE ,\-.\d]+)*/', $commandSequence, $commands, PREG_SET_ORDER);
-        
-        $path = array();
+        $commands = [];
+        preg_match_all(
+            "/([MZLHVCSQTAmzlhvcsqta])([eE ,\-.\d]+)*/",
+            $commandSequence,
+            $commands,
+            PREG_SET_ORDER,
+        );
+
+        $path = [];
         foreach ($commands as $c) {
             if (count($c) == 3) {
                 $commandLower = strtolower($c[1]);
 
                 // arcs have special flags that apparently don't require spaces.
-                if ($commandLower === 'a' && preg_match_all(static::ARC_REGEXP, $c[2], $matches, PREG_PATTERN_ORDER)) {
+                if (
+                    $commandLower === "a" &&
+                    preg_match_all(
+                        static::ARC_REGEXP,
+                        $c[2],
+                        $matches,
+                        PREG_PATTERN_ORDER,
+                    )
+                ) {
                     $numberOfMatches = count($matches[0]);
                     for ($k = 0; $k < $numberOfMatches; ++$k) {
                         $path[] = [
@@ -78,8 +92,13 @@ class Path extends Shape
                     continue;
                 }
 
-                $arguments = array();
-                preg_match_all('/([-+]?((\d+\.\d+)|((\d+)|(\.\d+)))(?:e[-+]?\d+)?)/i', $c[2], $arguments, PREG_PATTERN_ORDER);
+                $arguments = [];
+                preg_match_all(
+                    "/([-+]?((\d+\.\d+)|((\d+)|(\.\d+)))(?:e[-+]?\d+)?)/i",
+                    $c[2],
+                    $arguments,
+                    PREG_PATTERN_ORDER,
+                );
                 $item = $arguments[0];
 
                 if (
@@ -87,10 +106,16 @@ class Path extends Shape
                     ($commandLength = self::$commandLengths[$commandLower]) &&
                     count($item) > $commandLength
                 ) {
-                    $repeatedCommand = isset(self::$repeatedCommands[$c[1]]) ? self::$repeatedCommands[$c[1]] : $c[1];
+                    $repeatedCommand = isset(self::$repeatedCommands[$c[1]])
+                        ? self::$repeatedCommands[$c[1]]
+                        : $c[1];
                     $command = $c[1];
 
-                    for ($k = 0, $klen = count($item); $k < $klen; $k += $commandLength) {
+                    for (
+                        $k = 0, $klen = count($item);
+                        $k < $klen;
+                        $k += $commandLength
+                    ) {
                         $_item = array_slice($item, $k, $k + $commandLength);
                         array_unshift($_item, $command);
                         $path[] = $_item;
@@ -101,9 +126,8 @@ class Path extends Shape
                     array_unshift($item, $c[1]);
                     $path[] = $item;
                 }
-
             } else {
-                $item = array($c[1]);
+                $item = [$c[1]];
 
                 $path[] = $item;
             }
@@ -114,13 +138,13 @@ class Path extends Shape
 
     public function start($attributes)
     {
-        if (!isset($attributes['d'])) {
+        if (!isset($attributes["d"])) {
             $this->hasShape = false;
 
             return;
         }
 
-        $path = static::parse($attributes['d']);
+        $path = static::parse($attributes["d"]);
         $surface = $this->document->getSurface();
 
         // From https://github.com/kangax/fabric.js/blob/master/src/shapes/path.class.js
@@ -140,40 +164,41 @@ class Path extends Shape
         $t = 0; //-((this.height / 2) + $this.pathOffset.y),
 
         foreach ($path as $current) {
-            switch ($current[0]) { // first letter
-                case 'l': // lineto, relative
+            switch ($current[0]) {
+                // first letter
+                case "l": // lineto, relative
                     $x += $current[1];
                     $y += $current[2];
                     $surface->lineTo($x + $l, $y + $t);
                     break;
 
-                case 'L': // lineto, absolute
+                case "L": // lineto, absolute
                     $x = $current[1];
                     $y = $current[2];
                     $surface->lineTo($x + $l, $y + $t);
                     break;
 
-                case 'h': // horizontal lineto, relative
+                case "h": // horizontal lineto, relative
                     $x += $current[1];
                     $surface->lineTo($x + $l, $y + $t);
                     break;
 
-                case 'H': // horizontal lineto, absolute
+                case "H": // horizontal lineto, absolute
                     $x = $current[1];
                     $surface->lineTo($x + $l, $y + $t);
                     break;
 
-                case 'v': // vertical lineto, relative
+                case "v": // vertical lineto, relative
                     $y += $current[1];
                     $surface->lineTo($x + $l, $y + $t);
                     break;
 
-                case 'V': // verical lineto, absolute
+                case "V": // verical lineto, absolute
                     $y = $current[1];
                     $surface->lineTo($x + $l, $y + $t);
                     break;
 
-                case 'm': // moveTo, relative
+                case "m": // moveTo, relative
                     $x += $current[1];
                     $y += $current[2];
                     $subpathStartX = $x;
@@ -181,7 +206,7 @@ class Path extends Shape
                     $surface->moveTo($x + $l, $y + $t);
                     break;
 
-                case 'M': // moveTo, absolute
+                case "M": // moveTo, absolute
                     $x = $current[1];
                     $y = $current[2];
                     $subpathStartX = $x;
@@ -189,7 +214,7 @@ class Path extends Shape
                     $surface->moveTo($x + $l, $y + $t);
                     break;
 
-                case 'c': // bezierCurveTo, relative
+                case "c": // bezierCurveTo, relative
                     $tempX = $x + $current[5];
                     $tempY = $y + $current[6];
                     $controlX = $x + $current[3];
@@ -200,13 +225,13 @@ class Path extends Shape
                         $controlX + $l, // x2
                         $controlY + $t, // y2
                         $tempX + $l,
-                        $tempY + $t
+                        $tempY + $t,
                     );
                     $x = $tempX;
                     $y = $tempY;
                     break;
 
-                case 'C': // bezierCurveTo, absolute
+                case "C": // bezierCurveTo, absolute
                     $x = $current[5];
                     $y = $current[6];
                     $controlX = $current[3];
@@ -217,17 +242,16 @@ class Path extends Shape
                         $controlX + $l,
                         $controlY + $t,
                         $x + $l,
-                        $y + $t
+                        $y + $t,
                     );
                     break;
 
-                case 's': // shorthand cubic bezierCurveTo, relative
-
+                case "s": // shorthand cubic bezierCurveTo, relative
                     // transform to absolute x,y
                     $tempX = $x + $current[3];
                     $tempY = $y + $current[4];
 
-                    if (!preg_match('/[CcSs]/', $previous[0])) {
+                    if (!preg_match("/[CcSs]/", $previous[0])) {
                         // If there is no previous command or if the previous command was not a C, c, S, or s,
                         // the control point is coincident with the current point
                         $controlX = $x;
@@ -244,7 +268,7 @@ class Path extends Shape
                         $x + $current[1] + $l,
                         $y + $current[2] + $t,
                         $tempX + $l,
-                        $tempY + $t
+                        $tempY + $t,
                     );
                     // set control point to 2nd one of this command
                     // "... the first control point is assumed to be
@@ -257,11 +281,11 @@ class Path extends Shape
                     $y = $tempY;
                     break;
 
-                case 'S': // shorthand cubic bezierCurveTo, absolute
+                case "S": // shorthand cubic bezierCurveTo, absolute
                     $tempX = $current[3];
                     $tempY = $current[4];
 
-                    if (!preg_match('/[CcSs]/', $previous[0])) {
+                    if (!preg_match("/[CcSs]/", $previous[0])) {
                         // If there is no previous command or if the previous command was not a C, c, S, or s,
                         // the control point is coincident with the current point
                         $controlX = $x;
@@ -278,7 +302,7 @@ class Path extends Shape
                         $current[1] + $l,
                         $current[2] + $t,
                         $tempX + $l,
-                        $tempY + $t
+                        $tempY + $t,
                     );
                     $x = $tempX;
                     $y = $tempY;
@@ -292,7 +316,7 @@ class Path extends Shape
 
                     break;
 
-                case 'q': // quadraticCurveTo, relative
+                case "q": // quadraticCurveTo, relative
                     // transform to absolute x,y
                     $tempX = $x + $current[3];
                     $tempY = $y + $current[4];
@@ -304,13 +328,13 @@ class Path extends Shape
                         $controlX + $l,
                         $controlY + $t,
                         $tempX + $l,
-                        $tempY + $t
+                        $tempY + $t,
                     );
                     $x = $tempX;
                     $y = $tempY;
                     break;
 
-                case 'Q': // quadraticCurveTo, absolute
+                case "Q": // quadraticCurveTo, absolute
                     $tempX = $current[3];
                     $tempY = $current[4];
 
@@ -318,7 +342,7 @@ class Path extends Shape
                         $current[1] + $l,
                         $current[2] + $t,
                         $tempX + $l,
-                        $tempY + $t
+                        $tempY + $t,
                     );
                     $x = $tempX;
                     $y = $tempY;
@@ -326,17 +350,16 @@ class Path extends Shape
                     $controlY = $current[2];
                     break;
 
-                case 't': // shorthand quadraticCurveTo, relative
-
+                case "t": // shorthand quadraticCurveTo, relative
                     // transform to absolute x,y
                     $tempX = $x + $current[1];
                     $tempY = $y + $current[2];
 
                     // calculate reflection of previous control points
-                    if (preg_match('/[QqT]/', $previous[0])) {
+                    if (preg_match("/[QqT]/", $previous[0])) {
                         $controlX = 2 * $x - $controlX;
                         $controlY = 2 * $y - $controlY;
-                    } elseif ($previous[0] === 't') {
+                    } elseif ($previous[0] === "t") {
                         $controlX = 2 * $x - $tempControlX;
                         $controlY = 2 * $y - $tempControlY;
                     } else {
@@ -351,18 +374,18 @@ class Path extends Shape
                         $controlX + $l,
                         $controlY + $t,
                         $tempX + $l,
-                        $tempY + $t
+                        $tempY + $t,
                     );
                     $x = $tempX;
                     $y = $tempY;
                     break;
 
-                case 'T':
+                case "T":
                     $tempX = $current[1];
                     $tempY = $current[2];
 
                     // calculate reflection of previous control points
-                    if (preg_match('/[QqTt]/', $previous[0])) {
+                    if (preg_match("/[QqTt]/", $previous[0])) {
                         $controlX = 2 * $x - $controlX;
                         $controlY = 2 * $y - $controlY;
                     } else {
@@ -374,53 +397,43 @@ class Path extends Shape
                         $controlX + $l,
                         $controlY + $t,
                         $tempX + $l,
-                        $tempY + $t
+                        $tempY + $t,
                     );
                     $x = $tempX;
                     $y = $tempY;
                     break;
 
-                case 'a':
-                    $this->drawArc(
-                        $surface,
-                        $x + $l,
-                        $y + $t,
-                        array(
-                            $current[1],
-                            $current[2],
-                            $current[3],
-                            $current[4],
-                            $current[5],
-                            $current[6] + $x + $l,
-                            $current[7] + $y + $t
-                        )
-                    );
+                case "a":
+                    $this->drawArc($surface, $x + $l, $y + $t, [
+                        $current[1],
+                        $current[2],
+                        $current[3],
+                        $current[4],
+                        $current[5],
+                        $current[6] + $x + $l,
+                        $current[7] + $y + $t,
+                    ]);
                     $x += $current[6];
                     $y += $current[7];
                     break;
 
-                case 'A':
+                case "A":
                     // TODO: optimize this
-                    $this->drawArc(
-                        $surface,
-                        $x + $l,
-                        $y + $t,
-                        array(
-                            $current[1],
-                            $current[2],
-                            $current[3],
-                            $current[4],
-                            $current[5],
-                            $current[6] + $l,
-                            $current[7] + $t
-                        )
-                    );
+                    $this->drawArc($surface, $x + $l, $y + $t, [
+                        $current[1],
+                        $current[2],
+                        $current[3],
+                        $current[4],
+                        $current[5],
+                        $current[6] + $l,
+                        $current[7] + $t,
+                    ]);
                     $x = $current[6];
                     $y = $current[7];
                     break;
 
-                case 'z':
-                case 'Z':
+                case "z":
+                case "Z":
                     $x = $subpathStartX;
                     $y = $subpathStartY;
                     $surface->closePath();
@@ -439,12 +452,7 @@ class Path extends Shape
         $sweep = $coords[4];
         $tx = $coords[5];
         $ty = $coords[6];
-        $segs = array(
-            array(),
-            array(),
-            array(),
-            array(),
-        );
+        $segs = [[], [], [], []];
 
         $toX = $tx - $fx;
         $toY = $ty - $fy;
@@ -453,7 +461,15 @@ class Path extends Shape
             return;
         }
 
-        $segsNorm = $this->arcToSegments($toX, $toY, $rx, $ry, $large, $sweep, $rot);
+        $segsNorm = $this->arcToSegments(
+            $toX,
+            $toY,
+            $rx,
+            $ry,
+            $large,
+            $sweep,
+            $rot,
+        );
 
         for ($i = 0, $len = count($segsNorm); $i < $len; $i++) {
             $segs[$i][0] = $segsNorm[$i][0] + $fx;
@@ -463,13 +479,13 @@ class Path extends Shape
             $segs[$i][4] = $segsNorm[$i][4] + $fx;
             $segs[$i][5] = $segsNorm[$i][5] + $fy;
 
-            call_user_func_array(array($surface, "bezierCurveTo"), $segs[$i]);
+            call_user_func_array([$surface, "bezierCurveTo"], $segs[$i]);
         }
     }
 
     function arcToSegments($toX, $toY, $rx, $ry, $large, $sweep, $rotateX)
     {
-        $th = $rotateX * M_PI / 180;
+        $th = ($rotateX * M_PI) / 180;
         $sinTh = sin($th);
         $cosTh = cos($th);
         $fromX = 0;
@@ -478,8 +494,8 @@ class Path extends Shape
         $rx = abs($rx);
         $ry = abs($ry);
 
-        $px = -$cosTh * $toX * 0.5 - $sinTh * $toY * 0.5;
-        $py = -$cosTh * $toY * 0.5 + $sinTh * $toX * 0.5;
+        $px = -($cosTh * $toX * 0.5 - $sinTh * $toY * 0.5);
+        $py = -($cosTh * $toY * 0.5 + $sinTh * $toX * 0.5);
         $rx2 = $rx * $rx;
         $ry2 = $ry * $ry;
         $py2 = $py * $py;
@@ -492,15 +508,27 @@ class Path extends Shape
             $rx *= $s;
             $ry *= $s;
         } else {
-            $root = ($large == $sweep ? -1.0 : 1.0) * sqrt($pl / ($rx2 * $py2 + $ry2 * $px2));
+            $root =
+                ($large == $sweep ? -1.0 : 1.0) *
+                sqrt($pl / ($rx2 * $py2 + $ry2 * $px2));
         }
 
-        $cx = $root * $rx * $py / $ry;
-        $cy = -$root * $ry * $px / $rx;
+        $cx = ($root * $rx * $py) / $ry;
+        $cy = -(($root * $ry * $px) / $rx);
         $cx1 = $cosTh * $cx - $sinTh * $cy + $toX * 0.5;
         $cy1 = $sinTh * $cx + $cosTh * $cy + $toY * 0.5;
-        $mTheta = $this->calcVectorAngle(1, 0, ($px - $cx) / $rx, ($py - $cy) / $ry);
-        $dtheta = $this->calcVectorAngle(($px - $cx) / $rx, ($py - $cy) / $ry, (-$px - $cx) / $rx, (-$py - $cy) / $ry);
+        $mTheta = $this->calcVectorAngle(
+            1,
+            0,
+            ($px - $cx) / $rx,
+            ($py - $cy) / $ry,
+        );
+        $dtheta = $this->calcVectorAngle(
+            ($px - $cx) / $rx,
+            ($py - $cy) / $ry,
+            -($px - $cx) / $rx,
+            -($py - $cy) / $ry,
+        );
 
         if ($sweep == 0 && $dtheta > 0) {
             $dtheta -= 2 * M_PI;
@@ -511,10 +539,11 @@ class Path extends Shape
         }
 
         // $Convert $into $cubic $bezier $segments <= 90deg
-        $segments = ceil(abs($dtheta / M_PI * 2));
-        $result = array();
+        $segments = ceil(abs(($dtheta / M_PI) * 2));
+        $result = [];
         $mDelta = $dtheta / $segments;
-        $mT = 8 / 3 * sin($mDelta / 4) * sin($mDelta / 4) / sin($mDelta / 2);
+        $mT =
+            ((8 / 3) * sin($mDelta / 4) * sin($mDelta / 4)) / sin($mDelta / 2);
         $th3 = $mTheta + $mDelta;
 
         for ($i = 0; $i < $segments; $i++) {
@@ -529,7 +558,7 @@ class Path extends Shape
                 $cy1,
                 $mT,
                 $fromX,
-                $fromY
+                $fromY,
             );
             $fromX = $result[$i][4];
             $fromY = $result[$i][5];
@@ -540,27 +569,33 @@ class Path extends Shape
         return $result;
     }
 
-    function segmentToBezier($th2, $th3, $cosTh, $sinTh, $rx, $ry, $cx1, $cy1, $mT, $fromX, $fromY)
-    {
+    function segmentToBezier(
+        $th2,
+        $th3,
+        $cosTh,
+        $sinTh,
+        $rx,
+        $ry,
+        $cx1,
+        $cy1,
+        $mT,
+        $fromX,
+        $fromY,
+    ) {
         $costh2 = cos($th2);
         $sinth2 = sin($th2);
         $costh3 = cos($th3);
         $sinth3 = sin($th3);
         $toX = $cosTh * $rx * $costh3 - $sinTh * $ry * $sinth3 + $cx1;
         $toY = $sinTh * $rx * $costh3 + $cosTh * $ry * $sinth3 + $cy1;
-        $cp1X = $fromX + $mT * (-$cosTh * $rx * $sinth2 - $sinTh * $ry * $costh2);
-        $cp1Y = $fromY + $mT * (-$sinTh * $rx * $sinth2 + $cosTh * $ry * $costh2);
+        $cp1X =
+            $fromX + $mT * -($cosTh * $rx * $sinth2 - $sinTh * $ry * $costh2);
+        $cp1Y =
+            $fromY + $mT * -($sinTh * $rx * $sinth2 + $cosTh * $ry * $costh2);
         $cp2X = $toX + $mT * ($cosTh * $rx * $sinth3 + $sinTh * $ry * $costh3);
         $cp2Y = $toY + $mT * ($sinTh * $rx * $sinth3 - $cosTh * $ry * $costh3);
 
-        return array(
-            $cp1X,
-            $cp1Y,
-            $cp2X,
-            $cp2Y,
-            $toX,
-            $toY
-        );
+        return [$cp1X, $cp1Y, $cp2X, $cp2Y, $toX, $toY];
     }
 
     function calcVectorAngle($ux, $uy, $vx, $vy)

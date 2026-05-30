@@ -11,7 +11,7 @@ class CalcRuleValueList extends RuleValueList
      */
     public function __construct($iLineNo = 0)
     {
-        parent::__construct(',', $iLineNo);
+        parent::__construct(",", $iLineNo);
     }
 
     /**
@@ -19,6 +19,6 @@ class CalcRuleValueList extends RuleValueList
      */
     public function render(OutputFormat $oOutputFormat)
     {
-        return $oOutputFormat->implode(' ', $this->aComponents);
+        return $oOutputFormat->implode(" ", $this->aComponents);
     }
 }

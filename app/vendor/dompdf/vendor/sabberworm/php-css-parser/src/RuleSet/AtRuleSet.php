@@ -25,7 +25,7 @@ class AtRuleSet extends RuleSet implements AtRule
      * @param string $sArgs
      * @param int $iLineNo
      */
-    public function __construct($sType, $sArgs = '', $iLineNo = 0)
+    public function __construct($sType, $sArgs = "", $iLineNo = 0)
     {
         parent::__construct($iLineNo);
         $this->sType = $sType;
@@ -63,11 +63,11 @@ class AtRuleSet extends RuleSet implements AtRule
     {
         $sArgs = $this->sArgs;
         if ($sArgs) {
-            $sArgs = ' ' . $sArgs;
+            $sArgs = " " . $sArgs;
         }
         $sResult = "@{$this->sType}$sArgs{$oOutputFormat->spaceBeforeOpeningBrace()}{";
         $sResult .= parent::render($oOutputFormat);
-        $sResult .= '}';
+        $sResult .= "}";
         return $sResult;
     }
 }
