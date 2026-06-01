@@ -288,6 +288,59 @@ function createXlsxArchive($files)
         );
 }
 
+function renderExcelHtml($rows, $columnCount)
+{
+    $html =
+        '<html><head><meta charset="UTF-8"><style>table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:10px;}td{border:1px solid #000;padding:3px;text-align:center;white-space:nowrap;}.title{font-weight:bold;font-size:14px;border:0;}.immeuble{font-weight:bold;background:#ffa755;}.header{background:#c8c8c8;}.total{font-weight:bold;background:#ffff00;}.note{text-align:left;border:0;}</style></head><body><table>';
+
+    foreach ($rows as $cells) {
+        $class = "";
+        $colspan = 1;
+
+        if (count($cells) === 1) {
+            $value = $cells[0]["value"];
+            if (strpos($value, "IMMEUBLE") === 0) {
+                $class = "immeuble";
+                $colspan = $columnCount;
+            } elseif (strpos($value, "NB :") === 0) {
+                $class = "note";
+                $colspan = $columnCount;
+            }
+        } elseif (
+            isset($cells[1]) &&
+            strpos($cells[1]["value"], "Relev") === 0
+        ) {
+            $class = "title";
+        } elseif (isset($cells[0]) && $cells[0]["value"] === "Code") {
+            $class = "header";
+        } elseif (isset($cells[0]) && $cells[0]["value"] === "TOTAL") {
+            $class = "total";
+        }
+
+        $html .= "<tr>";
+        foreach ($cells as $index => $cell) {
+            $cellClass = $class !== "" ? ' class="' . $class . '"' : "";
+            $cellColspan =
+                $index === 0 && $colspan > 1
+                    ? ' colspan="' . $colspan . '"'
+                    : "";
+            $html .=
+                "<td" .
+                $cellClass .
+                $cellColspan .
+                ">" .
+                xmlEscapeXlsx($cell["value"]) .
+                "</td>";
+            if ($colspan > 1) {
+                break;
+            }
+        }
+        $html .= "</tr>";
+    }
+
+    return $html . "</table></body></html>";
+}
+
 function buildCotisationRows($immeubles, $exercice, $nameExercice, $periods, $periodCount, $id_copropriete, $id_exercice, $connection)
 {
     $rows = [];
@@ -501,29 +554,14 @@ $worksheetData = buildCotisationRows(
     $connection,
 );
 
-$xlsxContent = createXlsxArchive([
-    "[Content_Types].xml" =>
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',
-    "_rels/.rels" =>
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
-    "xl/workbook.xml" =>
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Cotisations" sheetId="1" r:id="rId1"/></sheets></workbook>',
-    "xl/_rels/workbook.xml.rels" =>
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
-    "xl/styles.xml" =>
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="10"/><name val="Calibri"/></font><font><b/><sz val="10"/><name val="Calibri"/></font></fonts><fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFC8C8C8"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFA755"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFFF00"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/><diagonal/></border></borders><cellXfs count="6"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="1" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf><xf numFmtId="0" fontId="0" fillId="2" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" wrapText="1"/></xf><xf numFmtId="4" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf><xf numFmtId="4" fontId="1" fillId="4" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf></cellXfs></styleSheet>',
-    "xl/worksheets/sheet1.xml" => buildWorksheetXml(
-        $worksheetData["rows"],
-        $worksheetData["merges"],
-        $worksheetData["columnCount"],
-    ),
-]);
-
-$filename = "tableau_des_cotisations_" . $nameExercice . ".xlsx";
-header(
-    "Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+$excelContent = renderExcelHtml(
+    $worksheetData["rows"],
+    $worksheetData["columnCount"],
 );
+
+$filename = "tableau_des_cotisations_" . $nameExercice . ".xls";
+header("Content-Type: application/vnd.ms-excel; charset=UTF-8");
 header('Content-Disposition: attachment; filename="' . $filename . '"');
-header("Content-Length: " . strlen($xlsxContent));
-echo $xlsxContent;
+header("Content-Length: " . strlen($excelContent));
+echo $excelContent;
 exit();
