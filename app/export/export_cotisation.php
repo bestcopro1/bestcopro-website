@@ -57,6 +57,89 @@ function getLotByImmeuble($immeuble, $id_copropriete, $connection)
     }
 }
 
+function getCotisationExportPeriods($exercice)
+{
+    $periodePaiement = isset($exercice["id_periodePaiement"])
+        ? $exercice["id_periodePaiement"]
+        : "1";
+    $monthsByPeriod = [
+        "1" => 1,
+        "2" => 3,
+        "3" => 6,
+        "4" => 12,
+    ];
+    $monthsPerPeriod = isset($monthsByPeriod[$periodePaiement])
+        ? $monthsByPeriod[$periodePaiement]
+        : 1;
+    $periodCount = intval(12 / $monthsPerPeriod);
+    $periods = [];
+
+    for ($i = 0; $i < $periodCount; $i++) {
+        $startOffset = $i * $monthsPerPeriod;
+        $endOffset = $startOffset + $monthsPerPeriod - 1;
+        $start = date(
+            "m/Y",
+            strtotime($exercice["dateDebut"] . " + " . $startOffset . " month"),
+        );
+        $end = date(
+            "m/Y",
+            strtotime($exercice["dateDebut"] . " + " . $endOffset . " month"),
+        );
+
+        if ($periodePaiement == "1") {
+            $label = $start;
+        } elseif ($periodePaiement == "2") {
+            $label = "T" . ($i + 1) . "<br>De " . $start . " à " . $end;
+        } elseif ($periodePaiement == "3") {
+            $label = "S" . ($i + 1) . "<br>De " . $start . " à " . $end;
+        } else {
+            $label = "De " . $start . " à " . $end;
+        }
+
+        $periods[] = [
+            "label" => $label,
+            "startOffset" => $startOffset,
+        ];
+    }
+
+    return $periods;
+}
+
+function renderCotisationExportTableHeader($nameExercice, $cotisationPeriods)
+{
+    $htmlContent = '<table style="width:100%;font-size: 10px;border-collapse: collapse;">';
+    $htmlContent .= "<tr>";
+    $htmlContent .=
+        '<td style="border: 1px solid #000; width: 80px;text-align: center;background-color: #c8c8c8;" rowspan="2">Code</td>';
+    $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
+    $htmlContent .=
+        '<td style="border: 1px solid #000; width: 60px;text-align: center;background-color: #c8c8c8;" rowspan="2">Total des impayés</td>';
+    $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
+    $htmlContent .=
+        '<td style="border: 1px solid #000;text-align: center;background-color: #c8c8c8;padding: 3px;" colspan="' .
+        count($cotisationPeriods) .
+        '">Détails des cotisations - ' .
+        $nameExercice .
+        "</td>";
+    $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
+    $htmlContent .=
+        '<td style="border: 1px solid #000; width: 60px;text-align: center;background-color: #c8c8c8;" rowspan="2">Avance</td>';
+    $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
+    $htmlContent .=
+        '<td style="border: 1px solid #000; width: 60px;text-align: center;background-color: #c8c8c8;" rowspan="2">Reste à Payer</td>';
+    $htmlContent .= "</tr>";
+    $htmlContent .= "<tr>";
+    foreach ($cotisationPeriods as $period) {
+        $htmlContent .=
+            '<td style="border: 1px solid #000; width: 70px;text-align: center;background-color: #c8c8c8;">' .
+            $period["label"] .
+            "</td>";
+    }
+    $htmlContent .= "</tr>";
+
+    return $htmlContent;
+}
+
 // reference the Dompdf namespace
 use Dompdf\Dompdf;
 
@@ -64,6 +147,8 @@ use Dompdf\Dompdf;
 $dompdf = new Dompdf();
 
 $exercice = getExercice($_GET["id_exercice"], null, $connection);
+$cotisationPeriods = getCotisationExportPeriods($exercice[0]);
+$cotisationPeriodCount = count($cotisationPeriods);
 $nameExercice = str_replace(
     "Exercice ",
     "",
@@ -105,150 +190,9 @@ foreach ($immeubles as $immeuble):
     $htmlContent .= "<strong>IMMEUBLE " . $immeuble["numeroImm"] . "</strong>";
     $htmlContent .= "</div>";
 
-    $htmlContent .=
-        '<table style="width:100%;font-size: 10px;border-collapse: collapse;">';
-    $htmlContent .= "<tr>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 80px;text-align: center;background-color: #c8c8c8;" rowspan="2">Code</td>';
-    $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 60px;text-align: center;background-color: #c8c8c8;" rowspan="2">Total des impayés</td>';
-    $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
-    $htmlContent .=
-        '<td style="border: 1px solid #000;text-align: center;background-color: #c8c8c8;padding: 3px;" colspan="12">Détails des cotisations - ' .
-        $nameExercice .
-        "</td>";
-    $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 60px;text-align: center;background-color: #c8c8c8;" rowspan="2">Avance</td>';
-    $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 60px;text-align: center;background-color: #c8c8c8;" rowspan="2">Reste à Payer</td>';
-    $htmlContent .= "</tr>";
-    $htmlContent .= "<tr>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-        date(
-            "m/Y",
-            strtotime(
-                date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                    " + 0 month",
-            ),
-        ) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-        date(
-            "m/Y",
-            strtotime(
-                date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                    " + 1 month",
-            ),
-        ) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-        date(
-            "m/Y",
-            strtotime(
-                date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                    " + 2 month",
-            ),
-        ) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-        date(
-            "m/Y",
-            strtotime(
-                date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                    " + 3 month",
-            ),
-        ) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-        date(
-            "m/Y",
-            strtotime(
-                date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                    " + 4 month",
-            ),
-        ) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-        date(
-            "m/Y",
-            strtotime(
-                date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                    " + 5 month",
-            ),
-        ) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-        date(
-            "m/Y",
-            strtotime(
-                date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                    " + 6 month",
-            ),
-        ) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-        date(
-            "m/Y",
-            strtotime(
-                date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                    " + 7 month",
-            ),
-        ) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-        date(
-            "m/Y",
-            strtotime(
-                date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                    " + 8 month",
-            ),
-        ) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-        date(
-            "m/Y",
-            strtotime(
-                date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                    " + 9 month",
-            ),
-        ) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-        date(
-            "m/Y",
-            strtotime(
-                date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                    " + 10 month",
-            ),
-        ) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-        date(
-            "m/Y",
-            strtotime(
-                date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                    " + 11 month",
-            ),
-        ) .
-        "</td>";
-    $htmlContent .= "</tr>";
+    $htmlContent .= renderCotisationExportTableHeader($nameExercice, $cotisationPeriods);
     $totalImpayes = 0;
-    $totalCotisations = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    $totalCotisations = array_fill(0, $cotisationPeriodCount, 0);
     $totalAvances = 0;
     $totalRestesAPayer = 0;
     $line = 1;
@@ -281,148 +225,7 @@ foreach ($immeubles as $immeuble):
                 "<strong>IMMEUBLE " . $immeuble["numeroImm"] . "</strong>";
             $htmlContent .= "</div>";
 
-            $htmlContent .=
-                '<table style="width:100%;font-size: 10px;border-collapse: collapse;">';
-            $htmlContent .= "<tr>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 80px;text-align: center;background-color: #c8c8c8;" rowspan="2">Code</td>';
-            $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 60px;text-align: center;background-color: #c8c8c8;" rowspan="2">Total des impayés</td>';
-            $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
-            $htmlContent .=
-                '<td style="border: 1px solid #000;text-align: center;background-color: #c8c8c8;padding: 3px;" colspan="12">Détails des cotisations - ' .
-                $nameExercice .
-                "</td>";
-            $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 60px;text-align: center;background-color: #c8c8c8;" rowspan="2">Avance</td>';
-            $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 60px;text-align: center;background-color: #c8c8c8;" rowspan="2">Reste à Payer</td>';
-            $htmlContent .= "</tr>";
-            $htmlContent .= "<tr>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-                date(
-                    "m/Y",
-                    strtotime(
-                        date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                            " + 0 month",
-                    ),
-                ) .
-                "</td>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-                date(
-                    "m/Y",
-                    strtotime(
-                        date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                            " + 1 month",
-                    ),
-                ) .
-                "</td>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-                date(
-                    "m/Y",
-                    strtotime(
-                        date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                            " + 2 month",
-                    ),
-                ) .
-                "</td>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-                date(
-                    "m/Y",
-                    strtotime(
-                        date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                            " + 3 month",
-                    ),
-                ) .
-                "</td>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-                date(
-                    "m/Y",
-                    strtotime(
-                        date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                            " + 4 month",
-                    ),
-                ) .
-                "</td>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-                date(
-                    "m/Y",
-                    strtotime(
-                        date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                            " + 5 month",
-                    ),
-                ) .
-                "</td>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-                date(
-                    "m/Y",
-                    strtotime(
-                        date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                            " + 6 month",
-                    ),
-                ) .
-                "</td>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-                date(
-                    "m/Y",
-                    strtotime(
-                        date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                            " + 7 month",
-                    ),
-                ) .
-                "</td>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-                date(
-                    "m/Y",
-                    strtotime(
-                        date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                            " + 8 month",
-                    ),
-                ) .
-                "</td>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-                date(
-                    "m/Y",
-                    strtotime(
-                        date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                            " + 9 month",
-                    ),
-                ) .
-                "</td>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-                date(
-                    "m/Y",
-                    strtotime(
-                        date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                            " + 10 month",
-                    ),
-                ) .
-                "</td>";
-            $htmlContent .=
-                '<td style="border: 1px solid #000; width: 40px;text-align: center;background-color: #c8c8c8;">' .
-                date(
-                    "m/Y",
-                    strtotime(
-                        date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                            " + 11 month",
-                    ),
-                ) .
-                "</td>";
-            $htmlContent .= "</tr>";
+            $htmlContent .= renderCotisationExportTableHeader($nameExercice, $cotisationPeriods);
         endif;
         $line += 1;
         $impayes = getRel_lot_exercice($lotbyimmeuble["id"], null, $connection);
@@ -462,7 +265,9 @@ foreach ($immeubles as $immeuble):
                     floatval($periode["cotisation"]);
             }
         }
-        $cotisation = ($totalPayeCotisation + $totalImpayeCotisation) / 12;
+        $cotisation =
+            ($totalPayeCotisation + $totalImpayeCotisation) /
+            $cotisationPeriodCount;
         $tmpCotisation = $totalPayeCotisation;
         $totalPaiement = 0;
         $paiements = getPaiement(null, null, $lotbyimmeuble["id"], $connection);
@@ -482,7 +287,7 @@ foreach ($immeubles as $immeuble):
             "</td>";
         $htmlContent .= "<td></td>";
         $resteAPayer = 0;
-        for ($i = 0; $i < 12; $i++):
+        for ($i = 0; $i < $cotisationPeriodCount; $i++):
             if ($tmpCotisation >= $cotisation):
                 //if (intval(date("m")) < $i)
                 //	$avance += $cotisation;
@@ -505,7 +310,7 @@ foreach ($immeubles as $immeuble):
                                     strtotime($exercice[0]["dateDebut"]),
                                 ) .
                                     " + " .
-                                    $i .
+                                    $cotisationPeriods[$i]["startOffset"] .
                                     " month",
                             ),
                         ),
@@ -530,7 +335,7 @@ foreach ($immeubles as $immeuble):
                                     strtotime($exercice[0]["dateDebut"]),
                                 ) .
                                     " + " .
-                                    $i .
+                                    $cotisationPeriods[$i]["startOffset"] .
                                     " month",
                             ),
                         ),
@@ -570,54 +375,12 @@ foreach ($immeubles as $immeuble):
         number_format($totalImpayes, 2) .
         "</td>";
     $htmlContent .= "<td></td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
-        number_format($totalCotisations[0], 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
-        number_format($totalCotisations[1], 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
-        number_format($totalCotisations[2], 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
-        number_format($totalCotisations[3], 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
-        number_format($totalCotisations[4], 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
-        number_format($totalCotisations[5], 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
-        number_format($totalCotisations[6], 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
-        number_format($totalCotisations[7], 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
-        number_format($totalCotisations[8], 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
-        number_format($totalCotisations[9], 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
-        number_format($totalCotisations[10], 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
-        number_format($totalCotisations[11], 2) .
-        "</td>";
+    foreach ($totalCotisations as $totalCotisation) {
+        $htmlContent .=
+            '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
+            number_format($totalCotisation, 2) .
+            "</td>";
+    }
     $htmlContent .= "<td></td>";
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
