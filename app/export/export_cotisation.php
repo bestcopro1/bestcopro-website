@@ -107,13 +107,13 @@ function getCotisationExportPeriods($exercice)
 
 function renderCotisationExportTableHeader($nameExercice, $cotisationPeriods)
 {
-    $htmlContent = '<table style="width:100%;font-size: 10px;border-collapse: collapse;">';
+    $htmlContent = '<table style="width:100%;font-size: 8px;border-collapse: collapse;table-layout: fixed;">';
     $htmlContent .= "<tr>";
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 80px;text-align: center;background-color: #c8c8c8;" rowspan="2">Code</td>';
+        '<td style="border: 1px solid #000; width: 68px;text-align: center;background-color: #c8c8c8;" rowspan="2">Code</td>';
     $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 60px;text-align: center;background-color: #c8c8c8;" rowspan="2">Total des impayés</td>';
+        '<td style="border: 1px solid #000; width: 42px;text-align: center;background-color: #c8c8c8;" rowspan="2">Total des impayés</td>';
     $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
     $htmlContent .=
         '<td style="border: 1px solid #000;text-align: center;background-color: #c8c8c8;padding: 3px;" colspan="' .
@@ -123,15 +123,15 @@ function renderCotisationExportTableHeader($nameExercice, $cotisationPeriods)
         "</td>";
     $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 60px;text-align: center;background-color: #c8c8c8;" rowspan="2">Avance</td>';
+        '<td style="border: 1px solid #000; width: 42px;text-align: center;background-color: #c8c8c8;" rowspan="2">Avance</td>';
     $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 60px;text-align: center;background-color: #c8c8c8;" rowspan="2">Reste à Payer</td>';
+        '<td style="border: 1px solid #000; width: 48px;text-align: center;background-color: #c8c8c8;" rowspan="2">Reste à Payer</td>';
     $htmlContent .= "</tr>";
     $htmlContent .= "<tr>";
     foreach ($cotisationPeriods as $period) {
         $htmlContent .=
-            '<td style="border: 1px solid #000; width: 70px;text-align: center;background-color: #c8c8c8;">' .
+            '<td style="border: 1px solid #000; width: 45px;text-align: center;background-color: #c8c8c8;">' .
             $period["label"] .
             "</td>";
     }
@@ -158,7 +158,7 @@ $immeubles = getImmeuble($_GET["id_copropriete"], $connection);
 
 $htmlContent = "";
 $htmlContent .=
-    "<style> * { font-family: DejaVu Sans, sans-serif; } span, p {font-size: 10px;}</style>";
+    "<style> @page { margin: 18px 20px; } * { font-family: DejaVu Sans, sans-serif; } span, p {font-size: 10px;} table td { padding: 1px; }</style>";
 foreach ($immeubles as $immeuble):
     $lotsbyimmeuble = getLotByImmeuble(
         $immeuble["numeroImm"],
