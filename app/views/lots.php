@@ -1547,6 +1547,13 @@ else:
 ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
 						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter le tableau des cotisations
 					</a>
+					<a href="export/export_cotisation_xlsx.php?id_copropriete=<?= $GLOBALS[
+         "id_copropriete"
+     ] ?>&id_exercice=<?= $GLOBALS[
+    "id_exercice"
+] ?>" type="button" class="btn btn-rounded btn-primary me-2">
+						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Exporter le tableau des cotisations Excel
+					</a>
 					<!--a href="export/export_impaye.php?id_copropriete=<?= $GLOBALS[
          "id_copropriete"
      ] ?>&id_exercice=<?= $GLOBALS[
