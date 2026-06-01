@@ -110,28 +110,24 @@ function renderCotisationExportTableHeader($nameExercice, $cotisationPeriods)
     $htmlContent = '<table style="width:100%;font-size: 8px;border-collapse: collapse;table-layout: fixed;">';
     $htmlContent .= "<tr>";
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 90px;text-align: center;background-color: #c8c8c8;" rowspan="2">Code</td>';
-    $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
+        '<td style="border: 1px solid #000; width: 105px;text-align: center;background-color: #c8c8c8;" rowspan="2">Code</td>';
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 42px;text-align: center;background-color: #c8c8c8;" rowspan="2">Total des impayés</td>';
-    $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
+        '<td style="border: 1px solid #000; width: 50px;text-align: center;background-color: #c8c8c8;" rowspan="2">Total des impayés</td>';
     $htmlContent .=
         '<td style="border: 1px solid #000;text-align: center;background-color: #c8c8c8;padding: 3px;" colspan="' .
         count($cotisationPeriods) .
         '">Détails des cotisations - ' .
         $nameExercice .
         "</td>";
-    $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 42px;text-align: center;background-color: #c8c8c8;" rowspan="2">Avance</td>';
-    $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
+        '<td style="border: 1px solid #000; width: 50px;text-align: center;background-color: #c8c8c8;" rowspan="2">Avance</td>';
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 48px;text-align: center;background-color: #c8c8c8;" rowspan="2">Reste à Payer</td>';
+        '<td style="border: 1px solid #000; width: 58px;text-align: center;background-color: #c8c8c8;" rowspan="2">Reste à Payer</td>';
     $htmlContent .= "</tr>";
     $htmlContent .= "<tr>";
     foreach ($cotisationPeriods as $period) {
         $htmlContent .=
-            '<td style="border: 1px solid #000; width: 43px;text-align: center;background-color: #c8c8c8;">' .
+            '<td style="border: 1px solid #000; width: 44px;text-align: center;background-color: #c8c8c8;">' .
             $period["label"] .
             "</td>";
     }
@@ -280,12 +276,10 @@ foreach ($immeubles as $immeuble):
             '<td style="border: 1px solid #000;text-align: center;">' .
             $lotbyimmeuble["code"] .
             "</td>";
-        $htmlContent .= "<td></td>";
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
             number_format($totalImpaye, 2) .
             "</td>";
-        $htmlContent .= "<td></td>";
         $resteAPayer = 0;
         for ($i = 0; $i < $cotisationPeriodCount; $i++):
             if ($tmpCotisation >= $cotisation):
@@ -351,12 +345,10 @@ foreach ($immeubles as $immeuble):
             endif;
             $tmpCotisation -= $cotisation;
         endfor;
-        $htmlContent .= "<td></td>";
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
             number_format($avance, 2) .
             "</td>";
-        $htmlContent .= "<td></td>";
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
             number_format($resteAPayer + $totalImpaye, 2) .
@@ -369,24 +361,20 @@ foreach ($immeubles as $immeuble):
     $htmlContent .= "<tr>";
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #FFFF00;padding: 3px;text-align: center; ">TOTAL</td>';
-    $htmlContent .= "<td></td>";
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
         number_format($totalImpayes, 2) .
         "</td>";
-    $htmlContent .= "<td></td>";
     foreach ($totalCotisations as $totalCotisation) {
         $htmlContent .=
             '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
             number_format($totalCotisation, 2) .
             "</td>";
     }
-    $htmlContent .= "<td></td>";
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
         number_format($totalAvances, 2) .
         "</td>";
-    $htmlContent .= "<td></td>";
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #FFFF00;text-align: center;">' .
         number_format($totalRestesAPayer, 2) .
