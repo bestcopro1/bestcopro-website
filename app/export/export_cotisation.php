@@ -110,7 +110,7 @@ function renderCotisationExportTableHeader($nameExercice, $cotisationPeriods)
     $htmlContent = '<table style="width:100%;font-size: 8px;border-collapse: collapse;table-layout: fixed;">';
     $htmlContent .= "<tr>";
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 68px;text-align: center;background-color: #c8c8c8;" rowspan="2">Code</td>';
+        '<td style="border: 1px solid #000; width: 90px;text-align: center;background-color: #c8c8c8;" rowspan="2">Code</td>';
     $htmlContent .= '<td style="width: 1px;" rowspan="2"></td>';
     $htmlContent .=
         '<td style="border: 1px solid #000; width: 42px;text-align: center;background-color: #c8c8c8;" rowspan="2">Total des impayés</td>';
@@ -131,7 +131,7 @@ function renderCotisationExportTableHeader($nameExercice, $cotisationPeriods)
     $htmlContent .= "<tr>";
     foreach ($cotisationPeriods as $period) {
         $htmlContent .=
-            '<td style="border: 1px solid #000; width: 45px;text-align: center;background-color: #c8c8c8;">' .
+            '<td style="border: 1px solid #000; width: 43px;text-align: center;background-color: #c8c8c8;">' .
             $period["label"] .
             "</td>";
     }

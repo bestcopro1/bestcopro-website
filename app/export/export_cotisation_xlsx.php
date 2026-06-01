@@ -7,12 +7,6 @@ include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
 
-if (!class_exists("ZipArchive")) {
-    http_response_code(500);
-    echo "L'extension PHP ZipArchive est requise pour générer le fichier XLSX.";
-    exit();
-}
-
 function getImmeubleXlsx($id_copropriete, $connection)
 {
     $request = "SELECT DISTINCT numeroImm FROM lot WHERE id_copropriete = ?";
@@ -220,6 +214,78 @@ function buildWorksheetXml($rows, $merges, $columnCount)
         $sheetData .
         $mergeXml .
         "</worksheet>";
+}
+
+function createXlsxArchive($files)
+{
+    $zip = "";
+    $centralDirectory = "";
+    $offset = 0;
+
+    foreach ($files as $name => $content) {
+        $nameLength = strlen($name);
+        $contentLength = strlen($content);
+        $crc = crc32($content);
+
+        $localHeader =
+            pack(
+                "VvvvvvVVVvv",
+                0x04034b50,
+                20,
+                0,
+                0,
+                0,
+                0,
+                $crc,
+                $contentLength,
+                $contentLength,
+                $nameLength,
+                0,
+            ) . $name;
+        $zip .= $localHeader . $content;
+
+        $centralDirectory .=
+            pack(
+                "VvvvvvvVVVvvvvvVV",
+                0x02014b50,
+                20,
+                20,
+                0,
+                0,
+                0,
+                0,
+                $crc,
+                $contentLength,
+                $contentLength,
+                $nameLength,
+                0,
+                0,
+                0,
+                0,
+                0,
+                $offset,
+            ) . $name;
+
+        $offset += strlen($localHeader) + $contentLength;
+    }
+
+    $centralDirectoryOffset = strlen($zip);
+    $centralDirectorySize = strlen($centralDirectory);
+    $entriesCount = count($files);
+
+    return $zip .
+        $centralDirectory .
+        pack(
+            "VvvvvVVv",
+            0x06054b50,
+            0,
+            0,
+            $entriesCount,
+            $entriesCount,
+            $centralDirectorySize,
+            $centralDirectoryOffset,
+            0,
+        );
 }
 
 function buildCotisationRows($immeubles, $exercice, $nameExercice, $periods, $periodCount, $id_copropriete, $id_exercice, $connection)
@@ -435,45 +501,29 @@ $worksheetData = buildCotisationRows(
     $connection,
 );
 
-$tmpFile = tempnam(sys_get_temp_dir(), "cotisations_");
-$zip = new ZipArchive();
-$zip->open($tmpFile, ZipArchive::OVERWRITE);
-$zip->addFromString(
-    "[Content_Types].xml",
-    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>",
-);
-$zip->addFromString(
-    "_rels/.rels",
-    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
-);
-$zip->addFromString(
-    "xl/workbook.xml",
-    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Cotisations" sheetId="1" r:id="rId1"/></sheets></workbook>',
-);
-$zip->addFromString(
-    "xl/_rels/workbook.xml.rels",
-    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
-);
-$zip->addFromString(
-    "xl/styles.xml",
-    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="10"/><name val="Calibri"/></font><font><b/><sz val="10"/><name val="Calibri"/></font></fonts><fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFC8C8C8"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFA755"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFFF00"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/><diagonal/></border></borders><cellXfs count="6"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="1" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf><xf numFmtId="0" fontId="0" fillId="2" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" wrapText="1"/></xf><xf numFmtId="4" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf><xf numFmtId="4" fontId="1" fillId="4" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf></cellXfs></styleSheet>',
-);
-$zip->addFromString(
-    "xl/worksheets/sheet1.xml",
-    buildWorksheetXml(
+$xlsxContent = createXlsxArchive([
+    "[Content_Types].xml" =>
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',
+    "_rels/.rels" =>
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+    "xl/workbook.xml" =>
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Cotisations" sheetId="1" r:id="rId1"/></sheets></workbook>',
+    "xl/_rels/workbook.xml.rels" =>
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
+    "xl/styles.xml" =>
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="10"/><name val="Calibri"/></font><font><b/><sz val="10"/><name val="Calibri"/></font></fonts><fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFC8C8C8"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFA755"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFFF00"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/><diagonal/></border></borders><cellXfs count="6"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="1" fillId="3" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf><xf numFmtId="0" fontId="0" fillId="2" borderId="1" xfId="0" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" wrapText="1"/></xf><xf numFmtId="4" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf><xf numFmtId="4" fontId="1" fillId="4" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center"/></xf></cellXfs></styleSheet>',
+    "xl/worksheets/sheet1.xml" => buildWorksheetXml(
         $worksheetData["rows"],
         $worksheetData["merges"],
         $worksheetData["columnCount"],
     ),
-);
-$zip->close();
+]);
 
 $filename = "tableau_des_cotisations_" . $nameExercice . ".xlsx";
 header(
     "Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 );
 header('Content-Disposition: attachment; filename="' . $filename . '"');
-header("Content-Length: " . filesize($tmpFile));
-readfile($tmpFile);
-unlink($tmpFile);
+header("Content-Length: " . strlen($xlsxContent));
+echo $xlsxContent;
 exit();
