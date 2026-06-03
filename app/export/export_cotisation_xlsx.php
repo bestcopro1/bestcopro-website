@@ -5,6 +5,7 @@ if (!isset($_SESSION)) {
 
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
+include_once __DIR__ . "/cotisation_export_data.php";
 $connection = $GLOBALS["connection"];
 
 function getImmeubleXlsx($id_copropriete, $connection)
@@ -341,13 +342,23 @@ function renderExcelHtml($rows, $columnCount)
     return $html . "</table></body></html>";
 }
 
-function buildCotisationRows($immeubles, $exercice, $nameExercice, $periods, $periodCount, $id_copropriete, $id_exercice, $connection)
-{
+function buildCotisationRows(
+    $immeubles,
+    $exercice,
+    $nameExercice,
+    $periods,
+    $periodCount,
+    $exportData
+) {
     $rows = [];
     $merges = [];
     $row = 1;
     $columnCount = 4 + $periodCount;
     $lastColumn = xlsxColumnName($columnCount);
+    $periodDueFlags = getCotisationExportPeriodDueFlags(
+        $exercice["dateDebut"],
+        $periods,
+    );
 
     $rows[$row] = [
         xlsxTextCell("BEST COPRO", 1),
@@ -388,61 +399,32 @@ function buildCotisationRows($immeubles, $exercice, $nameExercice, $periods, $pe
         $totalCotisations = array_fill(0, $periodCount, 0);
         $totalAvances = 0;
         $totalRestesAPayer = 0;
-        $lots = getLotByImmeubleXlsx(
-            $immeuble["numeroImm"],
-            $id_copropriete,
-            $connection,
-        );
+        $immeubleKey = (string) $immeuble["numeroImm"];
+        $lots = isset($exportData["lotsByImmeuble"][$immeubleKey])
+            ? $exportData["lotsByImmeuble"][$immeubleKey]
+            : [];
 
         foreach ($lots as $lot) {
-            $impayes = getRel_lot_exercice($lot["id"], null, $connection);
-            $totalPaye = 0;
-            $totalImpaye = 0;
-            foreach ($impayes as $periode) {
-                if (intval($periode["id_exercice"]) <= 0) {
-                    $totalPaye += floatval($periode["cotisation"]);
-                    if (
-                        floatval($periode["cotisation"]) <
-                        floatval($periode["partFonct"]) +
-                            floatval($periode["partInv"])
-                    ) {
-                        $totalImpaye +=
-                            floatval($periode["partFonct"]) +
-                            floatval($periode["partInv"]) -
-                            floatval($periode["cotisation"]);
-                    }
-                }
-            }
-
-            $relLotExercice = getRel_lot_exercice(
+            $impayeSummary = getCotisationExportSummary(
+                $exportData["previousRelSummaries"],
                 $lot["id"],
-                $id_exercice,
-                $connection,
             );
-            $totalPayeCotisation = 0;
-            $totalImpayeCotisation = 0;
-            foreach ($relLotExercice as $periode) {
-                $totalPayeCotisation += floatval($periode["cotisation"]);
-                if (
-                    floatval($periode["cotisation"]) <
-                    floatval($periode["partFonct"]) +
-                        floatval($periode["partInv"])
-                ) {
-                    $totalImpayeCotisation +=
-                        floatval($periode["partFonct"]) +
-                        floatval($periode["partInv"]) -
-                        floatval($periode["cotisation"]);
-                }
-            }
+            $totalPaye = $impayeSummary["totalPaye"];
+            $totalImpaye = $impayeSummary["totalImpaye"];
+            $currentSummary = getCotisationExportSummary(
+                $exportData["currentRelSummaries"],
+                $lot["id"],
+            );
+            $totalPayeCotisation = $currentSummary["totalPaye"];
+            $totalImpayeCotisation = $currentSummary["totalImpaye"];
 
             $cotisation =
                 ($totalPayeCotisation + $totalImpayeCotisation) / $periodCount;
             $tmpCotisation = $totalPayeCotisation;
-            $paiements = getPaiement(null, null, $lot["id"], $connection);
-            $totalPaiement = 0;
-            foreach ($paiements as $paiement) {
-                $totalPaiement += floatval($paiement["montant"]);
-            }
+            $totalPaiement = getCotisationExportPaymentTotal(
+                $exportData["paymentTotals"],
+                $lot["id"],
+            );
             $avance = $totalPaiement - $totalPaye - $totalPayeCotisation;
             $resteAPayer = 0;
 
@@ -455,45 +437,13 @@ function buildCotisationRows($immeubles, $exercice, $nameExercice, $periods, $pe
                     $value = $cotisation;
                     $totalCotisations[$i] += $cotisation;
                 } elseif ($tmpCotisation > 0) {
-                    if (
-                        intval(date("Ym")) >=
-                        intval(
-                            date(
-                                "Ym",
-                                strtotime(
-                                    date(
-                                        "Y-m-d",
-                                        strtotime($exercice["dateDebut"]),
-                                    ) .
-                                        " + " .
-                                        $periods[$i]["startOffset"] .
-                                        " month",
-                                ),
-                            ),
-                        )
-                    ) {
+                    if ($periodDueFlags[$i]) {
                         $resteAPayer += $cotisation - $tmpCotisation;
                     }
                     $value = $tmpCotisation;
                     $totalCotisations[$i] += $tmpCotisation;
                 } else {
-                    if (
-                        intval(date("Ym")) >=
-                        intval(
-                            date(
-                                "Ym",
-                                strtotime(
-                                    date(
-                                        "Y-m-d",
-                                        strtotime($exercice["dateDebut"]),
-                                    ) .
-                                        " + " .
-                                        $periods[$i]["startOffset"] .
-                                        " month",
-                                ),
-                            ),
-                        )
-                    ) {
+                    if ($periodDueFlags[$i]) {
                         $resteAPayer += $cotisation;
                     }
                     $value = "";
@@ -549,16 +499,19 @@ $nameExercice = str_replace(
     "",
     getNameexercice($exercice[0]["dateDebut"]),
 );
-$immeubles = getImmeubleXlsx($id_copropriete, $connection);
+$exportData = getCotisationExportData(
+    $id_copropriete,
+    $id_exercice,
+    $connection,
+);
+$immeubles = $exportData["immeubles"];
 $worksheetData = buildCotisationRows(
     $immeubles,
     $exercice[0],
     $nameExercice,
     $periods,
     $periodCount,
-    $id_copropriete,
-    $id_exercice,
-    $connection,
+    $exportData,
 );
 
 $excelContent = renderExcelHtml(

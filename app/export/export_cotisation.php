@@ -7,6 +7,7 @@ require_once "../vendor/dompdf/autoload.inc.php";
 
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
+include_once __DIR__ . "/cotisation_export_data.php";
 $connection = $GLOBALS["connection"];
 
 function getImmeuble($id_copropriete, $connection)
@@ -157,17 +158,25 @@ $nameExercice = str_replace(
     "",
     getNameexercice($exercice[0]["dateDebut"]),
 );
-$immeubles = getImmeuble($_GET["id_copropriete"], $connection);
+$exportData = getCotisationExportData(
+    $_GET["id_copropriete"],
+    $_GET["id_exercice"],
+    $connection,
+);
+$immeubles = $exportData["immeubles"];
+$periodDueFlags = getCotisationExportPeriodDueFlags(
+    $exercice[0]["dateDebut"],
+    $cotisationPeriods,
+);
 
 $htmlContent = "";
 $htmlContent .=
     "<style> @page { margin: 18px 20px; } * { font-family: DejaVu Sans, sans-serif; } span, p {font-size: 10px;} table td { padding: 1px; }</style>";
 foreach ($immeubles as $immeuble):
-    $lotsbyimmeuble = getLotByImmeuble(
-        $immeuble["numeroImm"],
-        $_GET["id_copropriete"],
-        $connection,
-    );
+    $immeubleKey = (string) $immeuble["numeroImm"];
+    $lotsbyimmeuble = isset($exportData["lotsByImmeuble"][$immeubleKey])
+        ? $exportData["lotsByImmeuble"][$immeubleKey]
+        : [];
 
     $htmlContent .= '<table style="width: 100%;">';
     $htmlContent .= "<tr>";
@@ -231,52 +240,26 @@ foreach ($immeubles as $immeuble):
             $htmlContent .= renderCotisationExportTableHeader($nameExercice, $cotisationPeriods);
         endif;
         $line += 1;
-        $impayes = getRel_lot_exercice($lotbyimmeuble["id"], null, $connection);
-        $totalPaye = 0;
-        $totalImpaye = 0;
-        foreach ($impayes as $periode) {
-            if (intval($periode["id_exercice"]) <= 0) {
-                $totalPaye += floatval($periode["cotisation"]);
-                if (
-                    floatval($periode["cotisation"]) <
-                    floatval($periode["partFonct"]) +
-                        floatval($periode["partInv"])
-                ) {
-                    $totalImpaye +=
-                        floatval($periode["partFonct"]) +
-                        floatval($periode["partInv"]) -
-                        floatval($periode["cotisation"]);
-                }
-            }
-        }
-        $relLotExercice = getRel_lot_exercice(
+        $impayeSummary = getCotisationExportSummary(
+            $exportData["previousRelSummaries"],
             $lotbyimmeuble["id"],
-            $_GET["id_exercice"],
-            $connection,
         );
-        $totalPayeCotisation = 0;
-        $totalImpayeCotisation = 0;
-        foreach ($relLotExercice as $periode) {
-            $totalPayeCotisation += floatval($periode["cotisation"]);
-            if (
-                floatval($periode["cotisation"]) <
-                floatval($periode["partFonct"]) + floatval($periode["partInv"])
-            ) {
-                $totalImpayeCotisation +=
-                    floatval($periode["partFonct"]) +
-                    floatval($periode["partInv"]) -
-                    floatval($periode["cotisation"]);
-            }
-        }
+        $totalPaye = $impayeSummary["totalPaye"];
+        $totalImpaye = $impayeSummary["totalImpaye"];
+        $currentSummary = getCotisationExportSummary(
+            $exportData["currentRelSummaries"],
+            $lotbyimmeuble["id"],
+        );
+        $totalPayeCotisation = $currentSummary["totalPaye"];
+        $totalImpayeCotisation = $currentSummary["totalImpaye"];
         $cotisation =
             ($totalPayeCotisation + $totalImpayeCotisation) /
             $cotisationPeriodCount;
         $tmpCotisation = $totalPayeCotisation;
-        $totalPaiement = 0;
-        $paiements = getPaiement(null, null, $lotbyimmeuble["id"], $connection);
-        foreach ($paiements as $paiement) {
-            $totalPaiement += floatval($paiement["montant"]);
-        }
+        $totalPaiement = getCotisationExportPaymentTotal(
+            $exportData["paymentTotals"],
+            $lotbyimmeuble["id"],
+        );
         $avance = $totalPaiement - $totalPaye - $totalPayeCotisation;
         $htmlContent .= "<tr>";
         $htmlContent .=
@@ -300,23 +283,7 @@ foreach ($immeubles as $immeuble):
                 //else
                 //	$avance += $tmpCotisation;
             elseif ($tmpCotisation > 0):
-                if (
-                    intval(date("Ym")) >=
-                    intval(
-                        date(
-                            "Ym",
-                            strtotime(
-                                date(
-                                    "Y-m-d",
-                                    strtotime($exercice[0]["dateDebut"]),
-                                ) .
-                                    " + " .
-                                    $cotisationPeriods[$i]["startOffset"] .
-                                    " month",
-                            ),
-                        ),
-                    )
-                ) {
+                if ($periodDueFlags[$i]) {
                     $resteAPayer += $cotisation - $tmpCotisation;
                 }
                 $htmlContent .=
@@ -325,23 +292,7 @@ foreach ($immeubles as $immeuble):
                     "</td>";
                 $totalCotisations[$i] += $tmpCotisation;
             else:
-                if (
-                    intval(date("Ym")) >=
-                    intval(
-                        date(
-                            "Ym",
-                            strtotime(
-                                date(
-                                    "Y-m-d",
-                                    strtotime($exercice[0]["dateDebut"]),
-                                ) .
-                                    " + " .
-                                    $cotisationPeriods[$i]["startOffset"] .
-                                    " month",
-                            ),
-                        ),
-                    )
-                ):
+                if ($periodDueFlags[$i]):
                     $resteAPayer += $cotisation;
                     $htmlContent .=
                         '<td style="border: 1px solid #000;text-align: center;background-color: #ffe9d5;"></td>';
