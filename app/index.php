@@ -123,38 +123,38 @@ function getVille($connection) {
                 
 				<div class="mt-4 d-flex align-items-center flex-wrap search-job bg-white px-0 mb-4 row">
 					<div class="col-xl-2 col-xxl-3 search-dropdown d-flex align-items-center">
-						<select class="form-control border-0 default-select style-1 h-auto">
+						<select class="form-control border-0 default-select style-1 h-auto" id="filterVille">
 							<option value="">Choisir la ville</option>
 							<?php
 							$villes = getVille($connection);
 							foreach($villes as $ville):
 							?>
-							<option value="<?=$ville["ville"]?>"><?=$ville["ville"]?></option>
+							<option value="<?=htmlspecialchars($ville["ville"])?>"><?=htmlspecialchars($ville["ville"])?></option>
 							<?php
 							endforeach;
 							?>
 						</select>
 					</div>
 					<div class="col-xl-2 col-xxl-3 search-dropdown d-flex align-items-center">
-						<select class="form-control border-0 default-select style-1 h-auto">
-							<option>Nombre de lots</option>
-							<option>&lt;= 50</option>
-							<option>&lt;= 100</option>
-							<option>&lt;= 300</option>
-							<option>&lt;= 500</option>
+						<select class="form-control border-0 default-select style-1 h-auto" id="filterLots">
+							<option value="">Nombre de lots</option>
+							<option value="50">&lt;= 50</option>
+							<option value="100">&lt;= 100</option>
+							<option value="300">&lt;= 300</option>
+							<option value="500">&lt;= 500</option>
 						</select>
 					</div>
 					<div class="col-xl-8 col-xxl-6 d-md-flex job-title-search pe-0">
 						<div class="input-group search-area">
-							<input type="text" class="form-control h-auto" placeholder="Chercher une copropriété...">
-						<span class="input-group-text"><a href="javascript:void(0)" class="btn btn-primary btn-rounded">Chercher<i class="flaticon-381-search-2 ms-2"></i></a></span>
+							<input type="text" class="form-control h-auto" id="searchCopropriete" placeholder="Chercher une copropriété...">
+						<span class="input-group-text"><a href="javascript:void(0)" class="btn btn-primary btn-rounded" id="searchCoproprieteBtn">Chercher<i class="flaticon-381-search-2 ms-2"></i></a></span>
 						</div>	
 					</div>
 				</div>
 				
 				<div class="row">
 					<div class="col-xl-12">
-						<div class="row">
+						<div class="row" id="coproprieteList">
 							<?php
 							$coproprietes = getCopropriete(null, $connection);
 							$relCoproprieteSyndic = getRel_copropriete_syndic($_SESSION["id"], $connection);
@@ -162,8 +162,9 @@ function getVille($connection) {
 							foreach($coproprietes as $copropriete):
 								if (!in_array($copropriete["id"], $relCoproprieteSyndic) && ($_SESSION['id_usertype'] === "3" || $_SESSION['id_usertype'] === "4"))
 									continue;
+								$searchText = strtolower($copropriete["nom"] . " " . $copropriete["adresse"] . " " . $copropriete["ville"]);
 							?>
-							<div class="col-xl-6">
+							<div class="col-xl-6 copropriete-item" data-ville="<?=htmlspecialchars($copropriete["ville"])?>" data-lots="<?=intval($copropriete["nbrLot"])?>" data-search="<?=htmlspecialchars($searchText)?>">
 								<div class="card">
 									<div class="card-body">
 										<div class="d-flex justify-content-between align-items-center flex-wrap">
@@ -196,6 +197,13 @@ function getVille($connection) {
 							<?php
 							endforeach;
 							?>
+							<div class="col-12" id="emptyCoproprieteList" style="display: none;">
+								<div class="card">
+									<div class="card-body text-center">
+										Aucune copropriete ne correspond a votre recherche.
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -223,6 +231,50 @@ function getVille($connection) {
     <script src="js\custom.min.js"></script>
 	<script src="js\dlabnav-init.js"></script>
 	<script src="js\demo.js"></script>
+	<script>
+		(function() {
+			function normalizeText(value) {
+				value = String(value || '').toLowerCase().trim();
+				if (value.normalize) {
+					value = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+				}
+				return value;
+			}
+
+			function applyCoproprieteFilters() {
+				var ville = normalizeText($('#filterVille').val());
+				var maxLots = parseInt($('#filterLots').val(), 10);
+				var search = normalizeText($('#searchCopropriete').val());
+				var visibleCount = 0;
+
+				$('.copropriete-item').each(function() {
+					var item = $(this);
+					var itemVille = normalizeText(item.attr('data-ville'));
+					var itemLots = parseInt(item.attr('data-lots'), 10);
+					var itemSearch = normalizeText(item.attr('data-search'));
+					var matchesVille = !ville || itemVille === ville;
+					var matchesLots = !maxLots || itemLots <= maxLots;
+					var matchesSearch = !search || itemSearch.indexOf(search) !== -1;
+					var isVisible = matchesVille && matchesLots && matchesSearch;
+
+					item.toggle(isVisible);
+					if (isVisible) {
+						visibleCount++;
+					}
+				});
+
+				$('#emptyCoproprieteList').toggle(visibleCount === 0);
+			}
+
+			$('#filterVille, #filterLots').on('change', applyCoproprieteFilters);
+			$('#searchCopropriete').on('input', applyCoproprieteFilters);
+			$('#searchCoproprieteBtn').on('click', function(event) {
+				event.preventDefault();
+				applyCoproprieteFilters();
+			});
+			applyCoproprieteFilters();
+		})();
+	</script>
 	
 </body>
 </html>
