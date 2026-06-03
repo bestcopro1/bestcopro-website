@@ -258,7 +258,8 @@ foreach ($echeances as $echeance) {
                         $page == "depenses" ||
                         $page == "fournisseurs" ||
                         $page == "fonctionnement" ||
-                        $page == "investissement"
+                        $page == "investissement" ||
+                        $page == "suivi_budget"
                     ) {
                         echo "mm-active";
                     } ?>">
@@ -307,6 +308,15 @@ foreach ($echeances as $echeance) {
         ) {
             echo "mm-active";
         } ?>">Budget d'investissement</a>
+							</li>
+                            <li class="<?php if ($page == "suivi_budget") {
+                                echo "mm-active";
+                            } ?>">
+								<a href="dashboard.php?page=suivi_budget" class="<?php if (
+            $page == "suivi_budget"
+        ) {
+            echo "mm-active";
+        } ?>">Suivi budget</a>
 							</li>
                         </ul>
                     </li>
