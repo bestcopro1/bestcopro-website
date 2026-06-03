@@ -143,6 +143,13 @@ use Dompdf\Dompdf;
 $dompdf = new Dompdf();
 
 $exercice = getExercice($_GET["id_exercice"], null, $connection);
+if (
+    count($exercice) > 0 &&
+    isset($_GET["id_periodePaiement"]) &&
+    in_array($_GET["id_periodePaiement"], ["1", "2", "3", "4"], true)
+) {
+    $exercice[0]["id_periodePaiement"] = $_GET["id_periodePaiement"];
+}
 $cotisationPeriods = getCotisationExportPeriods($exercice[0]);
 $cotisationPeriodCount = count($cotisationPeriods);
 $nameExercice = str_replace(

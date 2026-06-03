@@ -535,6 +535,13 @@ function buildCotisationRows($immeubles, $exercice, $nameExercice, $periods, $pe
 $id_copropriete = $_GET["id_copropriete"];
 $id_exercice = $_GET["id_exercice"];
 $exercice = getExercice($id_exercice, null, $connection);
+if (
+    count($exercice) > 0 &&
+    isset($_GET["id_periodePaiement"]) &&
+    in_array($_GET["id_periodePaiement"], ["1", "2", "3", "4"], true)
+) {
+    $exercice[0]["id_periodePaiement"] = $_GET["id_periodePaiement"];
+}
 $periods = getCotisationExportPeriodsXlsx($exercice[0]);
 $periodCount = count($periods);
 $nameExercice = str_replace(

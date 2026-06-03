@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-06-03
+
+### Changed
+
+- Ajout d'un choix de periodicite (mensuel, trimestriel, semestriel, annuel) pour les exports de cotisations PDF et Excel depuis la page des lots.
+
 ## 2026-05-20
 
 ### Added
