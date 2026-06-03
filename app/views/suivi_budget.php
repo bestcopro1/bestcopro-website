@@ -11,7 +11,7 @@ $rubriques = getSuiviBudgetRows($GLOBALS["id_exercice"], $connection);
 			<div class="container-fluid">
 				<div class="form-head d-flex mb-3 align-items-start">
 					<div class="me-auto d-none d-lg-block">
-						<h2 class="text-primary font-w600 mb-0">Suivi budget</h2>
+						<h2 class="text-primary font-w600 mb-0">Suivi budget de fonctionnement</h2>
 						<p class="mb-0"><?= $GLOBALS["copropriete"][0]["nom"] ?></p>
 					</div>
 					<a href="export/export_suivi_budget.php?id_exercice=<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>" class="btn btn-rounded btn-primary px-3 my-1 me-2">
@@ -19,7 +19,7 @@ $rubriques = getSuiviBudgetRows($GLOBALS["id_exercice"], $connection);
 					</a>
 				</div>
 				<div class="alert alert-primary alert-alt fade show p-3 mb-4">
-					<strong>Suivi budget de l'<?= getNameexercice($exercice[0]["dateDebut"]) ?></strong>
+					<strong>Suivi budget de fonctionnement de l'<?= getNameexercice($exercice[0]["dateDebut"]) ?></strong>
 				</div>
 				<div class="row">
 					<div class="col-12">

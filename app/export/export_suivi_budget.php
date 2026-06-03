@@ -46,7 +46,7 @@ $htmlContent .=
 $htmlContent .= '<table class="header">';
 $htmlContent .= "<tr>";
 $htmlContent .= "<td><strong>BEST COPRO</strong></td>";
-$htmlContent .= '<td class="title">Suivi budget</td>';
+$htmlContent .= '<td class="title">Suivi budget de fonctionnement</td>';
 $htmlContent .=
     '<td style="text-align:right;">' .
     htmlspecialchars($nameExercice, ENT_QUOTES, "UTF-8") .
@@ -200,4 +200,6 @@ $dompdf = new Dompdf();
 $dompdf->loadHtml($htmlContent);
 $dompdf->setPaper("A4", "landscape");
 $dompdf->render();
-$dompdf->stream("suivi_budget_" . str_replace(" ", "_", $nameExercice) . ".pdf");
+$dompdf->stream(
+    "suivi_budget_fonctionnement_" . str_replace(" ", "_", $nameExercice) . ".pdf",
+);
