@@ -361,6 +361,9 @@ if ($_SESSION["id_usertype"] !== "1") {
 						<h2 class="text-primary font-w600 mb-0">Budget d'investissement</h2>
 						<p class="mb-0"><?= $GLOBALS["copropriete"][0]["nom"] ?></p>
 					</div>
+					<a href="export/export_budget.php?id_exercice=<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>&type=investissement" class="btn btn-rounded btn-primary px-3 my-1 me-2">
+						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter
+					</a>
 					<?php if ($_SESSION["id_usertype"] === "1"): ?>
 					<button type="button" class="btn btn-rounded btn-primary px-3 my-1 me-2" id="saveORedit" data-url="investissement">Enregistrer les modifications</button>
 					<?php endif; ?>
