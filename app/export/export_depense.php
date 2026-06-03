@@ -50,6 +50,47 @@ function getDepenseByDates($id_poste, $from, $to, $connection)
     }
 }
 
+function getPosteMonthlyDepenses($id_poste, $dateDebut, $connection)
+{
+    $monthlyDepenses = [];
+    $total = 0;
+    $hasDepenses = false;
+
+    for ($i = 0; $i < 12; $i++) {
+        $from = date(
+            "Y-m-d",
+            strtotime(date("Y-m-d", strtotime($dateDebut)) . " + " . $i . " month"),
+        );
+        $to = date(
+            "Y-m-d",
+            strtotime(
+                date("Y-m-d", strtotime($dateDebut)) .
+                    " + " .
+                    ($i + 1) .
+                    " month",
+            ),
+        );
+        $montantDepenses = 0;
+        $allDepenses = getDepenseByDates($id_poste, $from, $to, $connection);
+
+        foreach ($allDepenses as $depense) {
+            $montantDepenses += floatval($depense["montant"]);
+        }
+
+        $monthlyDepenses[$i] = $montantDepenses;
+        $total += $montantDepenses;
+        if (abs($montantDepenses) > 0.00001) {
+            $hasDepenses = true;
+        }
+    }
+
+    return [
+        "monthlyDepenses" => $monthlyDepenses,
+        "total" => $total,
+        "hasDepenses" => $hasDepenses,
+    ];
+}
+
 // reference the Dompdf namespace
 use Dompdf\Dompdf;
 
@@ -83,6 +124,29 @@ $line = 1;
 $page = 1;
 
 foreach ($rubriques as $rubrique):
+    $postes = getPoste(null, $rubrique["id"], null, $connection);
+    $postesWithDepenses = [];
+
+    foreach ($postes as $poste) {
+        $posteDepenses = getPosteMonthlyDepenses(
+            $poste["id"],
+            $exercice[0]["dateDebut"],
+            $connection,
+        );
+
+        if ($posteDepenses["hasDepenses"]) {
+            $poste["monthlyDepenses"] = $posteDepenses["monthlyDepenses"];
+            $poste["totalDepenses"] = $posteDepenses["total"];
+            $postesWithDepenses[] = $poste;
+        }
+    }
+
+    if (count($postesWithDepenses) === 0) {
+        continue;
+    }
+
+    $postes = $postesWithDepenses;
+
     if ($line >= $page * 22):
         $page += 1;
         $htmlContent .= "</table>";
@@ -236,11 +300,12 @@ foreach ($rubriques as $rubrique):
             ),
         ) .
         "</strong></td>";
+    $htmlContent .=
+        '<td style="border: 1px solid #000; width: 55px;text-align: center;background-color: #c8c8c8;"><strong>Dépenses total</strong></td>';
     $htmlContent .= "</tr>";
 
     $totalDepenses = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-    $postes = getPoste(null, $rubrique["id"], null, $connection);
     foreach ($postes as $poste):
         if ($line >= $page * 25):
             $page += 1;
@@ -415,6 +480,8 @@ foreach ($rubriques as $rubrique):
                         ),
                     ) .
                     "</strong></td>";
+                $htmlContent .=
+                    '<td style="border: 1px solid #000; width: 55px;text-align: center;background-color: #c8c8c8;"><strong>Dépenses total</strong></td>';
                 $htmlContent .= "</tr>";
             endif;
         endif;
@@ -426,44 +493,8 @@ foreach ($rubriques as $rubrique):
             "<strong></td>";
         $htmlContent .= '<td style="width: 1px;"></td>';
         for ($i = 0; $i < 12; $i++):
-            $montantDepenses = 0;
-            $monthYear = date(
-                "m/Y",
-                strtotime(
-                    date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                        " + " .
-                        $i .
-                        " month",
-                ),
-            );
-            $from = date(
-                "Y-m-d",
-                strtotime(
-                    date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                        " + " .
-                        $i .
-                        " month",
-                ),
-            );
-            $to = date(
-                "Y-m-d",
-                strtotime(
-                    date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                        " + " .
-                        ($i + 1) .
-                        " month",
-                ),
-            );
-            $allDepenses = getDepenseByDates(
-                $poste["id"],
-                $from,
-                $to,
-                $connection,
-            );
-            foreach ($allDepenses as $depense) {
-                $montantDepenses += $depense["montant"];
-            }
-            if ($montantDepenses === 0):
+            $montantDepenses = $poste["monthlyDepenses"][$i];
+            if (abs(floatval($montantDepenses)) < 0.00001):
                 $htmlContent .=
                     '<td style="border: 1px solid #000;text-align: center;"></td>';
             else:
@@ -474,6 +505,10 @@ foreach ($rubriques as $rubrique):
             endif;
             $totalDepenses[$i] += $montantDepenses;
         endfor;
+        $htmlContent .=
+            '<td style="border: 1px solid #000;text-align: center;">' .
+            number_format($poste["totalDepenses"], 2) .
+            "</td>";
         $htmlContent .= "</tr>";
     endforeach;
 
@@ -528,6 +563,10 @@ foreach ($rubriques as $rubrique):
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #00B0F0;text-align: center;"><strong>' .
         number_format($totalDepenses[11], 2) .
+        "</strong></td>";
+    $htmlContent .=
+        '<td style="border: 1px solid #000;background-color: #00B0F0;text-align: center;"><strong>' .
+        number_format(array_sum($totalDepenses), 2) .
         "</strong></td>";
     $htmlContent .= "</tr>";
     $htmlContent .= "</table>";
