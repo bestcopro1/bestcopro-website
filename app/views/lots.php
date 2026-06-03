@@ -1543,60 +1543,41 @@ else:
              count($exportExercice) > 0
                  ? $exportExercice[0]["id_periodePaiement"]
                  : "1";
-         $exportPdfUrl =
-             "export/export_cotisation.php?id_copropriete=" .
-             urlencode($GLOBALS["id_copropriete"]) .
-             "&id_exercice=" .
-             urlencode($GLOBALS["id_exercice"]);
-         $exportExcelUrl =
-             "export/export_cotisation_xlsx.php?id_copropriete=" .
-             urlencode($GLOBALS["id_copropriete"]) .
-             "&id_exercice=" .
-             urlencode($GLOBALS["id_exercice"]);
+         $periodePaiementOptions = [
+             "1" => "Mensuel",
+             "2" => "Trimestriel",
+             "3" => "Semestriel",
+             "4" => "Annuel",
+         ];
+         if (!isset($periodePaiementOptions[$currentPeriodePaiement])) {
+             $currentPeriodePaiement = "1";
+         }
+         $orderedPeriodePaiementOptions =
+             [$currentPeriodePaiement => $periodePaiementOptions[$currentPeriodePaiement]] +
+             array_diff_key($periodePaiementOptions, [$currentPeriodePaiement => true]);
          ?>
 					<a href="export/export_password.php" type="button" class="btn btn-rounded btn-primary me-2">
 						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter la liste des mots de passe
 					</a>
-					<div class="d-flex align-items-center me-2 mb-2">
-						<select id="exportPeriodePaiement" class="form-control default-select wide">
-							<option value="1" <?php if ($currentPeriodePaiement == "1") {
+					<form method="get" class="d-flex align-items-center flex-wrap">
+						<input type="hidden" name="id_copropriete" value="<?= htmlspecialchars($GLOBALS["id_copropriete"]) ?>">
+						<input type="hidden" name="id_exercice" value="<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>">
+						<div class="d-flex align-items-center me-2 mb-2">
+						<select name="id_periodePaiement" class="form-control default-select wide">
+							<?php foreach ($orderedPeriodePaiementOptions as $periodePaiementId => $periodePaiementLabel): ?>
+							<option value="<?= $periodePaiementId ?>" <?php if ($periodePaiementId == $currentPeriodePaiement) {
            echo "selected";
-       } ?>>Mensuel</option>
-							<option value="2" <?php if ($currentPeriodePaiement == "2") {
-           echo "selected";
-       } ?>>Trimestriel</option>
-							<option value="3" <?php if ($currentPeriodePaiement == "3") {
-           echo "selected";
-       } ?>>Semestriel</option>
-							<option value="4" <?php if ($currentPeriodePaiement == "4") {
-           echo "selected";
-       } ?>>Annuel</option>
+       } ?>><?= $periodePaiementLabel ?></option>
+							<?php endforeach; ?>
 						</select>
-					</div>
-					<a href="<?= htmlspecialchars($exportPdfUrl . "&id_periodePaiement=" . $currentPeriodePaiement) ?>" data-base-url="<?= htmlspecialchars($exportPdfUrl) ?>" type="button" class="btn btn-rounded btn-primary me-2 export-cotisation-link">
+						</div>
+					<button type="submit" formaction="export/export_cotisation.php" class="btn btn-rounded btn-primary me-2 mb-2">
 						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter le tableau des cotisations
-					</a>
-					<a href="<?= htmlspecialchars($exportExcelUrl . "&id_periodePaiement=" . $currentPeriodePaiement) ?>" data-base-url="<?= htmlspecialchars($exportExcelUrl) ?>" type="button" class="btn btn-rounded btn-primary me-2 export-cotisation-link">
+					</button>
+					<button type="submit" formaction="export/export_cotisation_xlsx.php" class="btn btn-rounded btn-primary me-2 mb-2">
 						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Exporter le tableau des cotisations Excel
-					</a>
-					<script>
-						document.addEventListener('DOMContentLoaded', function() {
-							var periodSelect = document.getElementById('exportPeriodePaiement');
-							var exportLinks = document.querySelectorAll('.export-cotisation-link');
-
-							function updateExportLinks() {
-								var period = periodSelect ? periodSelect.value : '1';
-								exportLinks.forEach(function(link) {
-									link.href = link.getAttribute('data-base-url') + '&id_periodePaiement=' + encodeURIComponent(period);
-								});
-							}
-
-							if (periodSelect) {
-								periodSelect.addEventListener('change', updateExportLinks);
-								updateExportLinks();
-							}
-						});
-					</script>
+					</button>
+					</form>
 					<!--a href="export/export_impaye.php?id_copropriete=<?= $GLOBALS[
          "id_copropriete"
      ] ?>&id_exercice=<?= $GLOBALS[
