@@ -69,7 +69,7 @@ $htmlContent .= "</tr>";
 $htmlContent .= "<tr>";
 $htmlContent .= "<th>Montant restant</th>";
 $htmlContent .= "<th>% restant</th>";
-$htmlContent .= "<th>Montant total</th>";
+$htmlContent .= "<th>Montant partiel restant</th>";
 $htmlContent .= "<th>% restant</th>";
 $htmlContent .= "</tr>";
 $htmlContent .= "</thead>";
@@ -109,7 +109,7 @@ foreach ($rubriques as $rubrique) {
             "</td>";
         $htmlContent .=
             '<td class="amount">' .
-            formatSuiviBudgetAmount($poste["partielMontant"]) .
+            formatSuiviBudgetAmount($poste["partielRestant"]) .
             "</td>";
         $htmlContent .=
             '<td class="percent">' .
@@ -146,7 +146,7 @@ foreach ($rubriques as $rubrique) {
         "</td>";
     $htmlContent .=
         '<td class="amount">' .
-        formatSuiviBudgetAmount($rubriqueTotals["partielMontant"]) .
+        formatSuiviBudgetAmount($rubriqueTotals["partielRestant"]) .
         "</td>";
     $htmlContent .=
         '<td class="percent">' .
@@ -181,7 +181,7 @@ $htmlContent .=
     "</td>";
 $htmlContent .=
     '<td class="amount">' .
-    formatSuiviBudgetAmount($globalTotals["partielMontant"]) .
+    formatSuiviBudgetAmount($globalTotals["partielRestant"]) .
     "</td>";
 $htmlContent .=
     '<td class="percent">' .

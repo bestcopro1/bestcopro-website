@@ -39,7 +39,7 @@ $rubriques = getSuiviBudgetRows($GLOBALS["id_exercice"], $connection);
 											<tr>
 												<th>Montant restant</th>
 												<th>% restant</th>
-												<th>Montant total</th>
+												<th>Montant partiel restant</th>
 												<th>% restant</th>
 											</tr>
 										</thead>
@@ -57,7 +57,7 @@ $rubriques = getSuiviBudgetRows($GLOBALS["id_exercice"], $connection);
 												<td><?= formatSuiviBudgetAmount($poste["cout"]) ?></td>
 												<td><?= formatSuiviBudgetAmount($poste["annuelRestant"]) ?></td>
 												<td><?= formatSuiviBudgetPercent($poste["annuelPourcentageRestant"]) ?></td>
-												<td><?= formatSuiviBudgetAmount($poste["partielMontant"]) ?></td>
+												<td><?= formatSuiviBudgetAmount($poste["partielRestant"]) ?></td>
 												<td><?= formatSuiviBudgetPercent($poste["partielPourcentageRestant"]) ?></td>
 											</tr>
 											<?php endforeach; ?>
@@ -67,7 +67,7 @@ $rubriques = getSuiviBudgetRows($GLOBALS["id_exercice"], $connection);
 												<td><?= formatSuiviBudgetAmount($rubriqueTotals["cout"]) ?></td>
 												<td><?= formatSuiviBudgetAmount($rubriqueTotals["annuelRestant"]) ?></td>
 												<td><?= formatSuiviBudgetPercent(getSuiviBudgetPercent($rubriqueTotals["annuelRestant"], $rubriqueTotals["budget"])) ?></td>
-												<td><?= formatSuiviBudgetAmount($rubriqueTotals["partielMontant"]) ?></td>
+												<td><?= formatSuiviBudgetAmount($rubriqueTotals["partielRestant"]) ?></td>
 												<td><?= formatSuiviBudgetPercent(getSuiviBudgetPercent($rubriqueTotals["partielRestant"], $rubriqueTotals["partielMontant"])) ?></td>
 											</tr>
 											<?php
@@ -79,7 +79,7 @@ $rubriques = getSuiviBudgetRows($GLOBALS["id_exercice"], $connection);
 												<td><?= formatSuiviBudgetAmount($globalTotals["cout"]) ?></td>
 												<td><?= formatSuiviBudgetAmount($globalTotals["annuelRestant"]) ?></td>
 												<td><?= formatSuiviBudgetPercent(getSuiviBudgetPercent($globalTotals["annuelRestant"], $globalTotals["budget"])) ?></td>
-												<td><?= formatSuiviBudgetAmount($globalTotals["partielMontant"]) ?></td>
+												<td><?= formatSuiviBudgetAmount($globalTotals["partielRestant"]) ?></td>
 												<td><?= formatSuiviBudgetPercent(getSuiviBudgetPercent($globalTotals["partielRestant"], $globalTotals["partielMontant"])) ?></td>
 											</tr>
 										</tbody>

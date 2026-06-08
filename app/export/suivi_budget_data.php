@@ -10,11 +10,11 @@ function getSuiviBudgetRows($id_exercice, $connection)
     $dateDebut = $exercice[0]["dateDebut"];
     $dateFin = $exercice[0]["dateFin"];
     $idCopropriete = $exercice[0]["id_copropriete"];
+    $moisEcoules = getSuiviBudgetElapsedMonths($dateDebut, $dateFin);
 
     $request =
         "SELECT rubrique.id, rubrique.libelle, poste.id, poste.libelle, poste.montant, " .
-        "COALESCE(SUM(depense.montant), 0) AS cout, " .
-        "COUNT(DISTINCT DATE_FORMAT(depense.date, '%Y-%m')) AS mois_depense " .
+        "COALESCE(SUM(depense.montant), 0) AS cout " .
         "FROM rubrique " .
         "INNER JOIN poste ON poste.id_rubrique = rubrique.id " .
         "LEFT JOIN depense ON depense.id_poste = poste.id AND CAST(depense.date AS date) BETWEEN ? AND ? " .
@@ -34,7 +34,6 @@ function getSuiviBudgetRows($id_exercice, $connection)
             $poste,
             $budget,
             $cout,
-            $moisDepense,
         );
 
         while ($stmt->fetch()) {
@@ -45,7 +44,7 @@ function getSuiviBudgetRows($id_exercice, $connection)
                 $poste,
                 $budget,
                 $cout,
-                $moisDepense,
+                $moisEcoules,
             );
         }
     }
@@ -56,17 +55,23 @@ function getSuiviBudgetRows($id_exercice, $connection)
             $idCopropriete,
             $dateDebut,
             $dateFin,
+            $moisEcoules,
             $connection,
         );
 }
 
-function getSuiviBudgetFallbackRows($id_copropriete, $dateDebut, $dateFin, $connection)
+function getSuiviBudgetFallbackRows(
+    $id_copropriete,
+    $dateDebut,
+    $dateFin,
+    $moisEcoules,
+    $connection,
+)
 {
     $request =
         "SELECT MIN(rubrique.id) AS id_rubrique, rubrique.libelle, poste.libelle, " .
         "MAX(poste.montant) AS budget, " .
-        "COALESCE(SUM(depense.montant), 0) AS cout, " .
-        "COUNT(DISTINCT DATE_FORMAT(depense.date, '%Y-%m')) AS mois_depense " .
+        "COALESCE(SUM(depense.montant), 0) AS cout " .
         "FROM rubrique " .
         "INNER JOIN exercice ON exercice.id = rubrique.id_exercice " .
         "INNER JOIN poste ON poste.id_rubrique = rubrique.id " .
@@ -86,7 +91,6 @@ function getSuiviBudgetFallbackRows($id_copropriete, $dateDebut, $dateFin, $conn
             $poste,
             $budget,
             $cout,
-            $moisDepense,
         );
 
         while ($stmt->fetch()) {
@@ -97,7 +101,7 @@ function getSuiviBudgetFallbackRows($id_copropriete, $dateDebut, $dateFin, $conn
                 $poste,
                 $budget,
                 $cout,
-                $moisDepense,
+                $moisEcoules,
             );
         }
     }
@@ -112,7 +116,7 @@ function addSuiviBudgetRow(
     $poste,
     $budget,
     $cout,
-    $moisDepense,
+    $moisEcoules,
 ) {
     if (!isset($rubriques[$id_rubrique])) {
         $rubriques[$id_rubrique] = [
@@ -124,11 +128,11 @@ function addSuiviBudgetRow(
 
     $budget = floatval($budget);
     $cout = floatval($cout);
-    $moisDepense = intval($moisDepense);
+    $moisEcoules = intval($moisEcoules);
     $annuelRestant = $budget - $cout;
     $annuelPourcentageRestant =
         abs($budget) > 0.00001 ? ($annuelRestant / $budget) * 100 : 0;
-    $partielMontant = ($budget / 12) * $moisDepense;
+    $partielMontant = ($budget / 12) * $moisEcoules;
     $partielRestant = $partielMontant - $cout;
     $partielPourcentageRestant =
         abs($partielMontant) > 0.00001
@@ -140,7 +144,7 @@ function addSuiviBudgetRow(
         "poste" => $poste,
         "budget" => $budget,
         "cout" => $cout,
-        "moisDepense" => $moisDepense,
+        "moisEcoules" => $moisEcoules,
         "annuelRestant" => $annuelRestant,
         "annuelPourcentageRestant" => $annuelPourcentageRestant,
         "partielMontant" => $partielMontant,
@@ -150,6 +154,33 @@ function addSuiviBudgetRow(
 
     $rubriques[$id_rubrique]["postes"][] = $row;
     addSuiviBudgetTotals($rubriques[$id_rubrique]["totals"], $row);
+}
+
+function getSuiviBudgetElapsedMonths($dateDebut, $dateFin = null)
+{
+    $startTimestamp = strtotime($dateDebut);
+    if ($startTimestamp === false) {
+        return 0;
+    }
+
+    $todayTimestamp = time();
+    if ($todayTimestamp < $startTimestamp) {
+        return 0;
+    }
+
+    $endTimestamp = $todayTimestamp;
+    $dateFinTimestamp = $dateFin !== null ? strtotime($dateFin) : false;
+    if ($dateFinTimestamp !== false) {
+        $endTimestamp = min($endTimestamp, $dateFinTimestamp);
+    }
+
+    $startYear = intval(date("Y", $startTimestamp));
+    $startMonth = intval(date("n", $startTimestamp));
+    $endYear = intval(date("Y", $endTimestamp));
+    $endMonth = intval(date("n", $endTimestamp));
+    $months = (($endYear - $startYear) * 12) + ($endMonth - $startMonth) + 1;
+
+    return max(0, min(12, $months));
 }
 
 function getEmptySuiviBudgetTotals()
