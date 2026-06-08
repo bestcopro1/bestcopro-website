@@ -108,7 +108,7 @@ function getCotisationExportPeriods($exercice)
 
 function renderCotisationExportTableHeader($nameExercice, $cotisationPeriods)
 {
-    $htmlContent = '<table style="width:100%;font-size: 8px;border-collapse: collapse;table-layout: fixed;">';
+    $htmlContent = '<table style="width:100%;font-size: 9px;border-collapse: collapse;table-layout: fixed;">';
     $htmlContent .= "<tr>";
     $htmlContent .=
         '<td style="border: 1px solid #000; width: 105px;text-align: center;background-color: #c8c8c8;" rowspan="2">Code</td>';
@@ -171,7 +171,9 @@ $periodDueFlags = getCotisationExportPeriodDueFlags(
 
 $htmlContent = "";
 $htmlContent .=
-    "<style> @page { margin: 18px 20px; } * { font-family: DejaVu Sans, sans-serif; } span, p {font-size: 10px;} table td { padding: 1px; }</style>";
+    "<style> @page { margin: 10px 12px 6px 12px; } * { font-family: DejaVu Sans, sans-serif; } body { margin: 0; } span, p {font-size: 10px;} table td { padding: 2px; line-height: 1.25; }</style>";
+$immeubleIndex = 0;
+$immeubleCount = count($immeubles);
 foreach ($immeubles as $immeuble):
     $immeubleKey = (string) $immeuble["numeroImm"];
     $lotsbyimmeuble = isset($exportData["lotsByImmeuble"][$immeubleKey])
@@ -196,9 +198,9 @@ foreach ($immeubles as $immeuble):
     $htmlContent .= "</tr>";
     $htmlContent .= "</table>";
     $htmlContent .=
-        '<p style="margin-top: 50px;">NB : Sauf erreur, omission, règlement en cours ou non identifié</p>';
+        '<p style="margin-top: 12px;margin-bottom: 6px;">NB : Sauf erreur, omission, règlement en cours ou non identifié</p>';
     $htmlContent .=
-        '<div style="font-size: 12px;border: 1px solid #000;background-color: #ffa755;text-align: center;padding: 3px;margin-bottom: 10px;">';
+        '<div style="font-size: 12px;border: 1px solid #000;background-color: #ffa755;text-align: center;padding: 3px;margin-bottom: 6px;">';
     $htmlContent .= "<strong>IMMEUBLE " . $immeuble["numeroImm"] . "</strong>";
     $htmlContent .= "</div>";
 
@@ -230,9 +232,9 @@ foreach ($immeubles as $immeuble):
             $htmlContent .= "</tr>";
             $htmlContent .= "</table>";
             $htmlContent .=
-                '<p style="margin-top: 50px;">NB : Sauf erreur, omission, règlement en cours ou non identifié</p>';
+                '<p style="margin-top: 12px;margin-bottom: 6px;">NB : Sauf erreur, omission, règlement en cours ou non identifié</p>';
             $htmlContent .=
-                '<div style="font-size: 12px;border: 1px solid #000;background-color: #ffa755;text-align: center;padding: 3px;margin-bottom: 10px;">';
+                '<div style="font-size: 12px;border: 1px solid #000;background-color: #ffa755;text-align: center;padding: 3px;margin-bottom: 6px;">';
             $htmlContent .=
                 "<strong>IMMEUBLE " . $immeuble["numeroImm"] . "</strong>";
             $htmlContent .= "</div>";
@@ -339,7 +341,10 @@ foreach ($immeubles as $immeuble):
         "</td>";
     $htmlContent .= "</tr>";
     $htmlContent .= "</table>";
-    $htmlContent .= '<div style="page-break-after: always;"></div>';
+    if ($immeubleIndex < $immeubleCount - 1) {
+        $htmlContent .= '<div style="page-break-after: always;"></div>';
+    }
+    $immeubleIndex++;
 endforeach;
 
 //echo $htmlContent;
