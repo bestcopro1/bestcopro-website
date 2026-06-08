@@ -1529,7 +1529,7 @@ else:
 			<div class="container-fluid">
 				<div class="form-head d-flex mb-3 align-items-start">
 					<div class="me-auto d-none d-lg-block">
-						<h2 class="text-primary font-w600 mb-0">Lots</h2>
+						<h2 class="text-primary font-w600 mb-0">Situation de copropriétaire</h2>
 						<p class="mb-0"><?= $GLOBALS["copropriete"][0]["nom"] ?></p>
 					</div>
 					<?php if (

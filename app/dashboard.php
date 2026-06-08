@@ -231,7 +231,7 @@ foreach ($echeances as $echeance) {
                             } ?>">
 								<a href="dashboard.php?page=lots" class="<?php if ($page == "lots") {
             echo "mm-active";
-        } ?>">Lots</a>
+        } ?>">Situation de copropriétaire</a>
 							</li>
                             <li class="<?php if ($page == "contentieux") {
                                 echo "mm-active";
