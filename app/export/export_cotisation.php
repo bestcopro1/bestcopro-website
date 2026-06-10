@@ -90,11 +90,11 @@ function getCotisationExportPeriods($exercice)
         if ($periodePaiement == "1") {
             $label = $start;
         } elseif ($periodePaiement == "2") {
-            $label = "T" . ($i + 1) . "<br>De " . $start . " à " . $end;
+            $label = "T" . ($i + 1) . "<br>Du " . $start . " au " . $end;
         } elseif ($periodePaiement == "3") {
-            $label = "S" . ($i + 1) . "<br>De " . $start . " à " . $end;
+            $label = "S" . ($i + 1) . "<br>Du " . $start . " au " . $end;
         } else {
-            $label = "De " . $start . " à " . $end;
+            $label = "Du " . $start . " au " . $end;
         }
 
         $periods[] = [
@@ -121,7 +121,7 @@ function renderCotisationExportTableHeader($nameExercice, $cotisationPeriods)
         $nameExercice .
         "</td>";
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 50px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">Avance</td>';
+        '<td style="border: 1px solid #000; width: 50px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">Surcoutisation</td>';
     $htmlContent .=
         '<td style="border: 1px solid #000; width: 58px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">Reste à Payer</td>';
     $htmlContent .= "</tr>";
@@ -183,7 +183,8 @@ $periodDueFlags = getCotisationExportPeriodDueFlags(
 
 $htmlContent = "";
 $htmlContent .=
-    "<style> @page { margin: 8px 10px 0 10px; } * { font-family: DejaVu Sans, sans-serif; } body { margin: 0; } span, p {font-size: 10px;} table td { padding: 2px; line-height: 1.25; }</style>";
+    "<style> @page { margin: 8px 10px 0 10px; } * { font-family: DejaVu Sans, sans-serif; } body { margin: 0; } span, p {font-size: 10px;} table td { padding: 2px; line-height: 1.25; } .pdf-edit-date { position: fixed; bottom: 4px; left: 10px; font-size: 9px; }</style>";
+$htmlContent .= '<div class="pdf-edit-date">Editée le ' . date("d/m/Y") . "</div>";
 $immeubleIndex = 0;
 $immeubleCount = count($immeubles);
 foreach ($immeubles as $immeuble):
@@ -203,10 +204,9 @@ foreach ($immeubles as $immeuble):
         '<div style="font-weight:bold;">' .
         htmlspecialchars($residenceName, ENT_QUOTES, "UTF-8") .
         "</div>";
-    $htmlContent .= "<span>" . date("d/m/Y") . "</span>";
     if ($dateSituation !== null) {
         $htmlContent .=
-            '<br><span>Situation au ' .
+            '<span>Arrêtée au ' .
             date("d/m/Y", strtotime($dateSituation)) .
             "</span>";
     }
@@ -220,7 +220,7 @@ foreach ($immeubles as $immeuble):
     $htmlContent .= "</tr>";
     $htmlContent .= "</table>";
     $htmlContent .=
-        '<p style="margin-top: 8px;margin-bottom: 4px;">NB : Sauf erreur, omission, règlement en cours ou non identifié</p>';
+        '<p style="margin-top: 8px;margin-bottom: 4px;font-weight:bold;">NB : Sauf erreur, omission, règlement en cours ou non identifié</p>';
     $htmlContent .=
         '<div style="font-size: 12px;border: 1px solid #000;background-color: #ffa755;text-align: center;padding: 3px;margin-bottom: 4px;">';
     $htmlContent .= "<strong>IMMEUBLE " . $immeuble["numeroImm"] . "</strong>";
@@ -247,10 +247,9 @@ foreach ($immeubles as $immeuble):
                 '<div style="font-weight:bold;">' .
                 htmlspecialchars($residenceName, ENT_QUOTES, "UTF-8") .
                 "</div>";
-            $htmlContent .= "<span>" . date("d/m/Y") . "</span>";
             if ($dateSituation !== null) {
                 $htmlContent .=
-                    '<br><span>Situation au ' .
+                    '<span>Arrêtée au ' .
                     date("d/m/Y", strtotime($dateSituation)) .
                     "</span>";
             }
@@ -264,7 +263,7 @@ foreach ($immeubles as $immeuble):
             $htmlContent .= "</tr>";
             $htmlContent .= "</table>";
             $htmlContent .=
-                '<p style="margin-top: 8px;margin-bottom: 4px;">NB : Sauf erreur, omission, règlement en cours ou non identifié</p>';
+                '<p style="margin-top: 8px;margin-bottom: 4px;font-weight:bold;">NB : Sauf erreur, omission, règlement en cours ou non identifié</p>';
             $htmlContent .=
                 '<div style="font-size: 12px;border: 1px solid #000;background-color: #ffa755;text-align: center;padding: 3px;margin-bottom: 4px;">';
             $htmlContent .=
@@ -303,7 +302,7 @@ foreach ($immeubles as $immeuble):
             "</td>";
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
-            number_format($totalImpaye, 2) .
+            formatCotisationExportAmount($totalImpaye) .
             "</td>";
         $resteAPayer = 0;
         for ($i = 0; $i < $cotisationPeriodCount; $i++):
@@ -312,7 +311,7 @@ foreach ($immeubles as $immeuble):
                 //	$avance += $cotisation;
                 $htmlContent .=
                     '<td style="border: 1px solid #000;text-align: center;">' .
-                    number_format($cotisation, 2) .
+                    formatCotisationExportAmount($cotisation) .
                     "</td>";
                 $totalCotisations[$i] += $cotisation;
                 //else
@@ -323,7 +322,7 @@ foreach ($immeubles as $immeuble):
                 }
                 $htmlContent .=
                     '<td style="border: 1px solid #000;text-align: center;">' .
-                    number_format($tmpCotisation, 2) .
+                    formatCotisationExportAmount($tmpCotisation) .
                     "</td>";
                 $totalCotisations[$i] += $tmpCotisation;
             else:
@@ -343,11 +342,11 @@ foreach ($immeubles as $immeuble):
         );
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
-            number_format($avanceAffichee, 0, ".", "") .
+            formatCotisationExportAmount($avanceAffichee, 0) .
             "</td>";
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
-            number_format($resteAPayerAffiche, 0, ".", "") .
+            formatCotisationExportAmount($resteAPayerAffiche, 0) .
             "</td>";
         $htmlContent .= "</tr>";
         $totalImpayes += $totalImpaye;
@@ -359,21 +358,21 @@ foreach ($immeubles as $immeuble):
         '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;padding: 3px;text-align: center; ">TOTAL</td>';
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;text-align: center;">' .
-        number_format($totalImpayes, 2) .
+        formatCotisationExportAmount($totalImpayes) .
         "</td>";
     foreach ($totalCotisations as $totalCotisation) {
         $htmlContent .=
             '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;text-align: center;">' .
-            number_format($totalCotisation, 2) .
+            formatCotisationExportAmount($totalCotisation) .
             "</td>";
     }
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;text-align: center;">' .
-        number_format($totalAvances, 0, ".", "") .
+        formatCotisationExportAmount($totalAvances, 0) .
         "</td>";
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;text-align: center;">' .
-        number_format($totalRestesAPayer, 0, ".", "") .
+        formatCotisationExportAmount($totalRestesAPayer, 0) .
         "</td>";
     $htmlContent .= "</tr>";
     $htmlContent .= "</table>";

@@ -222,6 +222,11 @@ function getCotisationExportDisplayResteAPayer($value)
     return ceil((float) $value);
 }
 
+function formatCotisationExportAmount($value, $decimals = 2)
+{
+    return number_format((float) $value, $decimals, ",", " ");
+}
+
 function getCotisationExportFilename(
     $prefix,
     $residenceName,

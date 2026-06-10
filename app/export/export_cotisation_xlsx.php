@@ -89,11 +89,11 @@ function getCotisationExportPeriodsXlsx($exercice)
         if ($periodePaiement == "1") {
             $label = $start;
         } elseif ($periodePaiement == "2") {
-            $label = "T" . ($i + 1) . " - De " . $start . " à " . $end;
+            $label = "T" . ($i + 1) . " - Du " . $start . " au " . $end;
         } elseif ($periodePaiement == "3") {
-            $label = "S" . ($i + 1) . " - De " . $start . " à " . $end;
+            $label = "S" . ($i + 1) . " - Du " . $start . " au " . $end;
         } else {
-            $label = "De " . $start . " à " . $end;
+            $label = "Du " . $start . " au " . $end;
         }
 
         $periods[] = [
@@ -121,8 +121,14 @@ function xlsxColumnName($index)
     return $name;
 }
 
-function xlsxCell($row, $column, $value, $style = 0, $isNumber = false)
-{
+function xlsxCell(
+    $row,
+    $column,
+    $value,
+    $style = 0,
+    $isNumber = false,
+    $decimals = 2
+) {
     $reference = xlsxColumnName($column) . $row;
     $styleAttribute = $style > 0 ? ' s="' . $style . '"' : "";
 
@@ -132,7 +138,7 @@ function xlsxCell($row, $column, $value, $style = 0, $isNumber = false)
             '"' .
             $styleAttribute .
             '><v>' .
-            number_format((float) $value, 2, ".", "") .
+            number_format((float) $value, $decimals, ".", "") .
             "</v></c>";
     }
 
@@ -155,6 +161,7 @@ function xlsxRow($rowNumber, $cells)
             $cell["value"],
             isset($cell["style"]) ? $cell["style"] : 0,
             isset($cell["number"]) ? $cell["number"] : false,
+            isset($cell["decimals"]) ? $cell["decimals"] : 2,
         );
     }
     return $xml . "</row>";
@@ -169,12 +176,13 @@ function xlsxTextCell($value, $style = 0)
     ];
 }
 
-function xlsxNumberCell($value, $style = 0)
+function xlsxNumberCell($value, $style = 0, $decimals = 2)
 {
     return [
         "value" => $value,
         "style" => $style,
         "number" => true,
+        "decimals" => $decimals,
     ];
 }
 
@@ -292,7 +300,7 @@ function createXlsxArchive($files)
 function renderExcelHtml($rows, $columnCount)
 {
     $html =
-        '<html><head><meta charset="UTF-8"><style>table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:10px;}td{border:1px solid #000;padding:3px;text-align:center;white-space:nowrap;}.title{font-weight:bold;font-size:14px;border:0;}.immeuble{font-weight:bold;background:#ffa755;}.header{background:#c8c8c8;}.total{font-weight:bold;background:#ffff00;}.note{text-align:left;border:0;}</style></head><body><table>';
+        '<html><head><meta charset="UTF-8"><style>table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:10px;}td{border:1px solid #000;padding:3px;text-align:center;white-space:nowrap;}.title{font-weight:bold;font-size:14px;border:0;}.immeuble{font-weight:bold;background:#ffa755;}.header{background:#d9eaf7;font-weight:bold;}.total{font-weight:bold;background:#d9eaf7;}.note{text-align:left;border:0;font-weight:bold;}</style></head><body><table>';
 
     foreach ($rows as $cells) {
         $class = "";
@@ -325,12 +333,18 @@ function renderExcelHtml($rows, $columnCount)
                 $index === 0 && $colspan > 1
                     ? ' colspan="' . $colspan . '"'
                     : "";
+            $value = isset($cell["number"]) && $cell["number"]
+                ? formatCotisationExportAmount(
+                    $cell["value"],
+                    isset($cell["decimals"]) ? $cell["decimals"] : 2
+                )
+                : $cell["value"];
             $html .=
                 "<td" .
                 $cellClass .
                 $cellColspan .
                 ">" .
-                xmlEscapeXlsx($cell["value"]) .
+                xmlEscapeXlsx($value) .
                 "</td>";
             if ($colspan > 1) {
                 break;
@@ -365,7 +379,7 @@ function buildCotisationRows(
     $exportDateLabel = date("d/m/Y");
     if ($dateSituation !== null) {
         $exportDateLabel .=
-            " - Situation au " . date("d/m/Y", strtotime($dateSituation));
+            " - Arrêtée au " . date("d/m/Y", strtotime($dateSituation));
     }
 
     $rows[$row] = [
@@ -398,7 +412,7 @@ function buildCotisationRows(
         foreach ($periods as $period) {
             $header[] = xlsxTextCell($period["label"], 3);
         }
-        $header[] = xlsxTextCell("Avance", 3);
+        $header[] = xlsxTextCell("Surcoutisation", 3);
         $header[] = xlsxTextCell("Reste à Payer", 3);
         $rows[$row] = $header;
         $row++;
@@ -464,8 +478,8 @@ function buildCotisationRows(
             $resteAPayerAffiche = getCotisationExportDisplayResteAPayer(
                 $resteAPayer + $totalImpaye
             );
-            $line[] = xlsxNumberCell($avanceAffichee, 4);
-            $line[] = xlsxNumberCell($resteAPayerAffiche, 4);
+            $line[] = xlsxNumberCell($avanceAffichee, 4, 0);
+            $line[] = xlsxNumberCell($resteAPayerAffiche, 4, 0);
             $rows[$row] = $line;
             $row++;
 
@@ -481,8 +495,8 @@ function buildCotisationRows(
         foreach ($totalCotisations as $totalCotisation) {
             $totalLine[] = xlsxNumberCell($totalCotisation, 5);
         }
-        $totalLine[] = xlsxNumberCell($totalAvances, 5);
-        $totalLine[] = xlsxNumberCell($totalRestesAPayer, 5);
+        $totalLine[] = xlsxNumberCell($totalAvances, 5, 0);
+        $totalLine[] = xlsxNumberCell($totalRestesAPayer, 5, 0);
         $rows[$row] = $totalLine;
         $row += 2;
     }
