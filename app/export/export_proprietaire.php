@@ -234,29 +234,23 @@ foreach ($etats as $etat):
     if (intval($etat["id_exercice"]) < 0):
         $exercice = getExercice($_GET["id_exercice"], null, $connection);
         $htmlContent .=
-            '<td style="border: 1px solid #000;width: 33%;text-align: center;">Année ' .
-            date(
-                "Y",
-                strtotime(
-                    date("Y-m-d", strtotime($exercice[0]["dateDebut"])) .
-                        " - " .
-                        abs($etat["id_exercice"]) .
-                        " year",
-                ),
+            '<td style="border: 1px solid #000;width: 33%;text-align: center;">' .
+            getExercisePeriodLabel(
+                $exercice[0]["dateDebut"],
+                intval($etat["id_exercice"])
             ) .
             "</td>";
     elseif (intval($etat["id_exercice"]) === 0):
         $htmlContent .=
             '<td style="border: 1px solid #000;width: 33%;text-align: center;">Impayé promoteur</td>';
     else:
-        $exercice = getExercice($_GET["id_exercice"], null, $connection);
-        $nameExercice = str_replace(
-            "Exercice ",
-            "",
-            getNameexercice($exercice[0]["dateDebut"]),
-        );
+        $exercice = getExercice($etat["id_exercice"], null, $connection);
+        $nameExercice =
+            count($exercice) > 0
+                ? getExercisePeriodLabel($exercice[0]["dateDebut"])
+                : "";
         $htmlContent .=
-            '<td style="border: 1px solid #000;width: 33%;text-align: center;">Année ' .
+            '<td style="border: 1px solid #000;width: 33%;text-align: center;">' .
             $nameExercice .
             "</td>";
     endif;

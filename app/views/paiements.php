@@ -48,6 +48,28 @@ function getImpaye($id_lot, $id_paiement = null, $connection)
         }
     }
 }
+
+function getPaymentImpayeLabel($impaye, $connection)
+{
+    if (intval($impaye["id_exercice"]) < 0) {
+        $exercice = getExercice($GLOBALS["id_exercice"], null, $connection);
+        if (count($exercice) > 0) {
+            return "Cumul des impayés " .
+                getExercisePeriodLabel(
+                    $exercice[0]["dateDebut"],
+                    intval($impaye["id_exercice"])
+                );
+        }
+
+        return "Cumul des impayés N" . $impaye["id_exercice"];
+    }
+
+    if (intval($impaye["id_exercice"]) == 0) {
+        return "Impayé promoteur";
+    }
+
+    return "";
+}
 if (isset($_POST["id"], $_POST["printZone"])) {
     $id = filter_input(INPUT_POST, "id", FILTER_SANITIZE_STRING);
     $printZone = filter_input(INPUT_POST, "printZone", FILTER_SANITIZE_STRING);
@@ -384,8 +406,8 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                     $impaye["id_rel"] .
                     '" ' .
                     $checked .
-                    ">Cumul des impayés N" .
-                    $impaye["id_exercice"];
+                    ">" .
+                    getPaymentImpayeLabel($impaye, $connection);
                 $codeHtml .= "</label>";
                 $codeHtml .= "</div>";
             } elseif (intval($impaye["id_exercice"]) == 0) {
@@ -958,7 +980,7 @@ if (isset($_GET["action"], $_GET["id"])):
 															<label class="form-check-label">
 																<input type="checkbox" class="form-check-input" name="impayes[]" value="<?= $impaye[
                     "id_rel"
-                ] ?>" checked>Cumul des impayés N<?= $impaye["id_exercice"] ?>
+                ] ?>" checked><?= getPaymentImpayeLabel($impaye, $connection) ?>
 															</label>
 														</div>
 														<?php elseif (intval($impaye["id_exercice"]) == 0): ?>
@@ -1135,7 +1157,7 @@ elseif (isset($_GET["action"])):
 															<label class="form-check-label">
 																<input type="checkbox" class="form-check-input" name="impayes[]" value="<?= $impaye[
                     "id_rel"
-                ] ?>">Cumul des impayés N<?= $impaye["id_exercice"] ?>
+                ] ?>"><?= getPaymentImpayeLabel($impaye, $connection) ?>
 															</label>
 														</div>
 														<?php elseif (intval($impaye["id_exercice"]) == 0): ?>

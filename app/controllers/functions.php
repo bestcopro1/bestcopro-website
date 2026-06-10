@@ -1686,6 +1686,19 @@ function getNameexercice($date)
             ($nextYear + 1);
     }
 }
+
+function getExercisePeriodLabel($dateDebut, $offsetYears = 0)
+{
+    $start = strtotime(
+        date("Y-m-d", strtotime($dateDebut)) . " " . intval($offsetYears) . " year"
+    );
+    if (date("m", $start) == "01") {
+        return date("Y", $start);
+    }
+
+    $end = strtotime(date("Y-m-d", $start) . " + 11 month");
+    return date("m/Y", $start) . " - " . date("m/Y", $end);
+}
 // get periodeInfo
 /**
  * periodeInfo
@@ -1792,4 +1805,4 @@ function getPassword($length = 8)
     $password = substr(str_shuffle($chars), 0, $length);
     return $password;
 }
-?>    
+?>
