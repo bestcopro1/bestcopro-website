@@ -343,11 +343,11 @@ foreach ($immeubles as $immeuble):
         );
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
-            number_format($avanceAffichee, 0) .
+            number_format($avanceAffichee, 0, ".", "") .
             "</td>";
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
-            number_format($resteAPayerAffiche, 0) .
+            number_format($resteAPayerAffiche, 0, ".", "") .
             "</td>";
         $htmlContent .= "</tr>";
         $totalImpayes += $totalImpaye;
@@ -369,11 +369,11 @@ foreach ($immeubles as $immeuble):
     }
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;text-align: center;">' .
-        number_format($totalAvances, 0) .
+        number_format($totalAvances, 0, ".", "") .
         "</td>";
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;text-align: center;">' .
-        number_format($totalRestesAPayer, 0) .
+        number_format($totalRestesAPayer, 0, ".", "") .
         "</td>";
     $htmlContent .= "</tr>";
     $htmlContent .= "</table>";
