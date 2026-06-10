@@ -1309,8 +1309,8 @@ if (isset($_GET["action"], $_GET["id"])):
 																</div>
 																<div class="modal-footer">
 																	<button type="button" class="btn btn-rounded btn-primary px-3 my-1 me-2 windowPrint" data-id="<?= $paiement[
-                     "id"
-                 ] ?>">Imprimer</button>
+                    "id"
+                ] ?>">Télécharger le reçu</button>
 																</div>
 															</div>
 														</div>

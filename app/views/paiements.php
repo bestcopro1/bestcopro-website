@@ -866,7 +866,7 @@ if (isset($_GET["action"], $_GET["id"])):
 					<button type="button" class="btn btn-rounded btn-primary px-3 my-1 me-2" id="saveORedit" data-url="paiements">Enregistrer</button>
 					<button type="button" class="btn btn-rounded btn-primary px-3 my-1 me-2" id="windowPrint" data-id="<?= $paiement[0][
          "id"
-     ] ?>">Imprimer</button>
+     ] ?>">Télécharger le reçu</button>
 				</div>
                 <div class="row">
                     <div class="col-12">
@@ -1062,7 +1062,7 @@ elseif (isset($_GET["action"])):
 					</div>
 					<a href="./dashboard.php?page=paiements" type="button" class="btn btn-rounded btn-outline-secondary px-3 my-1 me-2" id="back">Annuler</a>
 					<button type="button" class="btn btn-rounded btn-primary px-3 my-1 me-2" id="saveORedit" data-url="paiements">Enregistrer</button>
-					<button type="button" class="btn btn-rounded btn-primary px-3 my-1 me-2" style="display: none;" id="windowPrint" data-id="">Imprimer</button>
+					<button type="button" class="btn btn-rounded btn-primary px-3 my-1 me-2" style="display: none;" id="windowPrint" data-id="">Télécharger le reçu</button>
 				</div>
                 <div class="row">
                     <div class="col-12">

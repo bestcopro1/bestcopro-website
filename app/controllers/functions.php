@@ -1731,13 +1731,8 @@ function periodeInfo($id_rel, $connection)
                     $nomPeriode = "Impayé promoteur";
                 } elseif (intval($id_exercice) < 0) {
                     $nomPeriode =
-                        "Impayé de l'année : " .
-                        date(
-                            "Y",
-                            strtotime(
-                                date("Y-m-d", strtotime($dateFinPeriode)),
-                            ),
-                        );
+                        "Impayé : " .
+                        getExercisePeriodLabel($dateFinPeriode);
                 } else {
                     $exercice = getExercice($id_exercice, null, $connection);
                     if ($exercice[0]["id_periodePaiement"] == "1") {
@@ -1749,12 +1744,8 @@ function periodeInfo($id_rel, $connection)
                             ),
                         );
                     } elseif ($exercice[0]["id_periodePaiement"] == "4") {
-                        $nomPeriode = date(
-                            "Y",
-                            strtotime(
-                                date("Y-m-d", strtotime($dateFinPeriode)) .
-                                    " - 1 year",
-                            ),
+                        $nomPeriode = getExercisePeriodLabel(
+                            $exercice[0]["dateDebut"]
                         );
                     }
                 }

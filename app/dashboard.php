@@ -665,24 +665,8 @@ foreach ($echeances as $echeance) {
 		});
 		$('#windowPrint').on('click', function() {
 			var id_paiement = $(this).attr('data-id');
-			$.ajax({
-				url:"./views/paiements.php",
-				method:"POST",
-				data: {
-					id: id_paiement,
-					printZone : "true"
-				},
-				success:function(response) {
-					if (response.includes('done|')) {
-						var printZone = response.split('|')[1];
-						$('#printZone').html(printZone);
-						window.print();
-						return false;
-					} else {
-						return false;
-					}
-				}
-			});
+			window.location.href = './export/export_recu_paiement.php?id=' + encodeURIComponent(id_paiement);
+			return false;
 		});
 	</script>
 	<?php endif; ?>
@@ -735,27 +719,9 @@ foreach ($echeances as $echeance) {
 	<script>
 		$('.windowPrint').on('click', function() {
 			var id_paiement = $(this).attr('data-id');
-			$.ajax({
-				url:"./views/paiements.php",
-				method:"POST",
-				data: {
-					id: id_paiement,
-					printZone : "true"
-				},
-				success:function(response) {
-					if (response.includes('done|')) {
-						var printZone = response.split('|')[1];
-						$('#printZone').html(printZone);
-						$('#paiement-'+id_paiement).modal('hide');
-						setTimeout(function() {
-							window.print();
-						}, 200);
-						return false;
-					} else {
-						return false;
-					}
-				}
-			});
+			$('#paiement-'+id_paiement).modal('hide');
+			window.location.href = './export/export_recu_paiement.php?id=' + encodeURIComponent(id_paiement);
+			return false;
 		});
 	</script>
 	<?php endif; ?>
