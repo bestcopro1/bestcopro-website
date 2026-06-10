@@ -1,6 +1,11 @@
 <?php
 
-function getCotisationExportData($id_copropriete, $id_exercice, $connection)
+function getCotisationExportData(
+    $id_copropriete,
+    $id_exercice,
+    $connection,
+    $dateSituation = null
+)
 {
     $immeubleData = getCotisationExportImmeublesAndLots(
         $id_copropriete,
@@ -14,15 +19,18 @@ function getCotisationExportData($id_copropriete, $id_exercice, $connection)
             $id_copropriete,
             null,
             $connection,
+            $dateSituation
         ),
         "currentRelSummaries" => getCotisationExportRelSummaries(
             $id_copropriete,
             $id_exercice,
             $connection,
+            $dateSituation
         ),
         "paymentTotals" => getCotisationExportPaymentTotals(
             $id_copropriete,
             $connection,
+            $dateSituation
         ),
     ];
 }
@@ -68,28 +76,68 @@ function getCotisationExportImmeublesAndLots($id_copropriete, $connection)
 function getCotisationExportRelSummaries(
     $id_copropriete,
     $id_exercice,
-    $connection
+    $connection,
+    $dateSituation = null
 ) {
     $summaries = [];
+    $paidExpression = "SUM(COALESCE(r.cotisation, 0))";
+    $unpaidExpression =
+        "SUM(CASE WHEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) > COALESCE(r.cotisation, 0) THEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) - COALESCE(r.cotisation, 0) ELSE 0 END)";
+    $joinPaiements = "";
+    if ($dateSituation !== null) {
+        $paidExpression = "SUM(COALESCE(rp.montant_paye, 0))";
+        $unpaidExpression =
+            "SUM(CASE WHEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) > COALESCE(rp.montant_paye, 0) THEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) - COALESCE(rp.montant_paye, 0) ELSE 0 END)";
+        $joinPaiements =
+            "LEFT JOIN (" .
+            "SELECT rrp.id_rel, SUM(COALESCE(rrp.montant, 0)) AS montant_paye " .
+            "FROM rel_rel_paiement rrp " .
+            "INNER JOIN paiement p ON p.id = rrp.id_paiement " .
+            "WHERE CAST(p.date AS date) <= ? " .
+            "GROUP BY rrp.id_rel" .
+            ") rp ON rp.id_rel = r.id_rel ";
+    }
+
     if ($id_exercice === null) {
         $request =
-            "SELECT r.id_lot, SUM(COALESCE(r.cotisation, 0)), " .
-            "SUM(CASE WHEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) > COALESCE(r.cotisation, 0) THEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) - COALESCE(r.cotisation, 0) ELSE 0 END) " .
+            "SELECT r.id_lot, " .
+            $paidExpression .
+            ", " .
+            $unpaidExpression .
+            " " .
             "FROM rel_lot_exercice r INNER JOIN lot l ON l.id = r.id_lot " .
+            $joinPaiements .
             "WHERE l.id_copropriete = ? AND r.id_exercice <= 0 GROUP BY r.id_lot";
     } else {
         $request =
-            "SELECT r.id_lot, SUM(COALESCE(r.cotisation, 0)), " .
-            "SUM(CASE WHEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) > COALESCE(r.cotisation, 0) THEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) - COALESCE(r.cotisation, 0) ELSE 0 END) " .
+            "SELECT r.id_lot, " .
+            $paidExpression .
+            ", " .
+            $unpaidExpression .
+            " " .
             "FROM rel_lot_exercice r INNER JOIN lot l ON l.id = r.id_lot " .
+            $joinPaiements .
             "WHERE l.id_copropriete = ? AND r.id_exercice = ? GROUP BY r.id_lot";
     }
 
     if ($stmt = $connection->prepare($request)) {
         if ($id_exercice === null) {
-            $stmt->bind_param("s", $id_copropriete);
+            if ($dateSituation === null) {
+                $stmt->bind_param("s", $id_copropriete);
+            } else {
+                $stmt->bind_param("ss", $dateSituation, $id_copropriete);
+            }
         } else {
-            $stmt->bind_param("ss", $id_copropriete, $id_exercice);
+            if ($dateSituation === null) {
+                $stmt->bind_param("ss", $id_copropriete, $id_exercice);
+            } else {
+                $stmt->bind_param(
+                    "sss",
+                    $dateSituation,
+                    $id_copropriete,
+                    $id_exercice
+                );
+            }
         }
         $stmt->execute();
         $stmt->store_result();
@@ -98,7 +146,7 @@ function getCotisationExportRelSummaries(
         while ($stmt->fetch()) {
             $summaries[(string) $id_lot] = [
                 "totalPaye" => (float) $totalPaye,
-                "totalImpaye" => (float) $totalImpaye,
+                "totalImpaye" => max(0, (float) $totalImpaye),
             ];
         }
     }
@@ -106,16 +154,28 @@ function getCotisationExportRelSummaries(
     return $summaries;
 }
 
-function getCotisationExportPaymentTotals($id_copropriete, $connection)
+function getCotisationExportPaymentTotals(
+    $id_copropriete,
+    $connection,
+    $dateSituation = null
+)
 {
     $request =
         "SELECT p.id_lot, SUM(COALESCE(p.montant, 0)) " .
         "FROM paiement p INNER JOIN lot l ON l.id = p.id_lot " .
-        "WHERE l.id_copropriete = ? GROUP BY p.id_lot";
+        "WHERE l.id_copropriete = ? ";
+    if ($dateSituation !== null) {
+        $request .= "AND CAST(p.date AS date) <= ? ";
+    }
+    $request .= "GROUP BY p.id_lot";
     $totals = [];
 
     if ($stmt = $connection->prepare($request)) {
-        $stmt->bind_param("s", $id_copropriete);
+        if ($dateSituation === null) {
+            $stmt->bind_param("s", $id_copropriete);
+        } else {
+            $stmt->bind_param("ss", $id_copropriete, $dateSituation);
+        }
         $stmt->execute();
         $stmt->store_result();
         $stmt->bind_result($id_lot, $totalPaiement);
@@ -147,9 +207,18 @@ function getCotisationExportPaymentTotal($totals, $id_lot)
     return isset($totals[$key]) ? $totals[$key] : 0;
 }
 
-function getCotisationExportPeriodDueFlags($dateDebut, $periods)
+function getCotisationExportPeriodDueFlags(
+    $dateDebut,
+    $periods,
+    $dateSituation = null
+)
 {
-    $currentYm = intval(date("Ym"));
+    $currentYm = intval(
+        date(
+            "Ym",
+            $dateSituation !== null ? strtotime($dateSituation) : time()
+        )
+    );
     $flags = [];
 
     foreach ($periods as $index => $period) {

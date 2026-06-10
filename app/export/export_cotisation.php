@@ -144,6 +144,14 @@ use Dompdf\Dompdf;
 $dompdf = new Dompdf();
 
 $exercice = getExercice($_GET["id_exercice"], null, $connection);
+$dateSituation = null;
+if (
+    isset($_GET["date_situation"]) &&
+    $_GET["date_situation"] !== "" &&
+    strtotime($_GET["date_situation"]) !== false
+) {
+    $dateSituation = date("Y-m-d", strtotime($_GET["date_situation"]));
+}
 if (
     count($exercice) > 0 &&
     isset($_GET["id_periodePaiement"]) &&
@@ -162,6 +170,7 @@ $exportData = getCotisationExportData(
     $_GET["id_copropriete"],
     $_GET["id_exercice"],
     $connection,
+    $dateSituation
 );
 $copropriete = getCopropriete($_GET["id_copropriete"], $connection);
 $residenceName = count($copropriete) > 0 ? $copropriete[0]["nom"] : "";
@@ -169,6 +178,7 @@ $immeubles = $exportData["immeubles"];
 $periodDueFlags = getCotisationExportPeriodDueFlags(
     $exercice[0]["dateDebut"],
     $cotisationPeriods,
+    $dateSituation
 );
 
 $htmlContent = "";
@@ -194,6 +204,12 @@ foreach ($immeubles as $immeuble):
         htmlspecialchars($residenceName, ENT_QUOTES, "UTF-8") .
         "</div>";
     $htmlContent .= "<span>" . date("d/m/Y") . "</span>";
+    if ($dateSituation !== null) {
+        $htmlContent .=
+            '<br><span>Situation au ' .
+            date("d/m/Y", strtotime($dateSituation)) .
+            "</span>";
+    }
     $htmlContent .= "</td>";
     $htmlContent .= "</tr>";
     $htmlContent .= "<tr>";
@@ -232,6 +248,12 @@ foreach ($immeubles as $immeuble):
                 htmlspecialchars($residenceName, ENT_QUOTES, "UTF-8") .
                 "</div>";
             $htmlContent .= "<span>" . date("d/m/Y") . "</span>";
+            if ($dateSituation !== null) {
+                $htmlContent .=
+                    '<br><span>Situation au ' .
+                    date("d/m/Y", strtotime($dateSituation)) .
+                    "</span>";
+            }
             $htmlContent .= "</td>";
             $htmlContent .= "</tr>";
             $htmlContent .= "<tr>";

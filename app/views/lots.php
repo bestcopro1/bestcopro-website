@@ -1571,6 +1571,10 @@ else:
 							<?php endforeach; ?>
 						</select>
 						</div>
+						<div class="d-flex align-items-center me-2 mb-2">
+							<label class="me-2 mb-0 text-nowrap" for="date_situation">Date de situation</label>
+							<input type="date" id="date_situation" name="date_situation" class="form-control" value="<?= date("Y-m-d") ?>">
+						</div>
 					<button type="submit" formaction="export/export_cotisation.php" class="btn btn-rounded btn-primary me-2 mb-2">
 						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter le tableau des cotisations
 					</button>

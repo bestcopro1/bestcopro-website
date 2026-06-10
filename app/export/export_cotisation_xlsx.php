@@ -348,7 +348,8 @@ function buildCotisationRows(
     $nameExercice,
     $periods,
     $periodCount,
-    $exportData
+    $exportData,
+    $dateSituation = null
 ) {
     $rows = [];
     $merges = [];
@@ -358,12 +359,19 @@ function buildCotisationRows(
     $periodDueFlags = getCotisationExportPeriodDueFlags(
         $exercice["dateDebut"],
         $periods,
+        $dateSituation
     );
+
+    $exportDateLabel = date("d/m/Y");
+    if ($dateSituation !== null) {
+        $exportDateLabel .=
+            " - Situation au " . date("d/m/Y", strtotime($dateSituation));
+    }
 
     $rows[$row] = [
         xlsxTextCell("BEST COPRO", 1),
         xlsxTextCell("Relevé annuel des cotisations - " . $nameExercice, 1),
-        xlsxTextCell(date("d/m/Y")),
+        xlsxTextCell($exportDateLabel),
     ];
     $merges[] = "B" . $row . ":" . $lastColumn . $row;
     $row += 2;
@@ -385,7 +393,7 @@ function buildCotisationRows(
 
         $header = [
             xlsxTextCell("Code", 3),
-            xlsxTextCell("Total des impayés", 3),
+            xlsxTextCell("Total des impayés antérieurs", 3),
         ];
         foreach ($periods as $period) {
             $header[] = xlsxTextCell($period["label"], 3);
@@ -485,6 +493,14 @@ function buildCotisationRows(
 $id_copropriete = $_GET["id_copropriete"];
 $id_exercice = $_GET["id_exercice"];
 $exercice = getExercice($id_exercice, null, $connection);
+$dateSituation = null;
+if (
+    isset($_GET["date_situation"]) &&
+    $_GET["date_situation"] !== "" &&
+    strtotime($_GET["date_situation"]) !== false
+) {
+    $dateSituation = date("Y-m-d", strtotime($_GET["date_situation"]));
+}
 if (
     count($exercice) > 0 &&
     isset($_GET["id_periodePaiement"]) &&
@@ -503,6 +519,7 @@ $exportData = getCotisationExportData(
     $id_copropriete,
     $id_exercice,
     $connection,
+    $dateSituation
 );
 $immeubles = $exportData["immeubles"];
 $worksheetData = buildCotisationRows(
@@ -512,6 +529,7 @@ $worksheetData = buildCotisationRows(
     $periods,
     $periodCount,
     $exportData,
+    $dateSituation
 );
 
 $excelContent = renderExcelHtml(
