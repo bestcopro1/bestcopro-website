@@ -295,6 +295,7 @@ foreach ($immeubles as $immeuble):
             $lotbyimmeuble["id"],
         );
         $avance = $totalPaiement - $totalPaye - $totalPayeCotisation;
+        $avanceAffichee = getCotisationExportDisplayAdvance($avance);
         $htmlContent .= "<tr>";
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
@@ -337,18 +338,21 @@ foreach ($immeubles as $immeuble):
             endif;
             $tmpCotisation -= $cotisation;
         endfor;
+        $resteAPayerAffiche = getCotisationExportDisplayResteAPayer(
+            $resteAPayer + $totalImpaye
+        );
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
-            number_format($avance, 2) .
+            number_format($avanceAffichee, 0) .
             "</td>";
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
-            number_format($resteAPayer + $totalImpaye, 2) .
+            number_format($resteAPayerAffiche, 0) .
             "</td>";
         $htmlContent .= "</tr>";
         $totalImpayes += $totalImpaye;
-        $totalAvances += $avance;
-        $totalRestesAPayer += $resteAPayer + $totalImpaye;
+        $totalAvances += $avanceAffichee;
+        $totalRestesAPayer += $resteAPayerAffiche;
     endforeach;
     $htmlContent .= "<tr>";
     $htmlContent .=
@@ -365,11 +369,11 @@ foreach ($immeubles as $immeuble):
     }
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;text-align: center;">' .
-        number_format($totalAvances, 2) .
+        number_format($totalAvances, 0) .
         "</td>";
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;text-align: center;">' .
-        number_format($totalRestesAPayer, 2) .
+        number_format($totalRestesAPayer, 0) .
         "</td>";
     $htmlContent .= "</tr>";
     $htmlContent .= "</table>";
@@ -391,4 +395,11 @@ $dompdf->setPaper("A4", "landscape");
 $dompdf->render();
 
 // Output the generated PDF to Browser
-$dompdf->stream();
+$filename = getCotisationExportFilename(
+    "releve_cotisations",
+    $residenceName,
+    $nameExercice,
+    $dateSituation,
+    "pdf"
+);
+$dompdf->stream($filename, ["Attachment" => true]);

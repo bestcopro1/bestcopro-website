@@ -434,6 +434,7 @@ function buildCotisationRows(
                 $lot["id"],
             );
             $avance = $totalPaiement - $totalPaye - $totalPayeCotisation;
+            $avanceAffichee = getCotisationExportDisplayAdvance($avance);
             $resteAPayer = 0;
 
             $line = [
@@ -460,14 +461,17 @@ function buildCotisationRows(
                     $value === "" ? xlsxTextCell("") : xlsxNumberCell($value, 4);
                 $tmpCotisation -= $cotisation;
             }
-            $line[] = xlsxNumberCell($avance, 4);
-            $line[] = xlsxNumberCell($resteAPayer + $totalImpaye, 4);
+            $resteAPayerAffiche = getCotisationExportDisplayResteAPayer(
+                $resteAPayer + $totalImpaye
+            );
+            $line[] = xlsxNumberCell($avanceAffichee, 4);
+            $line[] = xlsxNumberCell($resteAPayerAffiche, 4);
             $rows[$row] = $line;
             $row++;
 
             $totalImpayes += $totalImpaye;
-            $totalAvances += $avance;
-            $totalRestesAPayer += $resteAPayer + $totalImpaye;
+            $totalAvances += $avanceAffichee;
+            $totalRestesAPayer += $resteAPayerAffiche;
         }
 
         $totalLine = [
@@ -521,6 +525,8 @@ $exportData = getCotisationExportData(
     $connection,
     $dateSituation
 );
+$copropriete = getCopropriete($id_copropriete, $connection);
+$residenceName = count($copropriete) > 0 ? $copropriete[0]["nom"] : "";
 $immeubles = $exportData["immeubles"];
 $worksheetData = buildCotisationRows(
     $immeubles,
@@ -537,7 +543,13 @@ $excelContent = renderExcelHtml(
     $worksheetData["columnCount"],
 );
 
-$filename = "tableau_des_cotisations_" . $nameExercice . ".xls";
+$filename = getCotisationExportFilename(
+    "tableau_cotisations",
+    $residenceName,
+    $nameExercice,
+    $dateSituation,
+    "xls"
+);
 header("Content-Type: application/vnd.ms-excel; charset=UTF-8");
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 header("Content-Length: " . strlen($excelContent));

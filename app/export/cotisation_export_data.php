@@ -207,6 +207,45 @@ function getCotisationExportPaymentTotal($totals, $id_lot)
     return isset($totals[$key]) ? $totals[$key] : 0;
 }
 
+function getCotisationExportDisplayAdvance($value)
+{
+    $value = (float) $value;
+    if ($value < 10) {
+        return 0;
+    }
+
+    return floor($value);
+}
+
+function getCotisationExportDisplayResteAPayer($value)
+{
+    return ceil((float) $value);
+}
+
+function getCotisationExportFilename(
+    $prefix,
+    $residenceName,
+    $nameExercice,
+    $dateSituation,
+    $extension
+) {
+    $parts = [$prefix, $residenceName, $nameExercice];
+    if ($dateSituation !== null) {
+        $parts[] = "situation-" . date("Y-m-d", strtotime($dateSituation));
+    }
+
+    $filename = strtolower(implode("_", array_filter($parts)));
+    $filename = iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $filename);
+    $filename = preg_replace("/[^a-z0-9]+/", "_", $filename);
+    $filename = trim($filename, "_");
+
+    if ($filename == "") {
+        $filename = $prefix;
+    }
+
+    return $filename . "." . $extension;
+}
+
 function getCotisationExportPeriodDueFlags(
     $dateDebut,
     $periods,

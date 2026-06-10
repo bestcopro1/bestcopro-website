@@ -1556,32 +1556,33 @@ else:
              [$currentPeriodePaiement => $periodePaiementOptions[$currentPeriodePaiement]] +
              array_diff_key($periodePaiementOptions, [$currentPeriodePaiement => true]);
          ?>
-					<a href="export/export_password.php" type="button" class="btn btn-rounded btn-primary me-2">
-						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter la liste des mots de passe
-					</a>
-					<form method="get" class="d-flex align-items-center flex-wrap">
-						<input type="hidden" name="id_copropriete" value="<?= htmlspecialchars($GLOBALS["id_copropriete"]) ?>">
-						<input type="hidden" name="id_exercice" value="<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>">
-						<div class="d-flex align-items-center me-2 mb-2">
-						<select name="id_periodePaiement" class="form-control default-select wide">
-							<?php foreach ($orderedPeriodePaiementOptions as $periodePaiementId => $periodePaiementLabel): ?>
-							<option value="<?= $periodePaiementId ?>" <?php if ($periodePaiementId == $currentPeriodePaiement) {
+					<div class="d-flex align-items-center justify-content-end flex-wrap gap-2 ms-lg-auto w-100 w-lg-auto">
+						<a href="export/export_password.php" type="button" class="btn btn-rounded btn-primary mb-2">
+							<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Mots de passe
+						</a>
+						<form method="get" class="d-flex align-items-center justify-content-end flex-wrap gap-2">
+							<input type="hidden" name="id_copropriete" value="<?= htmlspecialchars($GLOBALS["id_copropriete"]) ?>">
+							<input type="hidden" name="id_exercice" value="<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>">
+							<div class="mb-2" style="min-width: 150px;">
+								<select name="id_periodePaiement" class="form-control default-select">
+									<?php foreach ($orderedPeriodePaiementOptions as $periodePaiementId => $periodePaiementLabel): ?>
+									<option value="<?= $periodePaiementId ?>" <?php if ($periodePaiementId == $currentPeriodePaiement) {
            echo "selected";
        } ?>><?= $periodePaiementLabel ?></option>
-							<?php endforeach; ?>
-						</select>
-						</div>
-						<div class="d-flex align-items-center me-2 mb-2">
-							<label class="me-2 mb-0 text-nowrap" for="date_situation">Date de situation</label>
-							<input type="date" id="date_situation" name="date_situation" class="form-control" value="<?= date("Y-m-d") ?>">
-						</div>
-					<button type="submit" formaction="export/export_cotisation.php" class="btn btn-rounded btn-primary me-2 mb-2">
-						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter le tableau des cotisations
-					</button>
-					<button type="submit" formaction="export/export_cotisation_xlsx.php" class="btn btn-rounded btn-primary me-2 mb-2">
-						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Exporter le tableau des cotisations Excel
-					</button>
-					</form>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<div class="mb-2" style="min-width: 170px;">
+								<input type="date" id="date_situation" name="date_situation" class="form-control" value="<?= date("Y-m-d") ?>" aria-label="Date de situation">
+							</div>
+							<button type="submit" formaction="export/export_cotisation.php" class="btn btn-rounded btn-primary mb-2">
+								<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Cotisations PDF
+							</button>
+							<button type="submit" formaction="export/export_cotisation_xlsx.php" class="btn btn-rounded btn-primary mb-2">
+								<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Cotisations Excel
+							</button>
+						</form>
+					</div>
 					<!--a href="export/export_impaye.php?id_copropriete=<?= $GLOBALS[
          "id_copropriete"
      ] ?>&id_exercice=<?= $GLOBALS[
