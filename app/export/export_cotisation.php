@@ -113,13 +113,7 @@ function renderCotisationExportTableHeader($nameExercice, $cotisationPeriods)
     $htmlContent .=
         '<td style="border: 1px solid #000; width: 105px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">Code</td>';
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 82px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">Années</td>';
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 68px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">État des impayés</td>';
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 68px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">Encaissements</td>';
-    $htmlContent .=
-        '<td style="border: 1px solid #000; width: 62px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">Reste dû</td>';
+        '<td style="border: 1px solid #000; width: 62px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">Total des impayés antérieurs</td>';
     $htmlContent .=
         '<td style="border: 1px solid #000;text-align: center;background-color: #d9eaf7;font-weight: bold;padding: 3px;" colspan="' .
         count($cotisationPeriods) .
@@ -233,9 +227,7 @@ foreach ($immeubles as $immeuble):
     $htmlContent .= "</div>";
 
     $htmlContent .= renderCotisationExportTableHeader($nameExercice, $cotisationPeriods);
-    $totalEtatsImpayes = 0;
-    $totalEncaissementsImpayes = 0;
-    $totalRestesDusImpayes = 0;
+    $totalImpayes = 0;
     $totalCotisations = array_fill(0, $cotisationPeriodCount, 0);
     $totalAvances = 0;
     $totalRestesAPayer = 0;
@@ -282,20 +274,15 @@ foreach ($immeubles as $immeuble):
             $htmlContent .= renderCotisationExportTableHeader($nameExercice, $cotisationPeriods);
         endif;
         $line += 1;
-        $previousDebtDetail = getCotisationExportPreviousDebtDetail(
-            $exportData["previousDebtDetails"],
-            $lotbyimmeuble["id"]
+        $impayeSummary = getCotisationExportSummary(
+            $exportData["previousRelSummaries"],
+            $lotbyimmeuble["id"],
         );
-        $anneesImpayes =
-            count($previousDebtDetail["labels"]) > 0
-                ? implode("<br>", $previousDebtDetail["labels"])
-                : "";
-        $etatImpaye = $previousDebtDetail["etatImpaye"];
-        $encaissementImpaye = $previousDebtDetail["encaissement"];
-        $resteDuImpaye = $previousDebtDetail["resteDu"];
+        $totalPaye = $impayeSummary["totalPaye"];
+        $totalImpaye = $impayeSummary["totalImpaye"];
         $currentSummary = getCotisationExportSummary(
             $exportData["currentRelSummaries"],
-            $lotbyimmeuble["id"]
+            $lotbyimmeuble["id"],
         );
         $totalPayeCotisation = $currentSummary["totalPaye"];
         $totalImpayeCotisation = $currentSummary["totalImpaye"];
@@ -305,9 +292,9 @@ foreach ($immeubles as $immeuble):
         $tmpCotisation = $totalPayeCotisation;
         $totalPaiement = getCotisationExportPaymentTotal(
             $exportData["paymentTotals"],
-            $lotbyimmeuble["id"]
+            $lotbyimmeuble["id"],
         );
-        $avance = $totalPaiement - $encaissementImpaye - $totalPayeCotisation;
+        $avance = $totalPaiement - $totalPaye - $totalPayeCotisation;
         $htmlContent .= "<tr>";
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
@@ -315,19 +302,7 @@ foreach ($immeubles as $immeuble):
             "</td>";
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
-            $anneesImpayes .
-            "</td>";
-        $htmlContent .=
-            '<td style="border: 1px solid #000;text-align: center;">' .
-            number_format($etatImpaye, 2) .
-            "</td>";
-        $htmlContent .=
-            '<td style="border: 1px solid #000;text-align: center;">' .
-            number_format($encaissementImpaye, 2) .
-            "</td>";
-        $htmlContent .=
-            '<td style="border: 1px solid #000;text-align: center;">' .
-            number_format($resteDuImpaye, 2) .
+            number_format($totalImpaye, 2) .
             "</td>";
         $resteAPayer = 0;
         for ($i = 0; $i < $cotisationPeriodCount; $i++):
@@ -368,33 +343,19 @@ foreach ($immeubles as $immeuble):
             "</td>";
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
-            number_format($resteAPayer + $resteDuImpaye, 2) .
+            number_format($resteAPayer + $totalImpaye, 2) .
             "</td>";
         $htmlContent .= "</tr>";
-        $totalEtatsImpayes += $etatImpaye;
-        $totalEncaissementsImpayes += $encaissementImpaye;
-        $totalRestesDusImpayes += $resteDuImpaye;
+        $totalImpayes += $totalImpaye;
         $totalAvances += $avance;
-        $totalRestesAPayer += $resteAPayer + $resteDuImpaye;
+        $totalRestesAPayer += $resteAPayer + $totalImpaye;
     endforeach;
     $htmlContent .= "<tr>";
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;padding: 3px;text-align: center; ">TOTAL</td>';
     $htmlContent .=
         '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;text-align: center;">' .
-        "" .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;text-align: center;">' .
-        number_format($totalEtatsImpayes, 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;text-align: center;">' .
-        number_format($totalEncaissementsImpayes, 2) .
-        "</td>";
-    $htmlContent .=
-        '<td style="border: 1px solid #000;background-color: #d9eaf7;font-weight: bold;text-align: center;">' .
-        number_format($totalRestesDusImpayes, 2) .
+        number_format($totalImpayes, 2) .
         "</td>";
     foreach ($totalCotisations as $totalCotisation) {
         $htmlContent .=

@@ -217,16 +217,19 @@ $htmlContent .= "</table>";
 $htmlContent .=
     '<table style="width:100%;font-size: 12px;border-collapse: collapse;margin-top:20px;">';
 $htmlContent .= "<tr>";
-$htmlContent .= '<td style="width: 33%;"></td>';
+$htmlContent .= '<td style="width: 31%;"></td>';
 $htmlContent .=
-    '<td style="border: 1px solid #000;width: 33%;text-align: center;background-color: #92d050;">État des cotisations</td>';
+    '<td style="border: 1px solid #000;width: 23%;text-align: center;background-color: #92d050;">État des impayés</td>';
 $htmlContent .=
-    '<td style="border: 1px solid #000;width: 33%;text-align: center;background-color: #92d050;">État des impayés</td>';
+    '<td style="border: 1px solid #000;width: 23%;text-align: center;background-color: #92d050;">Encaissements</td>';
+$htmlContent .=
+    '<td style="border: 1px solid #000;width: 23%;text-align: center;background-color: #92d050;">Reste dû</td>';
 $htmlContent .= "</tr>";
-$htmlContent .= '<tr><td colspan="3"></td></tr>';
+$htmlContent .= '<tr><td colspan="4"></td></tr>';
 $htmlContent .= "<tr>";
-$totalCotisation = 0;
-$totalImpaye = 0;
+$totalEtatImpaye = 0;
+$totalEncaissement = 0;
+$totalResteDu = 0;
 foreach ($etats as $etat):
     if (intval($etat["id_exercice"]) < 0):
         $exercice = getExercice($_GET["id_exercice"], null, $connection);
@@ -257,36 +260,41 @@ foreach ($etats as $etat):
             $nameExercice .
             "</td>";
     endif;
-    $totalCotisation += floatval($etat["sumCotisation"]);
-    $totalImpaye +=
-        floatval($etat["sumPartFonct"]) +
-        floatval($etat["sumPartInv"]) -
-        floatval($etat["sumCotisation"]);
+    $etatImpaye =
+        floatval($etat["sumPartFonct"]) + floatval($etat["sumPartInv"]);
+    $encaissement = floatval($etat["sumCotisation"]);
+    $resteDu = max(0, $etatImpaye - $encaissement);
+    $totalEtatImpaye += $etatImpaye;
+    $totalEncaissement += $encaissement;
+    $totalResteDu += $resteDu;
     $htmlContent .=
-        '<td style="border: 1px solid #000;width: 33%;text-align: center;">' .
-        $etat["sumCotisation"] .
+        '<td style="border: 1px solid #000;width: 23%;text-align: center;">' .
+        number_format($etatImpaye, 2) .
         "</td>";
     $htmlContent .=
-        '<td style="border: 1px solid #000;width: 33%;text-align: center;">' .
-        number_format(
-            floatval($etat["sumPartFonct"]) +
-                floatval($etat["sumPartInv"]) -
-                floatval($etat["sumCotisation"]),
-            2,
-        ) .
+        '<td style="border: 1px solid #000;width: 23%;text-align: center;">' .
+        number_format($encaissement, 2) .
+        "</td>";
+    $htmlContent .=
+        '<td style="border: 1px solid #000;width: 23%;text-align: center;">' .
+        number_format($resteDu, 2) .
         "</td>";
     $htmlContent .= "</tr>";
-    $htmlContent .= '<tr><td colspan="3"></td></tr>';
+    $htmlContent .= '<tr><td colspan="4"></td></tr>';
 endforeach;
 $htmlContent .=
-    '<td style="border: 1px solid #000;width: 33%;text-align: center;"></td>';
+    '<td style="border: 1px solid #000;width: 31%;text-align: center;"></td>';
 $htmlContent .=
-    '<td style="border: 1px solid #000;width: 33%;text-align: center;"><strong>Total payé : ' .
-    number_format(floatval($totalCotisation), 2) .
+    '<td style="border: 1px solid #000;width: 23%;text-align: center;"><strong>Total impayés : ' .
+    number_format(floatval($totalEtatImpaye), 2) .
     "</strong></td>";
 $htmlContent .=
-    '<td style="border: 1px solid #000;width: 33%;text-align: center;"><strong>Total à payer : ' .
-    number_format(floatval($totalImpaye), 2) .
+    '<td style="border: 1px solid #000;width: 23%;text-align: center;"><strong>Total encaissé : ' .
+    number_format(floatval($totalEncaissement), 2) .
+    "</strong></td>";
+$htmlContent .=
+    '<td style="border: 1px solid #000;width: 23%;text-align: center;"><strong>Total reste dû : ' .
+    number_format(floatval($totalResteDu), 2) .
     "</strong></td>";
 $htmlContent .= "</tr>";
 $htmlContent .= "</table>";
