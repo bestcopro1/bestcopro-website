@@ -9,7 +9,7 @@ function getCotisationExportData(
 {
     $immeubleData = getCotisationExportImmeublesAndLots(
         $id_copropriete,
-        $connection,
+        $connection
     );
 
     return [
@@ -18,6 +18,11 @@ function getCotisationExportData(
         "previousRelSummaries" => getCotisationExportRelSummaries(
             $id_copropriete,
             null,
+            $connection,
+            $dateSituation
+        ),
+        "previousDebtDetails" => getCotisationExportPreviousDebtDetails(
+            $id_copropriete,
             $connection,
             $dateSituation
         ),
@@ -154,6 +159,82 @@ function getCotisationExportRelSummaries(
     return $summaries;
 }
 
+function getCotisationExportPreviousDebtDetails(
+    $id_copropriete,
+    $connection,
+    $dateSituation = null
+) {
+    $details = [];
+    $joinPaiements =
+        "LEFT JOIN (" .
+        "SELECT rrp.id_rel, SUM(COALESCE(rrp.montant, 0)) AS montant_paye " .
+        "FROM rel_rel_paiement rrp " .
+        "INNER JOIN paiement p ON p.id = rrp.id_paiement ";
+    if ($dateSituation !== null) {
+        $joinPaiements .= "WHERE CAST(p.date AS date) <= ? ";
+    }
+    $joinPaiements .=
+        "GROUP BY rrp.id_rel" .
+        ") rp ON rp.id_rel = r.id_rel ";
+
+    $request =
+        "SELECT r.id_lot, r.id_exercice, r.dateFinPeriode, " .
+        "SUM(COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0)), " .
+        "SUM(COALESCE(rp.montant_paye, 0)) " .
+        "FROM rel_lot_exercice r INNER JOIN lot l ON l.id = r.id_lot " .
+        $joinPaiements .
+        "WHERE l.id_copropriete = ? AND r.id_exercice <= 0 " .
+        "GROUP BY r.id_lot, r.id_exercice, r.dateFinPeriode " .
+        "ORDER BY r.id_lot ASC, r.id_exercice ASC, r.dateFinPeriode ASC";
+
+    if ($stmt = $connection->prepare($request)) {
+        if ($dateSituation === null) {
+            $stmt->bind_param("s", $id_copropriete);
+        } else {
+            $stmt->bind_param("ss", $dateSituation, $id_copropriete);
+        }
+        $stmt->execute();
+        $stmt->store_result();
+        $stmt->bind_result(
+            $id_lot,
+            $id_exercice,
+            $dateFinPeriode,
+            $etatImpaye,
+            $encaissement
+        );
+
+        while ($stmt->fetch()) {
+            $key = (string) $id_lot;
+            if (!isset($details[$key])) {
+                $details[$key] = [
+                    "labels" => [],
+                    "etatImpaye" => 0,
+                    "encaissement" => 0,
+                    "resteDu" => 0,
+                ];
+            }
+
+            if ((int) $id_exercice === 0) {
+                $label = "Promoteur";
+            } else {
+                $label = "Année " . date("Y", strtotime($dateFinPeriode));
+            }
+
+            if (!in_array($label, $details[$key]["labels"], true)) {
+                $details[$key]["labels"][] = $label;
+            }
+            $details[$key]["etatImpaye"] += (float) $etatImpaye;
+            $details[$key]["encaissement"] += (float) $encaissement;
+            $details[$key]["resteDu"] = max(
+                0,
+                $details[$key]["etatImpaye"] - $details[$key]["encaissement"]
+            );
+        }
+    }
+
+    return $details;
+}
+
 function getCotisationExportPaymentTotals(
     $id_copropriete,
     $connection,
@@ -198,6 +279,21 @@ function getCotisationExportSummary($summaries, $id_lot)
     return [
         "totalPaye" => 0,
         "totalImpaye" => 0,
+    ];
+}
+
+function getCotisationExportPreviousDebtDetail($details, $id_lot)
+{
+    $key = (string) $id_lot;
+    if (isset($details[$key])) {
+        return $details[$key];
+    }
+
+    return [
+        "labels" => [],
+        "etatImpaye" => 0,
+        "encaissement" => 0,
+        "resteDu" => 0,
     ];
 }
 
