@@ -134,6 +134,10 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                 $modepaiement[0]["libelle"] .
                 "</span></p>";
             $codeHtml .=
+                '<p class="font-w400 mb-2 d-flex"><span class="custom-label-2">Date de paiement : </span><span class="font-w600">' .
+                date("d/m/Y", strtotime($paiement[0]["date"])) .
+                "</span></p>";
+            $codeHtml .=
                 '<p class="font-w400 mb-2 d-flex"><span class="custom-label-2">Périodes associées : </span>';
             $codeHtml .=
                 '<div class="table-responsive" style="margin-top: -20px;">';

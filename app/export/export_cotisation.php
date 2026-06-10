@@ -171,7 +171,7 @@ $periodDueFlags = getCotisationExportPeriodDueFlags(
 
 $htmlContent = "";
 $htmlContent .=
-    "<style> @page { margin: 10px 12px 6px 12px; } * { font-family: DejaVu Sans, sans-serif; } body { margin: 0; } span, p {font-size: 10px;} table td { padding: 2px; line-height: 1.25; }</style>";
+    "<style> @page { margin: 8px 10px 1px 10px; } * { font-family: DejaVu Sans, sans-serif; } body { margin: 0; } span, p {font-size: 10px;} table td { padding: 2px; line-height: 1.25; }</style>";
 $immeubleIndex = 0;
 $immeubleCount = count($immeubles);
 foreach ($immeubles as $immeuble):
@@ -198,9 +198,9 @@ foreach ($immeubles as $immeuble):
     $htmlContent .= "</tr>";
     $htmlContent .= "</table>";
     $htmlContent .=
-        '<p style="margin-top: 12px;margin-bottom: 6px;">NB : Sauf erreur, omission, règlement en cours ou non identifié</p>';
+        '<p style="margin-top: 8px;margin-bottom: 4px;">NB : Sauf erreur, omission, règlement en cours ou non identifié</p>';
     $htmlContent .=
-        '<div style="font-size: 12px;border: 1px solid #000;background-color: #ffa755;text-align: center;padding: 3px;margin-bottom: 6px;">';
+        '<div style="font-size: 12px;border: 1px solid #000;background-color: #ffa755;text-align: center;padding: 3px;margin-bottom: 4px;">';
     $htmlContent .= "<strong>IMMEUBLE " . $immeuble["numeroImm"] . "</strong>";
     $htmlContent .= "</div>";
 
@@ -232,9 +232,9 @@ foreach ($immeubles as $immeuble):
             $htmlContent .= "</tr>";
             $htmlContent .= "</table>";
             $htmlContent .=
-                '<p style="margin-top: 12px;margin-bottom: 6px;">NB : Sauf erreur, omission, règlement en cours ou non identifié</p>';
+                '<p style="margin-top: 8px;margin-bottom: 4px;">NB : Sauf erreur, omission, règlement en cours ou non identifié</p>';
             $htmlContent .=
-                '<div style="font-size: 12px;border: 1px solid #000;background-color: #ffa755;text-align: center;padding: 3px;margin-bottom: 6px;">';
+                '<div style="font-size: 12px;border: 1px solid #000;background-color: #ffa755;text-align: center;padding: 3px;margin-bottom: 4px;">';
             $htmlContent .=
                 "<strong>IMMEUBLE " . $immeuble["numeroImm"] . "</strong>";
             $htmlContent .= "</div>";
