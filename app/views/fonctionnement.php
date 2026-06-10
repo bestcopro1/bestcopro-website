@@ -360,7 +360,9 @@ if ($_SESSION["id_usertype"] !== "1") {
 				<div class="form-head d-flex mb-3 align-items-start">
 					<div class="me-auto d-none d-lg-block">
 						<h2 class="text-primary font-w600 mb-0">Budget de fonctionnement</h2>
-						<p class="mb-0"><?= $GLOBALS["copropriete"][0]["nom"] ?></p>
+					</div>
+					<div class="text-end d-none d-lg-block me-3">
+						<p class="mb-0 fw-bold"><?= htmlspecialchars($GLOBALS["copropriete"][0]["nom"]) ?></p>
 					</div>
 					<a href="export/export_budget.php?id_exercice=<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>&type=fonctionnement" class="btn btn-rounded btn-primary px-3 my-1 me-2">
 						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter

@@ -26,6 +26,8 @@ if (count($exercice) === 0) {
 
 $rubriques = getSuiviBudgetRows($id_exercice, $connection);
 $nameExercice = getNameexercice($exercice[0]["dateDebut"]);
+$copropriete = getCopropriete($exercice[0]["id_copropriete"], $connection);
+$residenceName = count($copropriete) > 0 ? $copropriete[0]["nom"] : "";
 $globalTotals = getEmptySuiviBudgetTotals();
 
 $htmlContent = "";
@@ -49,6 +51,8 @@ $htmlContent .= "<td><strong>BEST COPRO</strong></td>";
 $htmlContent .= '<td class="title">Suivi budget de fonctionnement</td>';
 $htmlContent .=
     '<td style="text-align:right;">' .
+    htmlspecialchars($residenceName, ENT_QUOTES, "UTF-8") .
+    "<br>" .
     htmlspecialchars($nameExercice, ENT_QUOTES, "UTF-8") .
     "<br>" .
     date("d/m/Y") .
@@ -62,14 +66,11 @@ $htmlContent .= "<tr>";
 $htmlContent .= '<th rowspan="2">Rubrique</th>';
 $htmlContent .= '<th rowspan="2">Poste</th>';
 $htmlContent .= '<th rowspan="2">Montant budget</th>';
-$htmlContent .= '<th rowspan="2">Coût</th>';
+$htmlContent .= '<th rowspan="2">Consommation</th>';
 $htmlContent .= '<th colspan="2">Suivi budget annuel</th>';
-$htmlContent .= '<th colspan="2">Suivi budget partiel</th>';
 $htmlContent .= "</tr>";
 $htmlContent .= "<tr>";
 $htmlContent .= "<th>Montant restant</th>";
-$htmlContent .= "<th>% restant</th>";
-$htmlContent .= "<th>Montant partiel restant</th>";
 $htmlContent .= "<th>% restant</th>";
 $htmlContent .= "</tr>";
 $htmlContent .= "</thead>";
@@ -107,14 +108,6 @@ foreach ($rubriques as $rubrique) {
             '<td class="percent">' .
             formatSuiviBudgetPercent($poste["annuelPourcentageRestant"]) .
             "</td>";
-        $htmlContent .=
-            '<td class="amount">' .
-            formatSuiviBudgetAmount($poste["partielRestant"]) .
-            "</td>";
-        $htmlContent .=
-            '<td class="percent">' .
-            formatSuiviBudgetPercent($poste["partielPourcentageRestant"]) .
-            "</td>";
         $htmlContent .= "</tr>";
     }
 
@@ -144,19 +137,6 @@ foreach ($rubriques as $rubrique) {
             ),
         ) .
         "</td>";
-    $htmlContent .=
-        '<td class="amount">' .
-        formatSuiviBudgetAmount($rubriqueTotals["partielRestant"]) .
-        "</td>";
-    $htmlContent .=
-        '<td class="percent">' .
-        formatSuiviBudgetPercent(
-            getSuiviBudgetPercent(
-                $rubriqueTotals["partielRestant"],
-                $rubriqueTotals["partielMontant"],
-            ),
-        ) .
-        "</td>";
     $htmlContent .= "</tr>";
 }
 
@@ -176,19 +156,6 @@ $htmlContent .=
         getSuiviBudgetPercent(
             $globalTotals["annuelRestant"],
             $globalTotals["budget"],
-        ),
-    ) .
-    "</td>";
-$htmlContent .=
-    '<td class="amount">' .
-    formatSuiviBudgetAmount($globalTotals["partielRestant"]) .
-    "</td>";
-$htmlContent .=
-    '<td class="percent">' .
-    formatSuiviBudgetPercent(
-        getSuiviBudgetPercent(
-            $globalTotals["partielRestant"],
-            $globalTotals["partielMontant"],
         ),
     ) .
     "</td>";

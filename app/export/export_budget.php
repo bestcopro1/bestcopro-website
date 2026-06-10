@@ -81,6 +81,8 @@ if (count($exercice) === 0) {
 }
 
 $budgetType = $budgetTypes[$type];
+$copropriete = getCopropriete($exercice[0]["id_copropriete"], $connection);
+$residenceName = count($copropriete) > 0 ? $copropriete[0]["nom"] : "";
 $rubriques = getBudgetExportRows(
     $id_exercice,
     $budgetType["id_typeRubrique"],
@@ -112,6 +114,8 @@ $htmlContent .=
     "</td>";
 $htmlContent .=
     '<td style="text-align:right;">' .
+    htmlspecialchars($residenceName, ENT_QUOTES, "UTF-8") .
+    "<br>" .
     htmlspecialchars($nameExercice, ENT_QUOTES, "UTF-8") .
     "<br>" .
     date("d/m/Y") .
