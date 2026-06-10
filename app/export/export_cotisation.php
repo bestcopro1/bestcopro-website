@@ -108,12 +108,12 @@ function getCotisationExportPeriods($exercice)
 
 function renderCotisationExportTableHeader($nameExercice, $cotisationPeriods)
 {
-    $htmlContent = '<table style="width:100%;font-size: 9px;border-collapse: collapse;table-layout: fixed;">';
+    $htmlContent = '<table style="width:100%;font-size: 10px;border-collapse: collapse;table-layout: fixed;">';
     $htmlContent .= "<tr>";
     $htmlContent .=
         '<td style="border: 1px solid #000; width: 105px;text-align: center;background-color: #c8c8c8;" rowspan="2">Code</td>';
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 50px;text-align: center;background-color: #c8c8c8;" rowspan="2">Total des impayés</td>';
+        '<td style="border: 1px solid #000; width: 62px;text-align: center;background-color: #c8c8c8;" rowspan="2">Total des impayés antérieurs</td>';
     $htmlContent .=
         '<td style="border: 1px solid #000;text-align: center;background-color: #c8c8c8;padding: 3px;" colspan="' .
         count($cotisationPeriods) .
@@ -171,7 +171,7 @@ $periodDueFlags = getCotisationExportPeriodDueFlags(
 
 $htmlContent = "";
 $htmlContent .=
-    "<style> @page { margin: 8px 10px 1px 10px; } * { font-family: DejaVu Sans, sans-serif; } body { margin: 0; } span, p {font-size: 10px;} table td { padding: 2px; line-height: 1.25; }</style>";
+    "<style> @page { margin: 8px 10px 0 10px; } * { font-family: DejaVu Sans, sans-serif; } body { margin: 0; } span, p {font-size: 10px;} table td { padding: 2px; line-height: 1.25; }</style>";
 $immeubleIndex = 0;
 $immeubleCount = count($immeubles);
 foreach ($immeubles as $immeuble):
