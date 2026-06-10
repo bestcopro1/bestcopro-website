@@ -108,27 +108,60 @@ function getCotisationExportPeriods($exercice)
 
 function renderCotisationExportTableHeader($nameExercice, $cotisationPeriods)
 {
-    $htmlContent = '<table style="width:100%;font-size: 10px;border-collapse: collapse;table-layout: fixed;">';
+    $isMonthlyExport = count($cotisationPeriods) >= 12;
+    $tableFontSize = $isMonthlyExport ? "9px" : "10px";
+    $cellPadding = $isMonthlyExport ? "1px" : "2px";
+    $codeWidth = $isMonthlyExport ? "88px" : "105px";
+    $impayeWidth = $isMonthlyExport ? "54px" : "62px";
+    $periodWidth = $isMonthlyExport ? "39px" : "44px";
+    $avanceWidth = $isMonthlyExport ? "56px" : "62px";
+    $resteWidth = $isMonthlyExport ? "54px" : "58px";
+
+    $htmlContent = '<table style="width:100%;font-size: ' .
+        $tableFontSize .
+        ';border-collapse: collapse;table-layout: fixed;">';
     $htmlContent .= "<tr>";
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 105px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">Code</td>';
+        '<td style="border: 1px solid #000; width: ' .
+        $codeWidth .
+        ";text-align: center;background-color: #d9eaf7;font-weight: bold;padding: " .
+        $cellPadding .
+        ';" rowspan="2">Code</td>';
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 62px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">Total des impayés antérieurs</td>';
+        '<td style="border: 1px solid #000; width: ' .
+        $impayeWidth .
+        ";text-align: center;background-color: #d9eaf7;font-weight: bold;padding: " .
+        $cellPadding .
+        ';" rowspan="2">Total des impayés antérieurs</td>';
     $htmlContent .=
-        '<td style="border: 1px solid #000;text-align: center;background-color: #d9eaf7;font-weight: bold;padding: 3px;" colspan="' .
+        '<td style="border: 1px solid #000;text-align: center;background-color: #d9eaf7;font-weight: bold;padding: ' .
+        $cellPadding .
+        ';" colspan="' .
         count($cotisationPeriods) .
         '">Détails des cotisations - ' .
         $nameExercice .
         "</td>";
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 50px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">Surcoutisation</td>';
+        '<td style="border: 1px solid #000; width: ' .
+        $avanceWidth .
+        ";text-align: center;background-color: #d9eaf7;font-weight: bold;padding: " .
+        $cellPadding .
+        ';" rowspan="2">Avance sur cotisation</td>';
     $htmlContent .=
-        '<td style="border: 1px solid #000; width: 58px;text-align: center;background-color: #d9eaf7;font-weight: bold;" rowspan="2">Reste à Payer</td>';
+        '<td style="border: 1px solid #000; width: ' .
+        $resteWidth .
+        ";text-align: center;background-color: #d9eaf7;font-weight: bold;padding: " .
+        $cellPadding .
+        ';" rowspan="2">Reste à Payer</td>';
     $htmlContent .= "</tr>";
     $htmlContent .= "<tr>";
     foreach ($cotisationPeriods as $period) {
         $htmlContent .=
-            '<td style="border: 1px solid #000; width: 44px;text-align: center;background-color: #d9eaf7;font-weight: bold;">' .
+            '<td style="border: 1px solid #000; width: ' .
+            $periodWidth .
+            ";text-align: center;background-color: #d9eaf7;font-weight: bold;padding: " .
+            $cellPadding .
+            ';">' .
             $period["label"] .
             "</td>";
     }
@@ -206,7 +239,7 @@ foreach ($immeubles as $immeuble):
         "</div>";
     if ($dateSituation !== null) {
         $htmlContent .=
-            '<span>Arrêtée au ' .
+            '<span>Situation arrêtée au ' .
             date("d/m/Y", strtotime($dateSituation)) .
             "</span>";
     }
@@ -249,7 +282,7 @@ foreach ($immeubles as $immeuble):
                 "</div>";
             if ($dateSituation !== null) {
                 $htmlContent .=
-                    '<span>Arrêtée au ' .
+                    '<span>Situation arrêtée au ' .
                     date("d/m/Y", strtotime($dateSituation)) .
                     "</span>";
             }

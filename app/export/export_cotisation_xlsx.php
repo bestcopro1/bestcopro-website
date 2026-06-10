@@ -379,7 +379,8 @@ function buildCotisationRows(
     $exportDateLabel = date("d/m/Y");
     if ($dateSituation !== null) {
         $exportDateLabel .=
-            " - Arrêtée au " . date("d/m/Y", strtotime($dateSituation));
+            " - Situation arrêtée au " .
+            date("d/m/Y", strtotime($dateSituation));
     }
 
     $rows[$row] = [
@@ -412,7 +413,7 @@ function buildCotisationRows(
         foreach ($periods as $period) {
             $header[] = xlsxTextCell($period["label"], 3);
         }
-        $header[] = xlsxTextCell("Surcoutisation", 3);
+        $header[] = xlsxTextCell("Avance sur cotisation", 3);
         $header[] = xlsxTextCell("Reste à Payer", 3);
         $rows[$row] = $header;
         $row++;
