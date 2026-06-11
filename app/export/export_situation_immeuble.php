@@ -19,9 +19,14 @@ function renderSituationImmeublePdfTable($title, $rows, $headers)
     $html .= "<table>";
     $html .= "<thead>";
     $html .= "<tr>";
-    foreach ($headers as $header) {
-        $html .= "<th>" . htmlspecialchars($header, ENT_QUOTES, "UTF-8") . "</th>";
-    }
+    $html .= '<th rowspan="2">' . htmlspecialchars($headers[0], ENT_QUOTES, "UTF-8") . "</th>";
+    $html .= '<th rowspan="2">' . htmlspecialchars($headers[1], ENT_QUOTES, "UTF-8") . "</th>";
+    $html .= '<th rowspan="2">' . htmlspecialchars($headers[2], ENT_QUOTES, "UTF-8") . "</th>";
+    $html .= '<th colspan="2">Reste dû</th>';
+    $html .= "</tr>";
+    $html .= "<tr>";
+    $html .= "<th>Montant total en chiffres</th>";
+    $html .= "<th>Montant total en pourcentage</th>";
     $html .= "</tr>";
     $html .= "</thead><tbody>";
 
@@ -110,8 +115,6 @@ $htmlContent .= renderSituationImmeublePdfTable(
         "Immeuble",
         "Total des impayés antérieurs",
         "Encaissement",
-        "Reste dû — Montant total en chiffres",
-        "Reste dû — Montant total en pourcentage",
     ]
 );
 $htmlContent .= renderSituationImmeublePdfTable(
@@ -121,8 +124,6 @@ $htmlContent .= renderSituationImmeublePdfTable(
         "Immeuble",
         "Base de cotisation",
         "Encaissement",
-        "Reste dû — Montant total en chiffres",
-        "Reste dû — Montant total en pourcentage",
     ]
 );
 

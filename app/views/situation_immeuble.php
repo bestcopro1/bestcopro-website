@@ -45,11 +45,14 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 									<table class="table table-bordered table-striped">
 										<thead>
 											<tr>
-												<th>Immeuble</th>
-												<th>Total des impayés antérieurs</th>
-												<th>Encaissement</th>
-												<th>Reste dû — Montant total en chiffres</th>
-												<th>Reste dû — Montant total en pourcentage</th>
+												<th rowspan="2">Immeuble</th>
+												<th rowspan="2">Total des impayés antérieurs</th>
+												<th rowspan="2">Encaissement</th>
+												<th colspan="2" class="text-center">Reste dû</th>
+											</tr>
+											<tr>
+												<th>Montant total en chiffres</th>
+												<th>Montant total en pourcentage</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -109,11 +112,14 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 									<table class="table table-bordered table-striped">
 										<thead>
 											<tr>
-												<th>Immeuble</th>
-												<th>Base de cotisation</th>
-												<th>Encaissement</th>
-												<th>Reste dû — Montant total en chiffres</th>
-												<th>Reste dû — Montant total en pourcentage</th>
+												<th rowspan="2">Immeuble</th>
+												<th rowspan="2">Base de cotisation</th>
+												<th rowspan="2">Encaissement</th>
+												<th colspan="2" class="text-center">Reste dû</th>
+											</tr>
+											<tr>
+												<th>Montant total en chiffres</th>
+												<th>Montant total en pourcentage</th>
 											</tr>
 										</thead>
 										<tbody>

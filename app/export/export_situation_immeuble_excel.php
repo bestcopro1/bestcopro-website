@@ -20,9 +20,14 @@ function renderSituationImmeubleExcelTable($title, $rows, $headers)
         escapeSituationImmeubleExcel($title) .
         "</td></tr>";
     $html .= "<tr>";
-    foreach ($headers as $header) {
-        $html .= "<th>" . escapeSituationImmeubleExcel($header) . "</th>";
-    }
+    $html .= '<th rowspan="2">' . escapeSituationImmeubleExcel($headers[0]) . "</th>";
+    $html .= '<th rowspan="2">' . escapeSituationImmeubleExcel($headers[1]) . "</th>";
+    $html .= '<th rowspan="2">' . escapeSituationImmeubleExcel($headers[2]) . "</th>";
+    $html .= '<th colspan="2">Reste dû</th>';
+    $html .= "</tr>";
+    $html .= "<tr>";
+    $html .= "<th>Montant total en chiffres</th>";
+    $html .= "<th>Montant total en pourcentage</th>";
     $html .= "</tr>";
 
     if (count($rows) > 0) {
@@ -99,8 +104,6 @@ $htmlContent .= renderSituationImmeubleExcelTable(
         "Immeuble",
         "Total des impayés antérieurs",
         "Encaissement",
-        "Reste dû — Montant total en chiffres",
-        "Reste dû — Montant total en pourcentage",
     ]
 );
 $htmlContent .= renderSituationImmeubleExcelTable(
@@ -110,8 +113,6 @@ $htmlContent .= renderSituationImmeubleExcelTable(
         "Immeuble",
         "Base de cotisation",
         "Encaissement",
-        "Reste dû — Montant total en chiffres",
-        "Reste dû — Montant total en pourcentage",
     ]
 );
 $htmlContent .= "</table></body></html>";
