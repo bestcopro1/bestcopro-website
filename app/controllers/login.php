@@ -2,6 +2,8 @@
 
 // Database connection
 include "config/db.php";
+mysqli_set_charset($connection, "utf8mb4");
+mysqli_query($connection, "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
 
 global $wrongPwdErr,
     $accountNotExistErr,
@@ -99,4 +101,4 @@ if (isset($_POST["login"])) {
         }
     }
 }
-?>    
+?>

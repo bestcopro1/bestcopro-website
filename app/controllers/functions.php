@@ -1,4 +1,13 @@
 <?php
+if (isset($GLOBALS["connection"]) && $GLOBALS["connection"] instanceof mysqli) {
+    mysqli_set_charset($GLOBALS["connection"], "utf8mb4");
+    mysqli_query($GLOBALS["connection"], "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+}
+
+if (!headers_sent()) {
+    header("Content-Type: text/html; charset=utf-8");
+}
+
 /**
  * getView
  *
