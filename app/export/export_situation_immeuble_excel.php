@@ -20,14 +20,9 @@ function renderSituationImmeubleExcelTable($title, $rows, $headers)
         escapeSituationImmeubleExcel($title) .
         "</td></tr>";
     $html .= "<tr>";
-    $html .= '<th rowspan="2">' . escapeSituationImmeubleExcel($headers[0]) . "</th>";
-    $html .= '<th rowspan="2">' . escapeSituationImmeubleExcel($headers[1]) . "</th>";
-    $html .= '<th rowspan="2">' . escapeSituationImmeubleExcel($headers[2]) . "</th>";
-    $html .= '<th colspan="2">Reste du</th>';
-    $html .= "</tr>";
-    $html .= "<tr>";
-    $html .= "<th>Montant total en chiffre</th>";
-    $html .= "<th>Montant total en pourcentage</th>";
+    foreach ($headers as $header) {
+        $html .= "<th>" . escapeSituationImmeubleExcel($header) . "</th>";
+    }
     $html .= "</tr>";
 
     if (count($rows) > 0) {
@@ -98,14 +93,26 @@ $htmlContent .= "<td>" . escapeSituationImmeubleExcel($residenceName) . "</td>";
 $htmlContent .= "</tr>";
 $htmlContent .= "<tr><td colspan=\"5\" class=\"spacer\"></td></tr>";
 $htmlContent .= renderSituationImmeubleExcelTable(
-    "Situation anterieur",
+    "Situation antérieure",
     $data["anterieur"],
-    ["Immeuble", "Total impayes anterieur", "Encaissement"]
+    [
+        "Immeuble",
+        "Total des impayés antérieurs",
+        "Encaissement",
+        "Reste dû — Montant total en chiffres",
+        "Reste dû — Montant total en pourcentage",
+    ]
 );
 $htmlContent .= renderSituationImmeubleExcelTable(
     "Situation actuelle",
     $data["actuel"],
-    ["Immeubles", "Base de cotisation", "Encaissante"]
+    [
+        "Immeuble",
+        "Base de cotisation",
+        "Encaissement",
+        "Reste dû — Montant total en chiffres",
+        "Reste dû — Montant total en pourcentage",
+    ]
 );
 $htmlContent .= "</table></body></html>";
 

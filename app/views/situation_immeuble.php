@@ -38,21 +38,18 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 					<div class="col-12">
 						<div class="card">
 							<div class="card-header">
-								<h4 class="card-title">Situation antérieur</h4>
+								<h4 class="card-title">Situation antérieure</h4>
 							</div>
 							<div class="card-body">
 								<div class="table-responsive">
 									<table class="table table-bordered table-striped">
 										<thead>
 											<tr>
-												<th rowspan="2">Immeuble</th>
-												<th rowspan="2">Total impayés antérieur</th>
-												<th rowspan="2">Encaissement</th>
-												<th colspan="2" class="text-center">Reste du</th>
-											</tr>
-											<tr>
-												<th>Montant total en chiffre</th>
-												<th>Montant total en pourcentage</th>
+												<th>Immeuble</th>
+												<th>Total des impayés antérieurs</th>
+												<th>Encaissement</th>
+												<th>Reste dû — Montant total en chiffres</th>
+												<th>Reste dû — Montant total en pourcentage</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -112,14 +109,11 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 									<table class="table table-bordered table-striped">
 										<thead>
 											<tr>
-												<th rowspan="2">Immeubles</th>
-												<th rowspan="2">Base de cotisation</th>
-												<th rowspan="2">Encaissante</th>
-												<th colspan="2" class="text-center">Reste du</th>
-											</tr>
-											<tr>
-												<th>Montant total en chiffre</th>
-												<th>Montant total en pourcentage</th>
+												<th>Immeuble</th>
+												<th>Base de cotisation</th>
+												<th>Encaissement</th>
+												<th>Reste dû — Montant total en chiffres</th>
+												<th>Reste dû — Montant total en pourcentage</th>
 											</tr>
 										</thead>
 										<tbody>
