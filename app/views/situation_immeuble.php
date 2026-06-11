@@ -1,73 +1,17 @@
 <?php
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
+include_once __DIR__ . "/../export/situation_immeuble_data.php";
 $connection = $GLOBALS["connection"];
 
-function formatSituationImmeubleAmount($value)
-{
-    return number_format((float) $value, 2, ",", " ");
-}
-
-function formatSituationImmeublePercent($value)
-{
-    return number_format((float) $value, 2, ",", " ") . " %";
-}
-
-function getSituationImmeubleRows($id_copropriete, $id_exercice, $isCurrent, $connection)
-{
-    $rows = [];
-    $exerciseCondition = $isCurrent ? "r.id_exercice = ?" : "r.id_exercice <= 0";
-    $request =
-        "SELECT l.numeroImm, " .
-        "SUM(COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0)) AS base_total, " .
-        "SUM(COALESCE(r.cotisation, 0)) AS encaissement_total, " .
-        "SUM(CASE WHEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) > COALESCE(r.cotisation, 0) " .
-        "THEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) - COALESCE(r.cotisation, 0) ELSE 0 END) AS reste_total " .
-        "FROM lot l INNER JOIN rel_lot_exercice r ON r.id_lot = l.id " .
-        "WHERE l.id_copropriete = ? AND " .
-        $exerciseCondition .
-        " GROUP BY l.numeroImm ORDER BY l.numeroImm ASC";
-
-    if ($stmt = $connection->prepare($request)) {
-        if ($isCurrent) {
-            $stmt->bind_param("ss", $id_copropriete, $id_exercice);
-        } else {
-            $stmt->bind_param("s", $id_copropriete);
-        }
-
-        $stmt->execute();
-        $stmt->store_result();
-        $stmt->bind_result($numeroImm, $baseTotal, $encaissementTotal, $resteTotal);
-
-        while ($stmt->fetch()) {
-            $baseTotal = (float) $baseTotal;
-            $resteTotal = (float) $resteTotal;
-            $rows[] = [
-                "immeuble" => $numeroImm,
-                "baseTotal" => $baseTotal,
-                "encaissementTotal" => (float) $encaissementTotal,
-                "resteTotal" => $resteTotal,
-                "restePercent" => $baseTotal > 0 ? ($resteTotal * 100) / $baseTotal : 0,
-            ];
-        }
-    }
-
-    return $rows;
-}
-
 $exercice = getExercice($GLOBALS["id_exercice"], null, $connection);
-$situationAnterieureRows = getSituationImmeubleRows(
+$situationImmeubleData = getSituationImmeubleData(
     $GLOBALS["id_copropriete"],
     $GLOBALS["id_exercice"],
-    false,
     $connection
 );
-$situationActuelleRows = getSituationImmeubleRows(
-    $GLOBALS["id_copropriete"],
-    $GLOBALS["id_exercice"],
-    true,
-    $connection
-);
+$situationAnterieureRows = $situationImmeubleData["anterieur"];
+$situationActuelleRows = $situationImmeubleData["actuel"];
 ?>
 		<div class="content-body">
 			<div class="container-fluid">
@@ -78,6 +22,12 @@ $situationActuelleRows = getSituationImmeubleRows(
 					<div class="text-end d-none d-lg-block me-3">
 						<p class="mb-0 fw-bold"><?= htmlspecialchars($GLOBALS["copropriete"][0]["nom"]) ?></p>
 					</div>
+					<a href="export/export_situation_immeuble.php?id_exercice=<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>" class="btn btn-rounded btn-primary px-3 my-1 me-2">
+						<span class="btn-icon-start text-primary"><i class="fa fa-file-pdf color-primary"></i></span> Export PDF
+					</a>
+					<a href="export/export_situation_immeuble_excel.php?id_exercice=<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>" class="btn btn-rounded btn-primary px-3 my-1 me-2">
+						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Export Excel
+					</a>
 				</div>
 				<?php if (count($exercice) > 0): ?>
 				<div class="alert alert-primary alert-alt fade show p-3 mb-4">
