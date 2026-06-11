@@ -208,6 +208,7 @@ foreach ($echeances as $echeance) {
                     <li class="<?php if (
                         $page == "copropriete" ||
                         $page == "lots" ||
+                        $page == "situation_immeuble" ||
                         $page == "proprietaires"
                     ) {
                         echo "mm-active";
@@ -232,6 +233,15 @@ foreach ($echeances as $echeance) {
 								<a href="dashboard.php?page=lots" class="<?php if ($page == "lots") {
             echo "mm-active";
         } ?>">Situation de copropriétaire</a>
+							</li>
+                            <li class="<?php if ($page == "situation_immeuble") {
+                                echo "mm-active";
+                            } ?>">
+								<a href="dashboard.php?page=situation_immeuble" class="<?php if (
+            $page == "situation_immeuble"
+        ) {
+            echo "mm-active";
+        } ?>">Situation par immeuble</a>
 							</li>
                             <li class="<?php if ($page == "contentieux") {
                                 echo "mm-active";
