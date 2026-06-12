@@ -464,10 +464,91 @@ function getDashboardProgressPercent($amount, $base)
 					<div class="col-xl-12">
 						<div class="card">
 							<div class="card-header pb-0 border-0 flex-wrap">
-								<h4 class="fs-20 ">Statistiques des paiements</h4>
+								<h4 class="fs-20 ">Situation des encaissements</h4>
 							</div>
 							<div class="card-body">
-								<div class="owl-carousel owl-carousel owl-loaded front-view-slider ">
+								<div class="table-responsive">
+									<table class="table table-bordered table-striped table-responsive-sm">
+										<thead>
+											<tr>
+												<th rowspan="2">Mois</th>
+												<th rowspan="2">Base théorique</th>
+												<th colspan="3" class="text-center">Encaissement</th>
+												<th rowspan="2">Écart Mensuel</th>
+											</tr>
+											<tr>
+												<th>Antérieur</th>
+												<th>En cours</th>
+												<th>Total Mensuel</th>
+											</tr>
+										</thead>
+										<tbody>
+											<?php
+           $baseTheorique =
+               floatval($currentExercice[0]["montantFonct"]) / 12;
+           for ($i = 0; $i < 12; $i++):
+               $monthYear = date(
+                   "m/Y",
+                   strtotime(
+                       date(
+                           "Y-m-d",
+                           strtotime($currentExercice[0]["dateDebut"]),
+                       ) .
+                           " + " .
+                           $i .
+                           " month",
+                   ),
+               );
+               $from = date(
+                   "Y-m-d",
+                   strtotime(
+                       date(
+                           "Y-m-d",
+                           strtotime($currentExercice[0]["dateDebut"]),
+                       ) .
+                           " + " .
+                           $i .
+                           " month",
+                   ),
+               );
+               $to = date(
+                   "Y-m-d",
+                   strtotime(
+                       date(
+                           "Y-m-d",
+                           strtotime($currentExercice[0]["dateDebut"]),
+                       ) .
+                           " + " .
+                           ($i + 1) .
+                           " month -1 day",
+                   ),
+               );
+               $paiementStats = getPaiementStatsByDates(
+                   $GLOBALS["id_copropriete"],
+                   $GLOBALS["id_exercice"],
+                   $from,
+                   $to,
+                   $connection,
+               );
+               $paiementsAnterieurs = $paiementStats["anterieur"];
+               $paiementsEncours = $paiementStats["encours"];
+               $totalPaiements = $paiementStats["total"];
+               $ecartMensuel = $baseTheorique - $paiementsEncours;
+               ?>
+											<tr>
+												<td><?= $monthYear ?></td>
+												<td><?= number_format($baseTheorique, 2) ?></td>
+												<td><?= number_format($paiementsAnterieurs, 2) ?></td>
+												<td><?= number_format($paiementsEncours, 2) ?></td>
+												<td><?= number_format($totalPaiements, 2) ?></td>
+												<td class="<?= $ecartMensuel >= 0 ? "text-danger" : "text-success" ?>"><?= number_format($ecartMensuel, 2) ?></td>
+											</tr>
+											<?php endfor;
+           ?>
+										</tbody>
+									</table>
+								</div>
+								<div class="owl-carousel owl-carousel owl-loaded front-view-slider d-none">
 									<?php for ($i = 0; $i < 12; $i++):
 
              $monthYear = date(
