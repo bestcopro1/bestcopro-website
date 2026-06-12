@@ -95,9 +95,10 @@ $htmlContent .=
         th, td { border: 1px solid #000; padding: 4px; }
         th { background: #c8c8c8; text-align: center; }
         .header td { border: 0; font-size: 10px; vertical-align: top; }
-        .title { font-size: 15px; font-weight: bold; text-align: center; }
-        .logo-cell { text-align: right; }
+        .logo-cell { text-align: left; width: 24%; }
         .logo { width: 120px; }
+        .title { font-size: 22px; font-weight: bold; text-align: center; padding-top: 16px; width: 52%; }
+        .info-cell { text-align: right; width: 24%; }
         .amount, .percent { text-align: right; white-space: nowrap; }
         .empty { text-align: center; }
         .global-total { background: #00B0F0; font-weight: bold; }
@@ -105,17 +106,17 @@ $htmlContent .=
 $htmlContent .= '<table class="header">';
 $htmlContent .= "<tr>";
 $htmlContent .=
-    '<td>' .
+    '<td class="logo-cell">' .
+    ($logo !== "" ? '<img class="logo" src="' . $logo . '" alt="logo">' : "") .
+    "</td>";
+$htmlContent .= '<td class="title">Situation de recouvrement et impayés</td>';
+$htmlContent .=
+    '<td class="info-cell">' .
     htmlspecialchars($residenceName, ENT_QUOTES, "UTF-8") .
     "<br>" .
     htmlspecialchars($nameExercice, ENT_QUOTES, "UTF-8") .
     "<br>Situation arrêtée au " .
     date("d/m/Y") .
-    "</td>";
-$htmlContent .= '<td class="title">Situation de recouvrement et impayés</td>';
-$htmlContent .=
-    '<td class="logo-cell">' .
-    ($logo !== "" ? '<img class="logo" src="' . $logo . '" alt="logo">' : "") .
     "</td>";
 $htmlContent .= "</tr>";
 $htmlContent .= "</table>";

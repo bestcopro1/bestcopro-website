@@ -90,9 +90,10 @@ $htmlContent =
         th, td { border: 1px solid #000; padding: 5px; white-space: nowrap; }
         th { background: #c8c8c8; text-align: center; font-weight: bold; }
         .title td { border: 0; font-weight: bold; font-size: 14px; vertical-align: top; }
-        .title-main { text-align: center; }
-        .logo-cell { text-align: right; }
+        .logo-cell { text-align: left; width: 24%; }
         .logo { width: 120px; }
+        .title-main { text-align: center; font-size: 22px; padding-top: 16px; width: 52%; }
+        .info-cell { text-align: right; width: 24%; }
         .section { background: #d9eaf7; font-weight: bold; text-align: left; }
         .amount { text-align: right; }
         .empty { text-align: center; }
@@ -101,17 +102,17 @@ $htmlContent =
     </style></head><body><table>';
 $htmlContent .= '<tr class="title">';
 $htmlContent .=
-    "<td>" .
+    '<td class="logo-cell">' .
+    ($logo !== "" ? '<img class="logo" src="' . $logo . '" alt="logo">' : "") .
+    "</td>";
+$htmlContent .= '<td colspan="3" class="title-main">Situation de recouvrement et impayés</td>';
+$htmlContent .=
+    '<td class="info-cell">' .
     escapeSituationImmeubleExcel($residenceName) .
     "<br>" .
     escapeSituationImmeubleExcel($nameExercice) .
     "<br>Situation arrêtée au " .
     date("d/m/Y") .
-    "</td>";
-$htmlContent .= '<td colspan="3" class="title-main">Situation de recouvrement et impayés</td>';
-$htmlContent .=
-    '<td class="logo-cell">' .
-    ($logo !== "" ? '<img class="logo" src="' . $logo . '" alt="logo">' : "") .
     "</td>";
 $htmlContent .= "</tr>";
 $htmlContent .= "<tr><td colspan=\"5\" class=\"spacer\"></td></tr>";
