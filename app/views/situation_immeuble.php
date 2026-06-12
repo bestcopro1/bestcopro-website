@@ -150,16 +150,25 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 											</tr>
 											<?php
            endif;
+           $actuelOfficialBase =
+               count($exercice) > 0
+                   ? floatval($exercice[0]["montantFonct"]) +
+                       floatval($exercice[0]["montantInvest"])
+                   : $actuelTotals["baseTotal"];
+           $actuelOfficialReste = max(
+               0,
+               $actuelOfficialBase - $actuelTotals["encaissementTotal"]
+           );
            $actuelPercent =
-               $actuelTotals["baseTotal"] > 0
-                   ? ($actuelTotals["encaissementTotal"] * 100) / $actuelTotals["baseTotal"]
+               $actuelOfficialBase > 0
+                   ? ($actuelTotals["encaissementTotal"] * 100) / $actuelOfficialBase
                    : 0;
            ?>
 											<tr class="situation-total-row fw-bold">
 												<td>TOTAL GENERAL</td>
-												<td><?= formatSituationImmeubleAmount($actuelTotals["baseTotal"]) ?></td>
+												<td><?= formatSituationImmeubleAmount($actuelOfficialBase) ?></td>
 												<td><?= formatSituationImmeubleAmount($actuelTotals["encaissementTotal"]) ?></td>
-												<td><?= formatSituationImmeubleAmount($actuelTotals["resteTotal"]) ?></td>
+												<td><?= formatSituationImmeubleAmount($actuelOfficialReste) ?></td>
 												<td><?= formatSituationImmeublePercent($actuelPercent) ?></td>
 											</tr>
 										</tbody>

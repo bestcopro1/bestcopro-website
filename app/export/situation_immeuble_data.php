@@ -93,11 +93,18 @@ function getSituationImmeubleData($id_copropriete, $id_exercice, $connection)
     ];
 }
 
-function getSituationImmeubleTotals($rows)
+function getSituationImmeubleTotals($rows, $baseOverride = null)
 {
     $totals = getEmptySituationImmeubleTotals();
     foreach ($rows as $row) {
         addSituationImmeubleTotals($totals, $row);
+    }
+    if ($baseOverride !== null) {
+        $totals["baseTotal"] = (float) $baseOverride;
+        $totals["resteTotal"] = max(
+            0,
+            $totals["baseTotal"] - $totals["encaissementTotal"]
+        );
     }
     $totals["restePercent"] = getSituationImmeublePercent(
         $totals["resteTotal"],

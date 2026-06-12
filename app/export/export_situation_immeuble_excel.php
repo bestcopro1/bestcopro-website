@@ -22,9 +22,9 @@ function getSituationImmeubleExcelImageData($path)
     return "data:image/png;base64," . base64_encode(file_get_contents($path));
 }
 
-function renderSituationImmeubleExcelTable($title, $rows, $headers)
+function renderSituationImmeubleExcelTable($title, $rows, $headers, $baseOverride = null)
 {
-    $totals = getSituationImmeubleTotals($rows);
+    $totals = getSituationImmeubleTotals($rows, $baseOverride);
     $html = '<tr><td colspan="5" class="section">' .
         escapeSituationImmeubleExcel($title) .
         "</td></tr>";
@@ -77,6 +77,8 @@ if (count($exercice) === 0) {
 $copropriete = getCopropriete($exercice[0]["id_copropriete"], $connection);
 $residenceName = count($copropriete) > 0 ? $copropriete[0]["nom"] : "";
 $nameExercice = getNameexercice($exercice[0]["dateDebut"]);
+$officialCurrentBase =
+    (float) $exercice[0]["montantFonct"] + (float) $exercice[0]["montantInvest"];
 $data = getSituationImmeubleData(
     $exercice[0]["id_copropriete"],
     $id_exercice,
@@ -132,7 +134,8 @@ $htmlContent .= renderSituationImmeubleExcelTable(
         "Immeuble",
         "Base de cotisation",
         "Encaissement",
-    ]
+    ],
+    $officialCurrentBase
 );
 $htmlContent .= "</table></body></html>";
 

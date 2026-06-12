@@ -21,9 +21,9 @@ function getSituationImmeubleImageData($path)
     return "data:image/png;base64," . base64_encode(file_get_contents($path));
 }
 
-function renderSituationImmeublePdfTable($title, $rows, $headers)
+function renderSituationImmeublePdfTable($title, $rows, $headers, $baseOverride = null)
 {
-    $totals = getSituationImmeubleTotals($rows);
+    $totals = getSituationImmeubleTotals($rows, $baseOverride);
     $html = '<h2>' . htmlspecialchars($title, ENT_QUOTES, "UTF-8") . "</h2>";
     $html .= "<table>";
     $html .= "<thead>";
@@ -77,6 +77,8 @@ if (count($exercice) === 0) {
 $copropriete = getCopropriete($exercice[0]["id_copropriete"], $connection);
 $residenceName = count($copropriete) > 0 ? $copropriete[0]["nom"] : "";
 $nameExercice = getNameexercice($exercice[0]["dateDebut"]);
+$officialCurrentBase =
+    (float) $exercice[0]["montantFonct"] + (float) $exercice[0]["montantInvest"];
 $data = getSituationImmeubleData(
     $exercice[0]["id_copropriete"],
     $id_exercice,
@@ -137,7 +139,8 @@ $htmlContent .= renderSituationImmeublePdfTable(
         "Immeuble",
         "Base de cotisation",
         "Encaissement",
-    ]
+    ],
+    $officialCurrentBase
 );
 
 $dompdf = new Dompdf();
