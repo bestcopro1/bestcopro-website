@@ -17,7 +17,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 			<div class="container-fluid">
 				<div class="form-head d-flex mb-3 align-items-start">
 					<div class="me-auto d-none d-lg-block">
-						<h2 class="text-primary font-w600 mb-0">Situation par immeuble</h2>
+						<h2 class="text-primary font-w600 mb-0">Situation de recouvrement et impayés</h2>
 					</div>
 					<div class="text-end d-none d-lg-block me-3">
 						<p class="mb-0 fw-bold"><?= htmlspecialchars($GLOBALS["copropriete"][0]["nom"]) ?></p>
@@ -31,7 +31,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 				</div>
 				<?php if (count($exercice) > 0): ?>
 				<div class="alert alert-primary alert-alt fade show p-3 mb-4">
-					<strong>Situation par immeuble de l'<?= getNameexercice($exercice[0]["dateDebut"]) ?></strong>
+					<strong>Situation de recouvrement et impayés de l'<?= getNameexercice($exercice[0]["dateDebut"]) ?></strong>
 				</div>
 				<?php endif; ?>
 				<div class="row">
@@ -45,14 +45,11 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 									<table class="table table-bordered table-striped">
 										<thead>
 											<tr>
-												<th rowspan="2">Immeuble</th>
-												<th rowspan="2">Total des impayés antérieurs</th>
-												<th rowspan="2">Encaissement</th>
-												<th colspan="2" class="text-center">Reste dû</th>
-											</tr>
-											<tr>
-												<th>Montant total en chiffres</th>
-												<th>Montant total en pourcentage</th>
+												<th>Immeuble</th>
+												<th>Total des impayés antérieurs</th>
+												<th>Encaissement</th>
+												<th>Montant reste dû</th>
+												<th>Taux de recouvrement</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -73,7 +70,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 												<td><?= formatSituationImmeubleAmount($row["baseTotal"]) ?></td>
 												<td><?= formatSituationImmeubleAmount($row["encaissementTotal"]) ?></td>
 												<td><?= formatSituationImmeubleAmount($row["resteTotal"]) ?></td>
-												<td><?= formatSituationImmeublePercent($row["restePercent"]) ?></td>
+												<td><?= formatSituationImmeublePercent($row["recouvrementPercent"]) ?></td>
 											</tr>
 											<?php
                endforeach;
@@ -86,7 +83,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
            endif;
            $anterieurPercent =
                $anterieurTotals["baseTotal"] > 0
-                   ? ($anterieurTotals["resteTotal"] * 100) / $anterieurTotals["baseTotal"]
+                   ? ($anterieurTotals["encaissementTotal"] * 100) / $anterieurTotals["baseTotal"]
                    : 0;
            ?>
 											<tr class="table-info fw-bold">
@@ -105,21 +102,18 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 					<div class="col-12">
 						<div class="card">
 							<div class="card-header">
-								<h4 class="card-title">Situation actuelle</h4>
+								<h4 class="card-title">Situation de la période encours</h4>
 							</div>
 							<div class="card-body">
 								<div class="table-responsive">
 									<table class="table table-bordered table-striped">
 										<thead>
 											<tr>
-												<th rowspan="2">Immeuble</th>
-												<th rowspan="2">Base de cotisation</th>
-												<th rowspan="2">Encaissement</th>
-												<th colspan="2" class="text-center">Reste dû</th>
-											</tr>
-											<tr>
-												<th>Montant total en chiffres</th>
-												<th>Montant total en pourcentage</th>
+												<th>Immeuble</th>
+												<th>Base de cotisation</th>
+												<th>Encaissement</th>
+												<th>Montant reste dû</th>
+												<th>Taux de recouvrement</th>
 											</tr>
 										</thead>
 										<tbody>
@@ -140,7 +134,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 												<td><?= formatSituationImmeubleAmount($row["baseTotal"]) ?></td>
 												<td><?= formatSituationImmeubleAmount($row["encaissementTotal"]) ?></td>
 												<td><?= formatSituationImmeubleAmount($row["resteTotal"]) ?></td>
-												<td><?= formatSituationImmeublePercent($row["restePercent"]) ?></td>
+												<td><?= formatSituationImmeublePercent($row["recouvrementPercent"]) ?></td>
 											</tr>
 											<?php
                endforeach;
@@ -153,7 +147,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
            endif;
            $actuelPercent =
                $actuelTotals["baseTotal"] > 0
-                   ? ($actuelTotals["resteTotal"] * 100) / $actuelTotals["baseTotal"]
+                   ? ($actuelTotals["encaissementTotal"] * 100) / $actuelTotals["baseTotal"]
                    : 0;
            ?>
 											<tr class="table-info fw-bold">

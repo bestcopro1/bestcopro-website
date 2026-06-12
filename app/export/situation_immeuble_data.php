@@ -16,6 +16,7 @@ function getEmptySituationImmeubleTotals()
         "baseTotal" => 0,
         "encaissementTotal" => 0,
         "resteTotal" => 0,
+        "recouvrementPercent" => 0,
     ];
 }
 
@@ -66,6 +67,7 @@ function getSituationImmeubleRows($id_copropriete, $id_exercice, $isCurrent, $co
                 "encaissementTotal" => (float) $encaissementTotal,
                 "resteTotal" => $resteTotal,
                 "restePercent" => getSituationImmeublePercent($resteTotal, $baseTotal),
+                "recouvrementPercent" => getSituationImmeublePercent($encaissementTotal, $baseTotal),
             ];
         }
     }
@@ -99,6 +101,10 @@ function getSituationImmeubleTotals($rows)
     }
     $totals["restePercent"] = getSituationImmeublePercent(
         $totals["resteTotal"],
+        $totals["baseTotal"]
+    );
+    $totals["recouvrementPercent"] = getSituationImmeublePercent(
+        $totals["encaissementTotal"],
         $totals["baseTotal"]
     );
 

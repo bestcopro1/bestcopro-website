@@ -13,6 +13,15 @@ function escapeSituationImmeubleExcel($value)
     return htmlspecialchars((string) $value, ENT_QUOTES, "UTF-8");
 }
 
+function getSituationImmeubleExcelImageData($path)
+{
+    if (!file_exists($path)) {
+        return "";
+    }
+
+    return "data:image/png;base64," . base64_encode(file_get_contents($path));
+}
+
 function renderSituationImmeubleExcelTable($title, $rows, $headers)
 {
     $totals = getSituationImmeubleTotals($rows);
@@ -20,14 +29,11 @@ function renderSituationImmeubleExcelTable($title, $rows, $headers)
         escapeSituationImmeubleExcel($title) .
         "</td></tr>";
     $html .= "<tr>";
-    $html .= '<th rowspan="2">' . escapeSituationImmeubleExcel($headers[0]) . "</th>";
-    $html .= '<th rowspan="2">' . escapeSituationImmeubleExcel($headers[1]) . "</th>";
-    $html .= '<th rowspan="2">' . escapeSituationImmeubleExcel($headers[2]) . "</th>";
-    $html .= '<th colspan="2">Reste dû</th>';
-    $html .= "</tr>";
-    $html .= "<tr>";
-    $html .= "<th>Montant total en chiffres</th>";
-    $html .= "<th>Montant total en pourcentage</th>";
+    $html .= '<th>' . escapeSituationImmeubleExcel($headers[0]) . "</th>";
+    $html .= '<th>' . escapeSituationImmeubleExcel($headers[1]) . "</th>";
+    $html .= '<th>' . escapeSituationImmeubleExcel($headers[2]) . "</th>";
+    $html .= "<th>Montant reste dû</th>";
+    $html .= "<th>Taux de recouvrement</th>";
     $html .= "</tr>";
 
     if (count($rows) > 0) {
@@ -37,11 +43,11 @@ function renderSituationImmeubleExcelTable($title, $rows, $headers)
             $html .= '<td class="amount">' . formatSituationImmeubleAmount($row["baseTotal"]) . "</td>";
             $html .= '<td class="amount">' . formatSituationImmeubleAmount($row["encaissementTotal"]) . "</td>";
             $html .= '<td class="amount">' . formatSituationImmeubleAmount($row["resteTotal"]) . "</td>";
-            $html .= '<td class="amount">' . formatSituationImmeublePercent($row["restePercent"]) . "</td>";
+            $html .= '<td class="amount">' . formatSituationImmeublePercent($row["recouvrementPercent"]) . "</td>";
             $html .= "</tr>";
         }
     } else {
-        $html .= '<tr><td colspan="5" class="empty">Aucune donnee disponible dans le tableau</td></tr>';
+        $html .= '<tr><td colspan="5" class="empty">Aucune donnée disponible dans le tableau</td></tr>';
     }
 
     $html .= '<tr class="total">';
@@ -49,7 +55,7 @@ function renderSituationImmeubleExcelTable($title, $rows, $headers)
     $html .= '<td class="amount">' . formatSituationImmeubleAmount($totals["baseTotal"]) . "</td>";
     $html .= '<td class="amount">' . formatSituationImmeubleAmount($totals["encaissementTotal"]) . "</td>";
     $html .= '<td class="amount">' . formatSituationImmeubleAmount($totals["resteTotal"]) . "</td>";
-    $html .= '<td class="amount">' . formatSituationImmeublePercent($totals["restePercent"]) . "</td>";
+    $html .= '<td class="amount">' . formatSituationImmeublePercent($totals["recouvrementPercent"]) . "</td>";
     $html .= "</tr>";
     $html .= '<tr><td colspan="5" class="spacer"></td></tr>';
 
@@ -59,7 +65,7 @@ function renderSituationImmeubleExcelTable($title, $rows, $headers)
 $id_exercice = isset($_GET["id_exercice"]) ? $_GET["id_exercice"] : null;
 if ($id_exercice === null) {
     http_response_code(400);
-    exit("Parametres invalides");
+    exit("Paramètres invalides");
 }
 
 $exercice = getExercice($id_exercice, null, $connection);
@@ -76,13 +82,17 @@ $data = getSituationImmeubleData(
     $id_exercice,
     $connection
 );
+$logo = getSituationImmeubleExcelImageData(__DIR__ . "/logo.png");
 
 $htmlContent =
     '<html><head><meta charset="UTF-8"><style>
         table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11px; }
         th, td { border: 1px solid #000; padding: 5px; white-space: nowrap; }
         th { background: #c8c8c8; text-align: center; font-weight: bold; }
-        .title td { border: 0; font-weight: bold; font-size: 14px; }
+        .title td { border: 0; font-weight: bold; font-size: 14px; vertical-align: top; }
+        .title-main { text-align: center; }
+        .logo-cell { text-align: right; }
+        .logo { width: 120px; }
         .section { background: #d9eaf7; font-weight: bold; text-align: left; }
         .amount { text-align: right; }
         .empty { text-align: center; }
@@ -90,11 +100,19 @@ $htmlContent =
         .spacer { border: 0; height: 12px; }
     </style></head><body><table>';
 $htmlContent .= '<tr class="title">';
-$htmlContent .= "<td>BEST COPRO</td>";
-$htmlContent .= '<td colspan="3">Situation par immeuble - ' .
+$htmlContent .=
+    "<td>" .
+    escapeSituationImmeubleExcel($residenceName) .
+    "<br>" .
     escapeSituationImmeubleExcel($nameExercice) .
+    "<br>Situation arrêtée au " .
+    date("d/m/Y") .
     "</td>";
-$htmlContent .= "<td>" . escapeSituationImmeubleExcel($residenceName) . "</td>";
+$htmlContent .= '<td colspan="3" class="title-main">Situation de recouvrement et impayés</td>';
+$htmlContent .=
+    '<td class="logo-cell">' .
+    ($logo !== "" ? '<img class="logo" src="' . $logo . '" alt="logo">' : "") .
+    "</td>";
 $htmlContent .= "</tr>";
 $htmlContent .= "<tr><td colspan=\"5\" class=\"spacer\"></td></tr>";
 $htmlContent .= renderSituationImmeubleExcelTable(
@@ -107,7 +125,7 @@ $htmlContent .= renderSituationImmeubleExcelTable(
     ]
 );
 $htmlContent .= renderSituationImmeubleExcelTable(
-    "Situation actuelle",
+    "Situation de la période encours",
     $data["actuel"],
     [
         "Immeuble",
@@ -118,7 +136,7 @@ $htmlContent .= renderSituationImmeubleExcelTable(
 $htmlContent .= "</table></body></html>";
 
 $filename = getSituationImmeubleFilename(
-    "situation_par_immeuble",
+    "situation_recouvrement_impayes",
     $residenceName,
     $nameExercice,
     "xls"

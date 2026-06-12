@@ -12,6 +12,15 @@ $connection = $GLOBALS["connection"];
 
 use Dompdf\Dompdf;
 
+function getSituationImmeubleImageData($path)
+{
+    if (!file_exists($path)) {
+        return "";
+    }
+
+    return "data:image/png;base64," . base64_encode(file_get_contents($path));
+}
+
 function renderSituationImmeublePdfTable($title, $rows, $headers)
 {
     $totals = getSituationImmeubleTotals($rows);
@@ -19,14 +28,11 @@ function renderSituationImmeublePdfTable($title, $rows, $headers)
     $html .= "<table>";
     $html .= "<thead>";
     $html .= "<tr>";
-    $html .= '<th rowspan="2">' . htmlspecialchars($headers[0], ENT_QUOTES, "UTF-8") . "</th>";
-    $html .= '<th rowspan="2">' . htmlspecialchars($headers[1], ENT_QUOTES, "UTF-8") . "</th>";
-    $html .= '<th rowspan="2">' . htmlspecialchars($headers[2], ENT_QUOTES, "UTF-8") . "</th>";
-    $html .= '<th colspan="2">Reste dû</th>';
-    $html .= "</tr>";
-    $html .= "<tr>";
-    $html .= "<th>Montant total en chiffres</th>";
-    $html .= "<th>Montant total en pourcentage</th>";
+    $html .= '<th>' . htmlspecialchars($headers[0], ENT_QUOTES, "UTF-8") . "</th>";
+    $html .= '<th>' . htmlspecialchars($headers[1], ENT_QUOTES, "UTF-8") . "</th>";
+    $html .= '<th>' . htmlspecialchars($headers[2], ENT_QUOTES, "UTF-8") . "</th>";
+    $html .= "<th>Montant reste dû</th>";
+    $html .= "<th>Taux de recouvrement</th>";
     $html .= "</tr>";
     $html .= "</thead><tbody>";
 
@@ -37,11 +43,11 @@ function renderSituationImmeublePdfTable($title, $rows, $headers)
             $html .= '<td class="amount">' . formatSituationImmeubleAmount($row["baseTotal"]) . "</td>";
             $html .= '<td class="amount">' . formatSituationImmeubleAmount($row["encaissementTotal"]) . "</td>";
             $html .= '<td class="amount">' . formatSituationImmeubleAmount($row["resteTotal"]) . "</td>";
-            $html .= '<td class="percent">' . formatSituationImmeublePercent($row["restePercent"]) . "</td>";
+            $html .= '<td class="percent">' . formatSituationImmeublePercent($row["recouvrementPercent"]) . "</td>";
             $html .= "</tr>";
         }
     } else {
-        $html .= '<tr><td colspan="5" class="empty">Aucune donnee disponible dans le tableau</td></tr>';
+        $html .= '<tr><td colspan="5" class="empty">Aucune donnée disponible dans le tableau</td></tr>';
     }
 
     $html .= '<tr class="global-total">';
@@ -49,7 +55,7 @@ function renderSituationImmeublePdfTable($title, $rows, $headers)
     $html .= '<td class="amount">' . formatSituationImmeubleAmount($totals["baseTotal"]) . "</td>";
     $html .= '<td class="amount">' . formatSituationImmeubleAmount($totals["encaissementTotal"]) . "</td>";
     $html .= '<td class="amount">' . formatSituationImmeubleAmount($totals["resteTotal"]) . "</td>";
-    $html .= '<td class="percent">' . formatSituationImmeublePercent($totals["restePercent"]) . "</td>";
+    $html .= '<td class="percent">' . formatSituationImmeublePercent($totals["recouvrementPercent"]) . "</td>";
     $html .= "</tr>";
     $html .= "</tbody></table>";
 
@@ -59,7 +65,7 @@ function renderSituationImmeublePdfTable($title, $rows, $headers)
 $id_exercice = isset($_GET["id_exercice"]) ? $_GET["id_exercice"] : null;
 if ($id_exercice === null) {
     http_response_code(400);
-    exit("Parametres invalides");
+    exit("Paramètres invalides");
 }
 
 $exercice = getExercice($id_exercice, null, $connection);
@@ -76,6 +82,7 @@ $data = getSituationImmeubleData(
     $id_exercice,
     $connection
 );
+$logo = getSituationImmeubleImageData(__DIR__ . "/logo.png");
 
 $htmlContent = "";
 $htmlContent .=
@@ -87,23 +94,28 @@ $htmlContent .=
         table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
         th, td { border: 1px solid #000; padding: 4px; }
         th { background: #c8c8c8; text-align: center; }
-        .header td { border: 0; font-size: 10px; }
+        .header td { border: 0; font-size: 10px; vertical-align: top; }
         .title { font-size: 15px; font-weight: bold; text-align: center; }
+        .logo-cell { text-align: right; }
+        .logo { width: 120px; }
         .amount, .percent { text-align: right; white-space: nowrap; }
         .empty { text-align: center; }
         .global-total { background: #00B0F0; font-weight: bold; }
     </style>';
 $htmlContent .= '<table class="header">';
 $htmlContent .= "<tr>";
-$htmlContent .= "<td><strong>BEST COPRO</strong></td>";
-$htmlContent .= '<td class="title">Situation par immeuble</td>';
 $htmlContent .=
-    '<td style="text-align:right;">' .
+    '<td>' .
     htmlspecialchars($residenceName, ENT_QUOTES, "UTF-8") .
     "<br>" .
     htmlspecialchars($nameExercice, ENT_QUOTES, "UTF-8") .
-    "<br>" .
+    "<br>Situation arrêtée au " .
     date("d/m/Y") .
+    "</td>";
+$htmlContent .= '<td class="title">Situation de recouvrement et impayés</td>';
+$htmlContent .=
+    '<td class="logo-cell">' .
+    ($logo !== "" ? '<img class="logo" src="' . $logo . '" alt="logo">' : "") .
     "</td>";
 $htmlContent .= "</tr>";
 $htmlContent .= "</table>";
@@ -118,7 +130,7 @@ $htmlContent .= renderSituationImmeublePdfTable(
     ]
 );
 $htmlContent .= renderSituationImmeublePdfTable(
-    "Situation actuelle",
+    "Situation de la période encours",
     $data["actuel"],
     [
         "Immeuble",
@@ -133,7 +145,7 @@ $dompdf->setPaper("A4", "landscape");
 $dompdf->render();
 $dompdf->stream(
     getSituationImmeubleFilename(
-        "situation_par_immeuble",
+        "situation_recouvrement_impayes",
         $residenceName,
         $nameExercice,
         "pdf"
