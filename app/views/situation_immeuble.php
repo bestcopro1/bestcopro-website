@@ -17,7 +17,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 			<div class="container-fluid">
 				<div class="form-head d-flex mb-3 align-items-start">
 					<div class="me-auto d-none d-lg-block">
-						<h2 class="text-primary font-w600 mb-0">Situation de recouvrement et impayés</h2>
+						<h2 class="text-primary font-w600 mb-0 fs-1">Situation de recouvrement et impayés</h2>
 					</div>
 					<div class="text-end d-none d-lg-block me-3">
 						<p class="mb-0 fw-bold"><?= htmlspecialchars($GLOBALS["copropriete"][0]["nom"]) ?></p>
@@ -34,6 +34,11 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 					<strong>Situation de recouvrement et impayés de l'<?= getNameexercice($exercice[0]["dateDebut"]) ?></strong>
 				</div>
 				<?php endif; ?>
+				<style>
+					.situation-total-row {
+						background-color: #fff3e0 !important;
+					}
+				</style>
 				<div class="row">
 					<div class="col-12">
 						<div class="card">
@@ -86,7 +91,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
                    ? ($anterieurTotals["encaissementTotal"] * 100) / $anterieurTotals["baseTotal"]
                    : 0;
            ?>
-											<tr class="table-info fw-bold">
+											<tr class="situation-total-row fw-bold">
 												<td>TOTAL GENERAL</td>
 												<td><?= formatSituationImmeubleAmount($anterieurTotals["baseTotal"]) ?></td>
 												<td><?= formatSituationImmeubleAmount($anterieurTotals["encaissementTotal"]) ?></td>
@@ -150,7 +155,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
                    ? ($actuelTotals["encaissementTotal"] * 100) / $actuelTotals["baseTotal"]
                    : 0;
            ?>
-											<tr class="table-info fw-bold">
+											<tr class="situation-total-row fw-bold">
 												<td>TOTAL GENERAL</td>
 												<td><?= formatSituationImmeubleAmount($actuelTotals["baseTotal"]) ?></td>
 												<td><?= formatSituationImmeubleAmount($actuelTotals["encaissementTotal"]) ?></td>

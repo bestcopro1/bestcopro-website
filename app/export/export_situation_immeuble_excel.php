@@ -92,12 +92,12 @@ $htmlContent =
         .title td { border: 0; font-weight: bold; font-size: 14px; vertical-align: top; }
         .logo-cell { text-align: left; width: 24%; }
         .logo { width: 120px; }
-        .title-main { text-align: center; font-size: 22px; padding-top: 16px; width: 52%; }
+        .title-main { text-align: center; font-size: 26px; padding-top: 16px; width: 52%; }
         .info-cell { text-align: right; width: 24%; }
         .section { background: #d9eaf7; font-weight: bold; text-align: left; }
         .amount { text-align: right; }
         .empty { text-align: center; }
-        .total { background: #00B0F0; font-weight: bold; }
+        .total { background: #fff3e0; font-weight: bold; }
         .spacer { border: 0; height: 12px; }
     </style></head><body><table>';
 $htmlContent .= '<tr class="title">';
