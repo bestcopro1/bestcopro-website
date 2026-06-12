@@ -148,6 +148,11 @@ function getDashboardProgressPercent($amount, $base)
 
     return min(100, ((float) $amount * 100) / $base);
 }
+
+function formatDashboardAmount($amount)
+{
+    return number_format((float) $amount, 2, ",", " ");
+}
 ?>
 		<div class="content-body">
             <!-- row -->
@@ -467,18 +472,42 @@ function getDashboardProgressPercent($amount, $base)
 								<h4 class="fs-20 ">Situation des encaissements</h4>
 							</div>
 							<div class="card-body">
+								<style>
+									.encaissements-table thead th {
+										text-align: center;
+										vertical-align: middle;
+										background: #f8f9fa;
+										font-weight: 700;
+									}
+									.encaissements-table td {
+										vertical-align: middle;
+									}
+									.encaissements-table .amount {
+										text-align: right;
+										white-space: nowrap;
+										font-variant-numeric: tabular-nums;
+									}
+									.encaissements-table .month-cell {
+										font-weight: 600;
+									}
+									.encaissements-table .total-row {
+										background: #fff3e0;
+										font-weight: 700;
+									}
+								</style>
 								<div class="table-responsive">
-									<table class="table table-bordered table-striped table-responsive-sm">
+									<table class="table table-bordered table-striped table-hover table-responsive-sm encaissements-table">
 										<thead>
 											<tr>
 												<th rowspan="2">Mois</th>
 												<th rowspan="2">Base théorique</th>
-												<th colspan="3" class="text-center">Encaissement</th>
+												<th colspan="4">Encaissement</th>
 												<th rowspan="2">Écart Mensuel</th>
 											</tr>
 											<tr>
 												<th>Antérieur</th>
 												<th>En cours</th>
+												<th>Avance</th>
 												<th>Total Mensuel</th>
 											</tr>
 										</thead>
@@ -486,6 +515,12 @@ function getDashboardProgressPercent($amount, $base)
 											<?php
            $baseTheorique =
                floatval($currentExercice[0]["montantFonct"]) / 12;
+           $totalBaseTheorique = 0;
+           $totalAnterieur = 0;
+           $totalEncours = 0;
+           $totalAvance = 0;
+           $totalMensuel = 0;
+           $totalEcart = 0;
            for ($i = 0; $i < 12; $i++):
                $monthYear = date(
                    "m/Y",
@@ -533,18 +568,38 @@ function getDashboardProgressPercent($amount, $base)
                $paiementsAnterieurs = $paiementStats["anterieur"];
                $paiementsEncours = $paiementStats["encours"];
                $totalPaiements = $paiementStats["total"];
-               $ecartMensuel = $baseTheorique - $paiementsEncours;
+               $paiementsAvance = max(
+                   0,
+                   $totalPaiements - $paiementsAnterieurs - $paiementsEncours
+               );
+               $ecartMensuel = $paiementsEncours - $baseTheorique;
+               $totalBaseTheorique += $baseTheorique;
+               $totalAnterieur += $paiementsAnterieurs;
+               $totalEncours += $paiementsEncours;
+               $totalAvance += $paiementsAvance;
+               $totalMensuel += $totalPaiements;
+               $totalEcart += $ecartMensuel;
                ?>
 											<tr>
-												<td><?= $monthYear ?></td>
-												<td><?= number_format($baseTheorique, 2) ?></td>
-												<td><?= number_format($paiementsAnterieurs, 2) ?></td>
-												<td><?= number_format($paiementsEncours, 2) ?></td>
-												<td><?= number_format($totalPaiements, 2) ?></td>
-												<td class="<?= $ecartMensuel >= 0 ? "text-danger" : "text-success" ?>"><?= number_format($ecartMensuel, 2) ?></td>
+												<td class="month-cell"><?= $monthYear ?></td>
+												<td class="amount"><?= formatDashboardAmount($baseTheorique) ?></td>
+												<td class="amount"><?= formatDashboardAmount($paiementsAnterieurs) ?></td>
+												<td class="amount"><?= formatDashboardAmount($paiementsEncours) ?></td>
+												<td class="amount"><?= formatDashboardAmount($paiementsAvance) ?></td>
+												<td class="amount"><?= formatDashboardAmount($totalPaiements) ?></td>
+												<td class="amount <?= $ecartMensuel >= 0 ? "text-success" : "text-danger" ?>"><?= formatDashboardAmount($ecartMensuel) ?></td>
 											</tr>
 											<?php endfor;
            ?>
+											<tr class="total-row">
+												<td>TOTAL</td>
+												<td class="amount"><?= formatDashboardAmount($totalBaseTheorique) ?></td>
+												<td class="amount"><?= formatDashboardAmount($totalAnterieur) ?></td>
+												<td class="amount"><?= formatDashboardAmount($totalEncours) ?></td>
+												<td class="amount"><?= formatDashboardAmount($totalAvance) ?></td>
+												<td class="amount"><?= formatDashboardAmount($totalMensuel) ?></td>
+												<td class="amount <?= $totalEcart >= 0 ? "text-success" : "text-danger" ?>"><?= formatDashboardAmount($totalEcart) ?></td>
+											</tr>
 										</tbody>
 									</table>
 								</div>
