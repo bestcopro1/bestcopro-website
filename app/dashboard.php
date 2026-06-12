@@ -241,7 +241,7 @@ foreach ($echeances as $echeance) {
             $page == "situation_immeuble"
         ) {
             echo "mm-active";
-        } ?>">Situation par immeuble</a>
+        } ?>">État des recouvrements et des impayés</a>
 							</li>
                             <li class="<?php if ($page == "contentieux") {
                                 echo "mm-active";

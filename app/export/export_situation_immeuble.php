@@ -109,7 +109,7 @@ $htmlContent .=
     '<td class="logo-cell">' .
     ($logo !== "" ? '<img class="logo" src="' . $logo . '" alt="logo">' : "") .
     "</td>";
-$htmlContent .= '<td class="title">Situation de recouvrement et impayés</td>';
+$htmlContent .= '<td class="title">État des recouvrements et des impayés</td>';
 $htmlContent .=
     '<td class="info-cell">' .
     htmlspecialchars($residenceName, ENT_QUOTES, "UTF-8") .
@@ -122,7 +122,7 @@ $htmlContent .= "</tr>";
 $htmlContent .= "</table>";
 
 $htmlContent .= renderSituationImmeublePdfTable(
-    "Situation antérieure",
+    "Situation des périodes antérieures",
     $data["anterieur"],
     [
         "Immeuble",
@@ -131,7 +131,7 @@ $htmlContent .= renderSituationImmeublePdfTable(
     ]
 );
 $htmlContent .= renderSituationImmeublePdfTable(
-    "Situation de la période encours",
+    "Situation de la période en cours",
     $data["actuel"],
     [
         "Immeuble",

@@ -17,7 +17,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 			<div class="container-fluid">
 				<div class="form-head d-flex mb-3 align-items-start">
 					<div class="me-auto d-none d-lg-block">
-						<h2 class="text-primary font-w600 mb-0 fs-1">Situation de recouvrement et impayés</h2>
+						<h2 class="text-primary font-w600 mb-0 fs-1">État des recouvrements et des impayés</h2>
 					</div>
 					<div class="text-end d-none d-lg-block me-3">
 						<p class="mb-0 fw-bold"><?= htmlspecialchars($GLOBALS["copropriete"][0]["nom"]) ?></p>
@@ -31,7 +31,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 				</div>
 				<?php if (count($exercice) > 0): ?>
 				<div class="alert alert-primary alert-alt fade show p-3 mb-4">
-					<strong>Situation de recouvrement et impayés de l'<?= getNameexercice($exercice[0]["dateDebut"]) ?></strong>
+					<strong>État des recouvrements et des impayés de l'<?= getNameexercice($exercice[0]["dateDebut"]) ?></strong>
 				</div>
 				<?php endif; ?>
 				<style>
@@ -43,7 +43,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 					<div class="col-12">
 						<div class="card">
 							<div class="card-header">
-								<h4 class="card-title">Situation antérieure</h4>
+								<h4 class="card-title">Situation des périodes antérieures</h4>
 							</div>
 							<div class="card-body">
 								<div class="table-responsive">
@@ -107,7 +107,7 @@ $situationActuelleRows = $situationImmeubleData["actuel"];
 					<div class="col-12">
 						<div class="card">
 							<div class="card-header">
-								<h4 class="card-title">Situation de la période encours</h4>
+								<h4 class="card-title">Situation de la période en cours</h4>
 							</div>
 							<div class="card-body">
 								<div class="table-responsive">

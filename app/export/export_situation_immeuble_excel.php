@@ -105,7 +105,7 @@ $htmlContent .=
     '<td class="logo-cell">' .
     ($logo !== "" ? '<img class="logo" src="' . $logo . '" alt="logo">' : "") .
     "</td>";
-$htmlContent .= '<td colspan="3" class="title-main">Situation de recouvrement et impayés</td>';
+$htmlContent .= '<td colspan="3" class="title-main">État des recouvrements et des impayés</td>';
 $htmlContent .=
     '<td class="info-cell">' .
     escapeSituationImmeubleExcel($residenceName) .
@@ -117,7 +117,7 @@ $htmlContent .=
 $htmlContent .= "</tr>";
 $htmlContent .= "<tr><td colspan=\"5\" class=\"spacer\"></td></tr>";
 $htmlContent .= renderSituationImmeubleExcelTable(
-    "Situation antérieure",
+    "Situation des périodes antérieures",
     $data["anterieur"],
     [
         "Immeuble",
@@ -126,7 +126,7 @@ $htmlContent .= renderSituationImmeubleExcelTable(
     ]
 );
 $htmlContent .= renderSituationImmeubleExcelTable(
-    "Situation de la période encours",
+    "Situation de la période en cours",
     $data["actuel"],
     [
         "Immeuble",
