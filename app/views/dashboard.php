@@ -114,7 +114,7 @@ function getPaiementStatsByDates($id_copropriete, $id_exercice, $from, $to, $con
     $request =
         "SELECT p.id, p.montant, " .
         "COALESCE(SUM(CASE WHEN r.id_exercice = ? THEN rrp.montant ELSE 0 END), 0) AS montant_encours, " .
-        "COALESCE(SUM(CASE WHEN r.id_exercice IS NOT NULL AND r.id_exercice <> ? THEN rrp.montant ELSE 0 END), 0) AS montant_anterieur " .
+        "COALESCE(SUM(CASE WHEN r.id_exercice <= 0 THEN rrp.montant ELSE 0 END), 0) AS montant_anterieur " .
         "FROM paiement p " .
         "INNER JOIN lot l ON l.id = p.id_lot " .
         "LEFT JOIN rel_rel_paiement rrp ON rrp.id_paiement = p.id " .
@@ -122,7 +122,7 @@ function getPaiementStatsByDates($id_copropriete, $id_exercice, $from, $to, $con
         "WHERE l.id_copropriete = ? AND CAST(p.date as date) BETWEEN ? AND ? " .
         "GROUP BY p.id, p.montant";
     if ($stmt = $connection->prepare($request)) {
-        $stmt->bind_param("sssss", $id_exercice, $id_exercice, $id_copropriete, $from, $to);
+        $stmt->bind_param("ssss", $id_exercice, $id_copropriete, $from, $to);
         $stmt->execute();
         $stmt->store_result();
 
@@ -470,6 +470,14 @@ function formatDashboardAmount($amount)
 						<div class="card">
 							<div class="card-header pb-0 border-0 flex-wrap">
 								<h4 class="fs-20 ">Situation des encaissements</h4>
+								<div>
+									<a href="export/export_situation_encaissements.php?id_exercice=<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>" class="btn btn-rounded btn-primary px-3 my-1 me-2">
+										<span class="btn-icon-start text-primary"><i class="fa fa-file-pdf color-primary"></i></span> Export PDF
+									</a>
+									<a href="export/export_situation_encaissements_excel.php?id_exercice=<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>" class="btn btn-rounded btn-primary px-3 my-1">
+										<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Export Excel
+									</a>
+								</div>
 							</div>
 							<div class="card-body">
 								<style>
