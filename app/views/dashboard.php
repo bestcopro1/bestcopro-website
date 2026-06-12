@@ -103,6 +103,51 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection)
         }
     }
 }
+
+function getPaiementStatsByDates($id_copropriete, $id_exercice, $from, $to, $connection)
+{
+    $stats = [
+        "anterieur" => 0,
+        "encours" => 0,
+        "total" => 0,
+    ];
+    $request =
+        "SELECT p.id, p.montant, " .
+        "COALESCE(SUM(CASE WHEN r.id_exercice = ? THEN rrp.montant ELSE 0 END), 0) AS montant_encours, " .
+        "COALESCE(SUM(CASE WHEN r.id_exercice IS NOT NULL AND r.id_exercice <> ? THEN rrp.montant ELSE 0 END), 0) AS montant_anterieur " .
+        "FROM paiement p " .
+        "INNER JOIN lot l ON l.id = p.id_lot " .
+        "LEFT JOIN rel_rel_paiement rrp ON rrp.id_paiement = p.id " .
+        "LEFT JOIN rel_lot_exercice r ON r.id_rel = rrp.id_rel " .
+        "WHERE l.id_copropriete = ? AND CAST(p.date as date) BETWEEN ? AND ? " .
+        "GROUP BY p.id, p.montant";
+    if ($stmt = $connection->prepare($request)) {
+        $stmt->bind_param("sssss", $id_exercice, $id_exercice, $id_copropriete, $from, $to);
+        $stmt->execute();
+        $stmt->store_result();
+
+        if ($stmt->num_rows > 0) {
+            $stmt->bind_result($id, $montant, $montantEncours, $montantAnterieur);
+            while ($stmt->fetch()) {
+                $stats["total"] += (float) $montant;
+                $stats["encours"] += (float) $montantEncours;
+                $stats["anterieur"] += (float) $montantAnterieur;
+            }
+        }
+    }
+
+    return $stats;
+}
+
+function getDashboardProgressPercent($amount, $base)
+{
+    $base = (float) $base;
+    if (abs($base) <= 0.00001) {
+        return 0;
+    }
+
+    return min(100, ((float) $amount * 100) / $base);
+}
 ?>
 		<div class="content-body">
             <!-- row -->
@@ -461,21 +506,28 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection)
                          " month -1 day",
                  ),
              );
-             $allPaiements = getPaiementByDates(
-                 $GLOBALS["id_copropriete"],
-                 $from,
-                 $to,
-                 $connection,
-             );
-             $totalPaiements = 0;
-             foreach ($allPaiements as $paiement) {
-                 $totalPaiements += $paiement["montant"];
-             }
+             $paiementStats = getPaiementStatsByDates(
+                  $GLOBALS["id_copropriete"],
+                  $GLOBALS["id_exercice"],
+                  $from,
+                  $to,
+                  $connection,
+              );
+             $totalPaiements = $paiementStats["total"];
+             $paiementsAnterieurs = $paiementStats["anterieur"];
+             $paiementsEncours = $paiementStats["encours"];
              $montantPaiements =
                  (floatval($currentExercice[0]["montantFonct"]) +
                      floatval($currentExercice[0]["montantInvest"])) /
                  12;
-             ?>
+             $progressBase = max(
+                 $montantPaiements,
+                 $totalPaiements,
+                 $paiementsAnterieurs,
+                 $paiementsEncours,
+                 1
+             );
+              ?>
 									<div class="items" data-bs-toggle="modal" data-bs-target="#mois-<?= $i ?>-p">
 										<div class="jobs">
 											<div class="text-center">
@@ -487,29 +539,42 @@ function getPaiementByDates($id_copropriete, $from, $to, $connection)
 											</div>
 											<div>
 												<?php if ($totalPaiements - $montantPaiements <= 0) {
-                echo '<span class="d-block mb-1 text-danger text-end">' .
-                    number_format($totalPaiements - $montantPaiements, 2) .
+                 echo '<span class="d-block mb-1 text-danger text-end">' .
+                     number_format($totalPaiements - $montantPaiements, 2) .
                     "</span>";
             } else {
                 echo '<span class="d-block mb-1 text-success text-end">' .
-                    number_format($totalPaiements - $montantPaiements, 2) .
-                    "</span>";
-            } ?>
-												<span>
-													<div class="progress" style="min-width:140px;">
-														<?php
-              $paiementPercent = ($totalPaiements * 100) / $montantPaiements;
-              if ($paiementPercent <= 100) {
-                  $progressbarColor = "danger";
-              } else {
-                  $progressbarColor = "success";
-              }
-              ?>
-														<div class="progress-bar bg-<?= $progressbarColor ?>" style="width: <?= $paiementPercent ?>%; height:6px;" role="progressbar">
-															<span class="sr-only"><?= $paiementPercent ?>%</span>
-														</div>
+                     number_format($totalPaiements - $montantPaiements, 2) .
+                     "</span>";
+             } ?>
+												<div class="mb-2">
+													<div class="d-flex justify-content-between small">
+														<span>Antérieur</span>
+														<span><?= number_format($paiementsAnterieurs, 2) ?></span>
 													</div>
-												</span>
+													<div class="progress" style="min-width:140px;">
+														<div class="progress-bar bg-warning" style="width: <?= getDashboardProgressPercent($paiementsAnterieurs, $progressBase) ?>%; height:6px;" role="progressbar"></div>
+													</div>
+												</div>
+												<div class="mb-2">
+													<div class="d-flex justify-content-between small">
+														<span>Exercice en cours</span>
+														<span><?= number_format($paiementsEncours, 2) ?></span>
+													</div>
+													<div class="progress" style="min-width:140px;">
+														<div class="progress-bar bg-primary" style="width: <?= getDashboardProgressPercent($paiementsEncours, $progressBase) ?>%; height:6px;" role="progressbar"></div>
+													</div>
+												</div>
+												<div>
+													<div class="d-flex justify-content-between small">
+														<span>Total</span>
+														<span><?= number_format($totalPaiements, 2) ?></span>
+													</div>
+													<div class="progress" style="min-width:140px;">
+														<?php $totalProgressColor = $totalPaiements >= $montantPaiements ? "success" : "danger"; ?>
+														<div class="progress-bar bg-<?= $totalProgressColor ?>" style="width: <?= getDashboardProgressPercent($totalPaiements, $progressBase) ?>%; height:6px;" role="progressbar"></div>
+													</div>
+												</div>
 											</div>
 										</div>	
 									</div>

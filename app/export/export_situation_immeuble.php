@@ -97,7 +97,7 @@ $htmlContent .=
         .header td { border: 0; font-size: 10px; vertical-align: top; }
         .logo-cell { text-align: left; width: 24%; }
         .logo { width: 120px; }
-        .title { font-size: 26px; font-weight: bold; text-align: center; padding-top: 16px; width: 52%; }
+        .title { font-size: 30px; font-weight: bold; text-align: center; padding-top: 16px; width: 52%; }
         .info-cell { text-align: right; width: 24%; }
         .amount, .percent { text-align: right; white-space: nowrap; }
         .empty { text-align: center; }
