@@ -76,12 +76,65 @@ if (isset($_POST["select"])) {
         exit();
     }
 
-    $request = "UPDATE depense SET situationPaiement='paye', datePaiement=?, id_modePaiement=?, montantPaye=? WHERE id=?";
-    if ($insert_stmt = $connection->prepare($request)) {
-        $insert_stmt->bind_param("ssss", $datePaiement, $id_modePaiement, $montantPaye, $id);
-        if (!$insert_stmt->execute()) {
-            echo $connection->error;
-            exit();
+    $depense = getDepense($id, null, $connection);
+    if (count($depense) == 0 || ($depense[0]["situationPaiement"] ?? "") != "non_paye") {
+        echo "Facture non payée introuvable";
+        exit();
+    }
+
+    $montantRestant = floatval($depense[0]["montant"]);
+    $montantRegle = floatval($montantPaye);
+    if ($montantRegle > $montantRestant) {
+        echo "Le montant payé ne peut pas dépasser le montant restant";
+        exit();
+    }
+
+    if ($montantRegle == $montantRestant) {
+        $request = "UPDATE depense SET situationPaiement='paye', datePaiement=?, id_modePaiement=?, montantPaye=? WHERE id=?";
+        if ($insert_stmt = $connection->prepare($request)) {
+            $insert_stmt->bind_param("ssss", $datePaiement, $id_modePaiement, $montantPaye, $id);
+            if (!$insert_stmt->execute()) {
+                echo $connection->error;
+                exit();
+            }
+        }
+    } else {
+        $nouveauRestant = $montantRestant - $montantRegle;
+        $request = "UPDATE depense SET montant=? WHERE id=?";
+        if ($update_stmt = $connection->prepare($request)) {
+            $update_stmt->bind_param("ss", $nouveauRestant, $id);
+            if (!$update_stmt->execute()) {
+                echo $connection->error;
+                exit();
+            }
+        }
+
+        $request = "INSERT INTO depense (id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic, situationPaiement, datePaiement, montantPaye)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'paye', ?, ?)";
+        if ($insert_stmt = $connection->prepare($request)) {
+            $id_poste_partiel = $depense[0]["id_poste"];
+            $date_facture_partiel = $depense[0]["date"];
+            $id_fournisseur_partiel = $depense[0]["id_fournisseur"];
+            $commentaire_partiel = $depense[0]["commentaire"];
+            $id_exercice_partiel = $depense[0]["id_exercice"];
+            $id_syndic = $_SESSION["id"];
+            $insert_stmt->bind_param(
+                "ssssssssss",
+                $id_poste_partiel,
+                $date_facture_partiel,
+                $montantPaye,
+                $id_fournisseur_partiel,
+                $id_modePaiement,
+                $commentaire_partiel,
+                $id_exercice_partiel,
+                $id_syndic,
+                $datePaiement,
+                $montantPaye,
+            );
+            if (!$insert_stmt->execute()) {
+                echo $connection->error;
+                exit();
+            }
         }
     }
     echo "done|" . $id;
