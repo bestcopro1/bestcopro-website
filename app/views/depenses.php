@@ -667,18 +667,6 @@ elseif (isset($_GET["action"])):
                                             </div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
-													<label class="text-label">Date de Facture*</label>
-                                                    <input type="date" class="form-control input-rounded input-default mb-3" name="date" placeholder="jj/mm/aaaa">
-                                                </div>
-                                            </div>
-											<div class="col-6 mb-2">
-												<div class="form-group">
-													<label class="text-label">Montant de facture*</label>
-													<input type="text" class="form-control input-rounded input-default mb-3" name="montant" placeholder="Montant">
-												</div>
-											</div>
-											<div class="col-6 mb-2">
-												<div class="form-group">
 													<label class="text-label">Fournisseur*</label>
 													<select name="id_fournisseur" class="single-select2 form-control wide mb-3">
 														<?php
@@ -696,8 +684,14 @@ elseif (isset($_GET["action"])):
 											</div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
-													<label class="text-label">Justificatif</label>
-													<input type="file" class="form-control input-rounded form-file-input" name="justificatif" id="justificatif" placeholder="Justificatif" accept="image/jpeg,image/png,application/pdf">
+													<label class="text-label">Date de Facture*</label>
+                                                    <input type="date" class="form-control input-rounded input-default mb-3" name="date" placeholder="jj/mm/aaaa">
+                                                </div>
+                                            </div>
+											<div class="col-6 mb-2">
+												<div class="form-group">
+													<label class="text-label">Montant de facture*</label>
+													<input type="text" class="form-control input-rounded input-default mb-3" name="montant" placeholder="Montant">
 												</div>
 											</div>
                                             <div class="col-6 mb-2">
@@ -736,6 +730,12 @@ elseif (isset($_GET["action"])):
 												<div class="form-group">
 													<label class="text-label">Montant payé*</label>
 													<input type="text" class="form-control input-rounded input-default mb-3" name="montantPaye" placeholder="Montant payé">
+												</div>
+											</div>
+											<div class="col-6 mb-2">
+												<div class="form-group">
+													<label class="text-label">Justificatif</label>
+													<input type="file" class="form-control input-rounded form-file-input" name="justificatif" id="justificatif" placeholder="Justificatif" accept="image/jpeg,image/png,application/pdf">
 												</div>
 											</div>
 											<div class="col-6 mb-2">
