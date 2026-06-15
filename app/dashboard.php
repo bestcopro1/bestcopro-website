@@ -596,6 +596,16 @@ foreach ($echeances as $echeance) {
 						$('.errorModal').css('display', 'flex');
 						return false;
 					}
+				},
+				error:function(xhr) {
+					var message = 'Une erreur est survenue pendant le traitement.';
+					if (xhr.responseText) {
+						message = xhr.responseText;
+					}
+					$('#erreurMessage').html(message);
+					$('.waitModal').css('display', 'none');
+					$('.successModal').css('display', 'none');
+					$('.errorModal').css('display', 'flex');
 				}
 			});
 		});

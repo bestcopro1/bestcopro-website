@@ -303,17 +303,16 @@ function ensureDepensePaiementFields($connection)
 
     if (!empty($alters)) {
         $connection->query("ALTER TABLE depense " . implode(", ", $alters));
+        $connection->query(
+            "UPDATE depense SET situationPaiement = 'paye' WHERE situationPaiement IS NULL OR situationPaiement = ''",
+        );
+        $connection->query(
+            "UPDATE depense SET datePaiement = date WHERE situationPaiement = 'paye' AND datePaiement IS NULL",
+        );
+        $connection->query(
+            "UPDATE depense SET montantPaye = montant WHERE situationPaiement = 'paye' AND montantPaye IS NULL",
+        );
     }
-
-    $connection->query(
-        "UPDATE depense SET situationPaiement = 'paye' WHERE situationPaiement IS NULL OR situationPaiement = ''",
-    );
-    $connection->query(
-        "UPDATE depense SET datePaiement = date WHERE situationPaiement = 'paye' AND datePaiement IS NULL",
-    );
-    $connection->query(
-        "UPDATE depense SET montantPaye = montant WHERE situationPaiement = 'paye' AND montantPaye IS NULL",
-    );
 }
 
 /**
