@@ -692,6 +692,16 @@ foreach ($echeances as $echeance) {
 	<?php endif; ?>
 	<?php if ($page == "depenses"): ?>
 	<script>
+		if ($('#facturesNonPayees').length && !$.fn.DataTable.isDataTable('#facturesNonPayees')) {
+			$('#facturesNonPayees').DataTable({
+				createdRow: function(row) {
+					$(row).addClass('selected');
+				},
+				language: {
+					"url": "json/fr-FR.json"
+				}
+			});
+		}
 		$('#depenses_rubrique').on('change', function() {
 			var id_rubrique = $(this).val();
 			$.ajax({

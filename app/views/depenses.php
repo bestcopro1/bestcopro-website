@@ -966,7 +966,7 @@ else:
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table id="facturesNonPayees" class="display" style="min-width: 845px">
+                                    <table id="facturesNonPayees" class="display" style="min-width: 845px; width: 100%;">
                                         <thead>
                                             <tr>
                                                 <th>Date de Facture</th>
