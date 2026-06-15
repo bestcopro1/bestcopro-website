@@ -1065,22 +1065,6 @@ else:
                                             <?php endif; ?>
                                             <?php endforeach; ?>
                                         </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <th>Date de Facture</th>
-                                                <th>Poste</th>
-                                                <th>Montant de facture</th>
-                                                <th>Responsable</th>
-                                                <th>Fournisseur</th>
-                                                <?php if (
-                                                    $_SESSION["id_usertype"] === "1" ||
-                                                    $_SESSION["id_usertype"] === "2" ||
-                                                    $_SESSION["id_usertype"] === "3"
-                                                ): ?>
-                                                <th class="text-center">Actions</th>
-                                                <?php endif; ?>
-                                            </tr>
-                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
