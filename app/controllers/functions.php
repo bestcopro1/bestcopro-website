@@ -308,13 +308,14 @@ function ensureDepensePaiementFields($connection)
         $connection->query(
             "UPDATE depense SET situationPaiement = 'paye' WHERE situationPaiement IS NULL OR situationPaiement = ''",
         );
-        $connection->query(
-            "UPDATE depense SET datePaiement = date WHERE situationPaiement = 'paye' AND datePaiement IS NULL",
-        );
-        $connection->query(
-            "UPDATE depense SET montantPaye = montant WHERE situationPaiement = 'paye' AND montantPaye IS NULL",
-        );
     }
+
+    $connection->query(
+        "UPDATE depense SET datePaiement = date WHERE situationPaiement = 'paye' AND datePaiement IS NULL",
+    );
+    $connection->query(
+        "UPDATE depense SET montantPaye = montant WHERE situationPaiement = 'paye' AND montantPaye IS NULL",
+    );
 
     if (
         isset($columnInfo["id_modePaiement"]) &&

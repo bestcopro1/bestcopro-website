@@ -814,11 +814,14 @@ else:
                                     <table id="example" class="display" style="min-width: 845px">
                                         <thead>
                                             <tr>
-                                                <th>Date de paiement</th>
+                                                <th>Date de Facture</th>
                                                 <th>Poste</th>
+                                                <th>Montant de facture</th>
+                                                <th>Date de paiment</th>
                                                 <th>Montant payé</th>
-                                                <th>Responsable</th>
+                                                <th>Mode de paiment</th>
                                                 <th>Fournisseur</th>
+                                                <th>Responsable</th>
                                                 <?php if (
                                                     $_SESSION["id_usertype"] ===
                                                         "1" ||
@@ -849,26 +852,39 @@ else:
                                                 $depense["id_fournisseur"],
                                                 $connection,
                                             );
+                                            $modepaiement = [];
+                                            if ($depense["id_modePaiement"] != "") {
+                                                $modepaiement = getModepaiement(
+                                                    $depense["id_modePaiement"],
+                                                    $connection,
+                                                );
+                                            }
                                             ?>
                                             <tr class="trDepense-<?= $depense[
                                                 "id"
                                             ] ?>">
                                                 <td><?= date(
                                                     "d/m/Y",
-                                                    strtotime($depense["datePaiement"] ?: $depense["date"]),
+                                                    strtotime($depense["date"]),
                                                 ) ?></td>
                                                 <td><?= $poste[0][
                                                     "libelle"
                                                 ] ?></td>
+                                                <td><?= $depense["montant"] ?></td>
+                                                <td><?= date(
+                                                    "d/m/Y",
+                                                    strtotime($depense["datePaiement"] ?: $depense["date"]),
+                                                ) ?></td>
                                                 <td><?= $depense["montantPaye"] ?: $depense["montant"] ?></td>
+                                                <td><?= count($modepaiement) > 0 ? $modepaiement[0]["libelle"] : "" ?></td>
+                                                <td><?= $fournisseur[0][
+                                                    "raisonSocial"
+                                                ] ?></td>
                                                 <td><?= $syndic[0]["civilite"] .
                                                     " " .
                                                     $syndic[0]["prenom"] .
                                                     " " .
                                                     $syndic[0]["nom"] ?></td>
-                                                <td><?= $fournisseur[0][
-                                                    "raisonSocial"
-                                                ] ?></td>
 												<?php if (
                 $_SESSION["id_usertype"] === "1" ||
                 $_SESSION["id_usertype"] === "2" ||
@@ -916,11 +932,14 @@ else:
                                         endforeach; ?>
                                         <tfoot>
                                              <tr>
-                                                <th>Date de paiement</th>
+                                                <th>Date de Facture</th>
                                                 <th>Post</th>
+                                                <th>Montant de facture</th>
+                                                <th>Date de paiment</th>
                                                 <th>Montant payé</th>
-                                                <th>Responsable</th>
+                                                <th>Mode de paiment</th>
                                                 <th>Fournisseur</th>
+                                                <th>Responsable</th>
                                                 <?php if (
                                                     $_SESSION["id_usertype"] ===
                                                         "1" ||
