@@ -284,9 +284,11 @@ function ensureDepensePaiementFields($connection)
     $checked = true;
 
     $columns = [];
+    $columnInfo = [];
     if ($result = $connection->query("SHOW COLUMNS FROM depense")) {
         while ($row = $result->fetch_assoc()) {
             $columns[] = $row["Field"];
+            $columnInfo[$row["Field"]] = $row;
         }
     }
 
@@ -311,6 +313,17 @@ function ensureDepensePaiementFields($connection)
         );
         $connection->query(
             "UPDATE depense SET montantPaye = montant WHERE situationPaiement = 'paye' AND montantPaye IS NULL",
+        );
+    }
+
+    if (
+        isset($columnInfo["id_modePaiement"]) &&
+        strtoupper($columnInfo["id_modePaiement"]["Null"]) === "NO"
+    ) {
+        $connection->query(
+            "ALTER TABLE depense MODIFY id_modePaiement " .
+                $columnInfo["id_modePaiement"]["Type"] .
+                " NULL DEFAULT NULL",
         );
     }
 }
