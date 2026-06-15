@@ -275,6 +275,47 @@ function getCopropriete($id = null, $connection)
     }
 }
 // get depense
+function ensureDepensePaiementFields($connection)
+{
+    static $checked = false;
+    if ($checked) {
+        return;
+    }
+    $checked = true;
+
+    $columns = [];
+    if ($result = $connection->query("SHOW COLUMNS FROM depense")) {
+        while ($row = $result->fetch_assoc()) {
+            $columns[] = $row["Field"];
+        }
+    }
+
+    $alters = [];
+    if (!in_array("situationPaiement", $columns)) {
+        $alters[] = "ADD COLUMN situationPaiement VARCHAR(20) NOT NULL DEFAULT 'paye'";
+    }
+    if (!in_array("datePaiement", $columns)) {
+        $alters[] = "ADD COLUMN datePaiement DATE NULL";
+    }
+    if (!in_array("montantPaye", $columns)) {
+        $alters[] = "ADD COLUMN montantPaye DECIMAL(12,2) NULL";
+    }
+
+    if (!empty($alters)) {
+        $connection->query("ALTER TABLE depense " . implode(", ", $alters));
+    }
+
+    $connection->query(
+        "UPDATE depense SET situationPaiement = 'paye' WHERE situationPaiement IS NULL OR situationPaiement = ''",
+    );
+    $connection->query(
+        "UPDATE depense SET datePaiement = date WHERE situationPaiement = 'paye' AND datePaiement IS NULL",
+    );
+    $connection->query(
+        "UPDATE depense SET montantPaye = montant WHERE situationPaiement = 'paye' AND montantPaye IS NULL",
+    );
+}
+
 /**
  * getDepense
  *
@@ -285,12 +326,13 @@ function getCopropriete($id = null, $connection)
  */
 function getDepense($id = null, $id_exercice = null, $connection)
 {
+    ensureDepensePaiementFields($connection);
     if ($id != null) {
         $request =
-            "SELECT id, id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic FROM depense WHERE id = ?";
+            "SELECT id, id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic, situationPaiement, datePaiement, montantPaye FROM depense WHERE id = ?";
     } else {
         $request =
-            "SELECT id, id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic FROM depense WHERE id_exercice = ? ORDER BY id DESC";
+            "SELECT id, id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic, situationPaiement, datePaiement, montantPaye FROM depense WHERE id_exercice = ? ORDER BY id DESC";
     }
     if ($stmt = $connection->prepare($request)) {
         if ($id != null) {
@@ -312,6 +354,9 @@ function getDepense($id = null, $id_exercice = null, $connection)
                 $commentaire,
                 $id_exercice,
                 $id_syndic,
+                $situationPaiement,
+                $datePaiement,
+                $montantPaye,
             );
             while ($stmt->fetch()) {
                 $result[] = [
@@ -324,6 +369,9 @@ function getDepense($id = null, $id_exercice = null, $connection)
                     "commentaire" => $commentaire,
                     "id_exercice" => $id_exercice,
                     "id_syndic" => $id_syndic,
+                    "situationPaiement" => $situationPaiement,
+                    "datePaiement" => $datePaiement,
+                    "montantPaye" => $montantPaye,
                 ];
             }
             return $result;

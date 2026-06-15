@@ -2,6 +2,7 @@
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
+ensureDepensePaiementFields($connection);
 if (isset($_POST["select"])) {
     $id_rubrique = filter_input(INPUT_POST, "select", FILTER_SANITIZE_STRING);
     if ($id_rubrique != "" || $id_rubrique != null) {
@@ -60,6 +61,31 @@ if (isset($_POST["select"])) {
         $error_msg .= "Une erreur est survenue";
         exit();
     }
+} elseif (isset($_POST["id"], $_POST["regler"])) {
+    $id = filter_input(INPUT_POST, "id", FILTER_SANITIZE_STRING);
+    $datePaiement = filter_input(INPUT_POST, "datePaiement", FILTER_SANITIZE_STRING);
+    $id_modePaiement = filter_input(INPUT_POST, "id_modePaiement", FILTER_SANITIZE_STRING);
+    $montantPaye = filter_input(INPUT_POST, "montantPaye", FILTER_SANITIZE_STRING);
+
+    if ($id == "" || $datePaiement == "" || $id_modePaiement == "" || $montantPaye == "") {
+        echo "Veuillez renseigner les informations de paiement";
+        exit();
+    }
+    if (!is_numeric($montantPaye) || floatval($montantPaye) <= 0) {
+        echo "Veuillez entrer un montant payé valide";
+        exit();
+    }
+
+    $request = "UPDATE depense SET situationPaiement='paye', datePaiement=?, id_modePaiement=?, montantPaye=? WHERE id=?";
+    if ($insert_stmt = $connection->prepare($request)) {
+        $insert_stmt->bind_param("ssss", $datePaiement, $id_modePaiement, $montantPaye, $id);
+        if (!$insert_stmt->execute()) {
+            echo $connection->error;
+            exit();
+        }
+    }
+    echo "done|" . $id;
+    exit();
 } elseif (
     isset(
         $_POST["id_exercice"],
@@ -67,7 +93,7 @@ if (isset($_POST["select"])) {
         $_POST["date"],
         $_POST["montant"],
         $_POST["id_fournisseur"],
-        $_POST["id_modePaiement"],
+        $_POST["situationPaiement"],
     )
 ) {
     $error_msg = "";
@@ -85,11 +111,10 @@ if (isset($_POST["select"])) {
         "id_fournisseur",
         FILTER_SANITIZE_STRING,
     );
-    $id_modePaiement = filter_input(
-        INPUT_POST,
-        "id_modePaiement",
-        FILTER_SANITIZE_STRING,
-    );
+    $situationPaiement = filter_input(INPUT_POST, "situationPaiement", FILTER_SANITIZE_STRING);
+    $datePaiement = filter_input(INPUT_POST, "datePaiement", FILTER_SANITIZE_STRING);
+    $id_modePaiement = filter_input(INPUT_POST, "id_modePaiement", FILTER_SANITIZE_STRING);
+    $montantPaye = filter_input(INPUT_POST, "montantPaye", FILTER_SANITIZE_STRING);
     $commentaire = filter_input(
         INPUT_POST,
         "commentaire",
@@ -122,10 +147,34 @@ if (isset($_POST["select"])) {
         echo $error_msg;
         exit();
     }
+    if ($situationPaiement == "non_paye") {
+        $id_modePaiement = "0";
+    }
     if ($id_modePaiement == "") {
         $error_msg .= "Veuillez sélectionner un mode de paiment";
         echo $error_msg;
         exit();
+    }
+    if ($situationPaiement != "paye" && $situationPaiement != "non_paye") {
+        $error_msg .= "Veuillez sélectionner la situation de paiement";
+        echo $error_msg;
+        exit();
+    }
+    if ($situationPaiement == "paye") {
+        if ($datePaiement == "") {
+            $error_msg .= "Veuillez entrer la date de paiement";
+            echo $error_msg;
+            exit();
+        }
+        if ($montantPaye == "" || !is_numeric($montantPaye) || floatval($montantPaye) <= 0) {
+            $error_msg .= "Veuillez entrer un montant payé valide";
+            echo $error_msg;
+            exit();
+        }
+    } else {
+        $datePaiement = null;
+        $id_modePaiement = null;
+        $montantPaye = null;
     }
     $poste = getPoste($id_poste, null, null, $connection);
     if (floatval($montant) > floatval($poste[0]["montant"])) {
@@ -177,17 +226,20 @@ if (isset($_POST["select"])) {
         $update = filter_input(INPUT_POST, "update", FILTER_SANITIZE_STRING);
         if ($id != "" && $update == "true") {
             $request =
-                "UPDATE depense SET id_poste=?, date=?, montant=?, id_fournisseur=?, id_modePaiement=?, commentaire=? WHERE id=?";
+                "UPDATE depense SET id_poste=?, date=?, montant=?, id_fournisseur=?, id_modePaiement=?, commentaire=?, situationPaiement=?, datePaiement=?, montantPaye=? WHERE id=?";
 
             if ($insert_stmt = $connection->prepare($request)) {
                 $insert_stmt->bind_param(
-                    "sssssss",
+                    "ssssssssss",
                     $id_poste,
                     $date,
                     $montant,
                     $id_fournisseur,
                     $id_modePaiement,
                     $commentaire,
+                    $situationPaiement,
+                    $datePaiement,
+                    $montantPaye,
                     $id,
                 );
                 // Execute the prepared query.
@@ -251,14 +303,14 @@ if (isset($_POST["select"])) {
             exit();
         }
     } elseif (empty($error_msg)) {
-        $request = "INSERT INTO depense (id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic) 
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $request = "INSERT INTO depense (id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic, situationPaiement, datePaiement, montantPaye) 
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $insert_id = "";
 
         if ($insert_stmt = $connection->prepare($request)) {
             $insert_stmt->bind_param(
-                "ssssssss",
+                "sssssssssss",
                 $id_poste,
                 $date,
                 $montant,
@@ -267,6 +319,9 @@ if (isset($_POST["select"])) {
                 $commentaire,
                 $id_exercice,
                 $id_syndic,
+                $situationPaiement,
+                $datePaiement,
+                $montantPaye,
             );
             // Execute the prepared query.
             if (!$insert_stmt->execute()) {
@@ -408,7 +463,7 @@ if (isset($_GET["action"], $_GET["id"])):
                                             </div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
-													<label class="text-label">Date*</label>
+													<label class="text-label">Date de Facture*</label>
                                                     <input type="date" class="form-control input-rounded input-default mb-3" name="date" placeholder="jj/mm/aaaa" value="<?= $depense[0][
                                                         "date"
                                                     ] ?>">
@@ -416,7 +471,7 @@ if (isset($_GET["action"], $_GET["id"])):
                                             </div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
-													<label class="text-label">Montant*</label>
+													<label class="text-label">Montant de facture*</label>
 													<input type="text" class="form-control input-rounded input-default mb-3" name="montant" placeholder="Montant" value="<?= $depense[0][
                  "montant"
              ] ?>">
@@ -449,6 +504,21 @@ if (isset($_GET["action"], $_GET["id"])):
 											</div>
                                             <div class="col-6 mb-2">
                                                 <div class="form-group">
+                                                    <label class="text-label">Situation de paiment*</label>
+                                                    <select name="situationPaiement" class="default-select form-control input-rounded wide mb-3 situationPaiement">
+                                                        <option value="paye" <?php if (($depense[0]["situationPaiement"] ?? "paye") == "paye") { echo "selected"; } ?>>Payé</option>
+                                                        <option value="non_paye" <?php if (($depense[0]["situationPaiement"] ?? "paye") == "non_paye") { echo "selected"; } ?>>Non payé</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+											<div class="col-6 mb-2 paiement-fields">
+												<div class="form-group">
+													<label class="text-label">Date de paiment*</label>
+                                                    <input type="date" class="form-control input-rounded input-default mb-3" name="datePaiement" placeholder="jj/mm/aaaa" value="<?= $depense[0]["datePaiement"] ?: $depense[0]["date"] ?>">
+                                                </div>
+                                            </div>
+                                            <div class="col-6 mb-2 paiement-fields">
+                                                <div class="form-group">
                                                     <label class="text-label">Mode de paiment*</label>
                                                     <select name="id_modePaiement" class="default-select form-control input-rounded wide mb-3">
 														<?php
@@ -466,6 +536,12 @@ if (isset($_GET["action"], $_GET["id"])):
                                                     </select>
                                                 </div>
                                             </div>
+											<div class="col-6 mb-2 paiement-fields">
+												<div class="form-group">
+													<label class="text-label">Montant payé*</label>
+													<input type="text" class="form-control input-rounded input-default mb-3" name="montantPaye" placeholder="Montant payé" value="<?= $depense[0]["montantPaye"] ?: $depense[0]["montant"] ?>">
+												</div>
+											</div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
 													<label class="text-label">Commentaire</label>
@@ -591,13 +667,13 @@ elseif (isset($_GET["action"])):
                                             </div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
-													<label class="text-label">Date*</label>
+													<label class="text-label">Date de Facture*</label>
                                                     <input type="date" class="form-control input-rounded input-default mb-3" name="date" placeholder="jj/mm/aaaa">
                                                 </div>
                                             </div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
-													<label class="text-label">Montant*</label>
+													<label class="text-label">Montant de facture*</label>
 													<input type="text" class="form-control input-rounded input-default mb-3" name="montant" placeholder="Montant">
 												</div>
 											</div>
@@ -626,6 +702,21 @@ elseif (isset($_GET["action"])):
 											</div>
                                             <div class="col-6 mb-2">
                                                 <div class="form-group">
+                                                    <label class="text-label">Situation de paiment*</label>
+                                                    <select name="situationPaiement" class="default-select form-control input-rounded wide mb-3 situationPaiement">
+                                                        <option value="paye">Payé</option>
+                                                        <option value="non_paye">Non payé</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+											<div class="col-6 mb-2 paiement-fields">
+												<div class="form-group">
+													<label class="text-label">Date de paiment*</label>
+                                                    <input type="date" class="form-control input-rounded input-default mb-3" name="datePaiement" placeholder="jj/mm/aaaa">
+                                                </div>
+                                            </div>
+                                            <div class="col-6 mb-2 paiement-fields">
+                                                <div class="form-group">
                                                     <label class="text-label">Mode de paiment*</label>
                                                     <select name="id_modePaiement" class="default-select form-control input-rounded wide mb-3">
 														<?php
@@ -641,6 +732,12 @@ elseif (isset($_GET["action"])):
                                                     </select>
                                                 </div>
                                             </div>
+											<div class="col-6 mb-2 paiement-fields">
+												<div class="form-group">
+													<label class="text-label">Montant payé*</label>
+													<input type="text" class="form-control input-rounded input-default mb-3" name="montantPaye" placeholder="Montant payé">
+												</div>
+											</div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
 													<label class="text-label">Commentaire</label>
@@ -677,6 +774,12 @@ else:
 
     iomEnd:
     $depenses = getDepense(null, $GLOBALS["id_exercice"], $connection);
+    $depensesPayees = array_filter($depenses, function ($depense) {
+        return ($depense["situationPaiement"] ?? "paye") == "paye";
+    });
+    $depensesNonPayees = array_filter($depenses, function ($depense) {
+        return ($depense["situationPaiement"] ?? "paye") == "non_paye";
+    });
     ?>
 		<div class="content-body">
             <!-- row -->
@@ -711,9 +814,9 @@ else:
                                     <table id="example" class="display" style="min-width: 845px">
                                         <thead>
                                             <tr>
-                                                <th>Date</th>
+                                                <th>Date de paiement</th>
                                                 <th>Poste</th>
-                                                <th>Montant</th>
+                                                <th>Montant payé</th>
                                                 <th>Responsable</th>
                                                 <th>Fournisseur</th>
                                                 <?php if (
@@ -729,7 +832,7 @@ else:
                                             </tr>
                                         </thead>
                                         <tbody>
-                                        <?php foreach ($depenses as $depense):
+                                        <?php foreach ($depensesPayees as $depense):
 
                                             $poste = getPoste(
                                                 $depense["id_poste"],
@@ -752,14 +855,12 @@ else:
                                             ] ?>">
                                                 <td><?= date(
                                                     "d/m/Y",
-                                                    strtotime($depense["date"]),
+                                                    strtotime($depense["datePaiement"] ?: $depense["date"]),
                                                 ) ?></td>
                                                 <td><?= $poste[0][
                                                     "libelle"
                                                 ] ?></td>
-                                                <td><?= $depense[
-                                                    "montant"
-                                                ] ?></td>
+                                                <td><?= $depense["montantPaye"] ?: $depense["montant"] ?></td>
                                                 <td><?= $syndic[0]["civilite"] .
                                                     " " .
                                                     $syndic[0]["prenom"] .
@@ -815,9 +916,9 @@ else:
                                         endforeach; ?>
                                         <tfoot>
                                              <tr>
-                                                <th>Date</th>
+                                                <th>Date de paiement</th>
                                                 <th>Post</th>
-                                                <th>Montant</th>
+                                                <th>Montant payé</th>
                                                 <th>Responsable</th>
                                                 <th>Fournisseur</th>
                                                 <?php if (
@@ -832,6 +933,119 @@ else:
 												<?php endif; ?>
                                             </tr>
                                         </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title">Factures non payées</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table id="facturesNonPayees" class="display" style="min-width: 845px">
+                                        <thead>
+                                            <tr>
+                                                <th>Date de Facture</th>
+                                                <th>Poste</th>
+                                                <th>Montant de facture</th>
+                                                <th>Responsable</th>
+                                                <th>Fournisseur</th>
+                                                <?php if (
+                                                    $_SESSION["id_usertype"] === "1" ||
+                                                    $_SESSION["id_usertype"] === "2" ||
+                                                    $_SESSION["id_usertype"] === "3"
+                                                ): ?>
+                                                <th class="text-center">Actions</th>
+                                                <?php endif; ?>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($depensesNonPayees as $depense):
+                                                $poste = getPoste($depense["id_poste"], null, null, $connection);
+                                                $syndic = getSyndic($depense["id_syndic"], null, $connection);
+                                                $fournisseur = getFournisseur($depense["id_fournisseur"], $connection);
+                                                ?>
+                                            <tr class="trDepense-<?= $depense["id"] ?>">
+                                                <td><?= date("d/m/Y", strtotime($depense["date"])) ?></td>
+                                                <td><?= $poste[0]["libelle"] ?></td>
+                                                <td><?= $depense["montant"] ?></td>
+                                                <td><?= $syndic[0]["civilite"] . " " . $syndic[0]["prenom"] . " " . $syndic[0]["nom"] ?></td>
+                                                <td><?= $fournisseur[0]["raisonSocial"] ?></td>
+                                                <?php if (
+                                                    $_SESSION["id_usertype"] === "1" ||
+                                                    $_SESSION["id_usertype"] === "2" ||
+                                                    $_SESSION["id_usertype"] === "3"
+                                                ): ?>
+                                                <td class="text-center">
+                                                    <a href="javascript:void(0);" class="btn btn-primary shadow btn-xs me-1" data-bs-toggle="modal" data-bs-target=".reglerDepense-<?= $depense["id"] ?>">Régler</a>
+                                                    <a href="javascript:void(0);" class="btn btn-secondary shadow btn-xs me-1" data-bs-toggle="modal" data-bs-target=".delDepense-<?= $depense["id"] ?>">Supprimer</a>
+                                                </td>
+                                                <?php endif; ?>
+                                            </tr>
+                                            <?php if (
+                                                $_SESSION["id_usertype"] === "1" ||
+                                                $_SESSION["id_usertype"] === "2" ||
+                                                $_SESSION["id_usertype"] === "3"
+                                            ): ?>
+                                            <div class="modal fade reglerDepense-<?= $depense["id"] ?>">
+                                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Régler la facture</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="form-group">
+                                                                <label class="text-label">Date de paiment</label>
+                                                                <input type="date" class="form-control input-rounded mb-3 regler-date" value="<?= date("Y-m-d") ?>">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label class="text-label">Mode de paiment</label>
+                                                                <select class="default-select form-control input-rounded wide mb-3 regler-mode">
+                                                                    <?php $modepaiements = getModepaiement(null, $connection);
+                                                                    foreach ($modepaiements as $modepaiement): ?>
+                                                                    <option value="<?= $modepaiement["id"] ?>"><?= $modepaiement["libelle"] ?></option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label class="text-label">Montant payé</label>
+                                                                <input type="text" class="form-control input-rounded mb-3 regler-montant" value="<?= $depense["montant"] ?>">
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-rounded btn-outline-primary" data-bs-dismiss="modal">Annuler</button>
+                                                            <button type="button" class="btn btn-rounded btn-primary reglerDepenseBtn" data-id="<?= $depense["id"] ?>">Enregistrer</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal fade delDepense-<?= $depense["id"] ?>">
+                                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Supprimer la dépense</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="text-center mb-4"><i class="fas fa-exclamation-triangle" style="font-size: 111px;"></i></div>
+                                                            <div class="text-center">Êtes-vous sûr de vouloir supprimer cette dépense ?</div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-rounded btn-outline-primary" data-bs-dismiss="modal">Non</button>
+                                                            <button type="button" class="btn btn-rounded btn-danger delDepenseBtn" data-id="<?= $depense["id"] ?>">Oui</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </tbody>
                                     </table>
                                 </div>
                             </div>

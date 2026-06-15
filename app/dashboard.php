@@ -710,12 +710,55 @@ foreach ($echeances as $echeance) {
 				},
 				success:function(response) {
 					if (response.includes('done|') && !response.includes('done|0')) {
-						var table = $('#example').DataTable();
-						table.row('.trDepense-'+id_depense).remove().draw(false);
-						$('.delDepense-'+id_depense).modal('hide');
+						window.location.reload();
 						return false;
 					} else {
 						return false;
+					}
+				}
+			});
+		});
+		function toggleDepensePaiementFields() {
+			if ($('.situationPaiement').val() === 'paye') {
+				$('.paiement-fields').show();
+			} else {
+				$('.paiement-fields').hide();
+			}
+		}
+		toggleDepensePaiementFields();
+		$('.situationPaiement').on('change', toggleDepensePaiementFields);
+		$('input[name="date"]').on('change', function() {
+			if (!$('input[name="datePaiement"]').val()) {
+				$('input[name="datePaiement"]').val($(this).val());
+			}
+		});
+		$('input[name="montant"]').on('change keyup', function() {
+			if (!$('input[name="montantPaye"]').val()) {
+				$('input[name="montantPaye"]').val($(this).val());
+			}
+		});
+		$('.reglerDepenseBtn').on('click', function() {
+			var id_depense = $(this).attr('data-id');
+			var modal = $('.reglerDepense-' + id_depense);
+			$.ajax({
+				url:"./views/depenses.php",
+				method:"POST",
+				data: {
+					id: id_depense,
+					regler: "true",
+					datePaiement: modal.find('.regler-date').val(),
+					id_modePaiement: modal.find('.regler-mode').val(),
+					montantPaye: modal.find('.regler-montant').val()
+				},
+				success:function(response) {
+					if (response.includes('done|') && !response.includes('done|0')) {
+						window.location.reload();
+					} else {
+						$('#erreurMessage').html(response);
+						$('.waitModal').css('display', 'none');
+						$('.successModal').css('display', 'none');
+						$('.errorModal').css('display', 'flex');
+						$('#SuccessErreurAlert').modal('show');
 					}
 				}
 			});
