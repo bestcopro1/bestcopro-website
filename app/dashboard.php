@@ -859,7 +859,7 @@ foreach ($echeances as $echeance) {
 			codeHtml += '<li class="list-group-item active">';
 			codeHtml += '<div class="row">';
 			codeHtml += '<div class="col-11">';
-			codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique_'+rubrique_count+'" placeholder="Nouvelle rubrique" value="">';
+			codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique_'+rubrique_count+'" placeholder="Nouveau poste" value="">';
 			codeHtml += '</div>';
 			codeHtml += '<div class="col-1">';
 			codeHtml += '<button type="button" class="btn btn-outline-secondary btn-rounded del_rubrique" data-rubrique="'+rubrique_count+'"><i class="fa fa-trash"></i></button>';
@@ -869,7 +869,7 @@ foreach ($echeances as $echeance) {
 			codeHtml += '<li class="list-group-item rubrique_'+rubrique_count+'_poste_1">';
 			codeHtml += '<div class="row">';
 			codeHtml += '<div class="col-6">';
-			codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique_'+rubrique_count+'_poste_1" placeholder="Nouveau poste" value="">';
+			codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique_'+rubrique_count+'_poste_1" placeholder="Nouvelle rubrique" value="">';
 			codeHtml += '</div>';
 			codeHtml += '<div class="col-5">';
 			codeHtml += '<input type="number" class="form-control input-rounded value" name="rubrique_'+rubrique_count+'_poste_1_value" placeholder="0.00" value="">';
@@ -882,7 +882,7 @@ foreach ($echeances as $echeance) {
 			codeHtml += '<li class="list-group-item">';
 			codeHtml += '<div class="row">';
 			codeHtml += '<div class="col-12">';
-			codeHtml += '<a href="#" class="btn light btn-primary btn-block add_poste" data-rubrique="'+rubrique_count+'" data-poste="2">Ajouter un poste</a>';
+			codeHtml += '<a href="#" class="btn light btn-primary btn-block add_poste" data-rubrique="'+rubrique_count+'" data-poste="2">Ajouter une rubrique</a>';
 			codeHtml += '</div>';
 			codeHtml += '</div>';
 			codeHtml += '</li>';
@@ -902,7 +902,7 @@ foreach ($echeances as $echeance) {
 			codeHtml += '<li class="list-group-item rubrique_'+rubrique_count+'_poste_'+poste_count+'">';
 			codeHtml += '<div class="row">';
 			codeHtml += '<div class="col-6">';
-			codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique_'+rubrique_count+'_poste_'+poste_count+'" placeholder="Nouveau poste" value="">';
+			codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique_'+rubrique_count+'_poste_'+poste_count+'" placeholder="Nouvelle rubrique" value="">';
 			codeHtml += '</div>';
 			codeHtml += '<div class="col-5">';
 			codeHtml += '<input type="number" class="form-control input-rounded value" name="rubrique_'+rubrique_count+'_poste_'+poste_count+'_value" placeholder="0.00" value="">';
@@ -967,7 +967,7 @@ foreach ($echeances as $echeance) {
 			codeHtml += '<li class="list-group-item active">';
 			codeHtml += '<div class="row">';
 			codeHtml += '<div class="col-11">';
-			codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique2_'+rubrique2_count+'" placeholder="Nouvelle rubrique" value="">';
+			codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique2_'+rubrique2_count+'" placeholder="Nouveau poste" value="">';
 			codeHtml += '</div>';
 			codeHtml += '<div class="col-1">';
 			codeHtml += '<button type="button" class="btn btn-outline-secondary btn-rounded del_rubrique2" data-rubrique2="'+rubrique2_count+'"><i class="fa fa-trash"></i></button>';
@@ -977,7 +977,7 @@ foreach ($echeances as $echeance) {
 			codeHtml += '<li class="list-group-item rubrique2_'+rubrique2_count+'_poste2_1">';
 			codeHtml += '<div class="row">';
 			codeHtml += '<div class="col-6">';
-			codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique2_'+rubrique2_count+'_poste2_1" placeholder="Nouveau poste" value="">';
+			codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique2_'+rubrique2_count+'_poste2_1" placeholder="Nouvelle rubrique" value="">';
 			codeHtml += '</div>';
 			codeHtml += '<div class="col-5">';
 			codeHtml += '<input type="text" class="form-control input-rounded value" name="rubrique2_'+rubrique2_count+'_poste2_1_value" placeholder="Budget annuel" value="0.00">';
@@ -990,7 +990,7 @@ foreach ($echeances as $echeance) {
 			codeHtml += '<li class="list-group-item">';
 			codeHtml += '<div class="row">';
 			codeHtml += '<div class="col-12">';
-			codeHtml += '<a href="#" class="btn light btn-primary btn-block add_poste2" data-rubrique2="'+rubrique2_count+'" data-poste2="2">Ajouter un poste</a>';
+			codeHtml += '<a href="#" class="btn light btn-primary btn-block add_poste2" data-rubrique2="'+rubrique2_count+'" data-poste2="2">Ajouter une rubrique</a>';
 			codeHtml += '</div>';
 			codeHtml += '</div>';
 			codeHtml += '</li>';
@@ -1010,7 +1010,7 @@ foreach ($echeances as $echeance) {
 			codeHtml += '<li class="list-group-item rubrique2_'+rubrique2_count+'_poste2_'+poste2_count+'">';
 			codeHtml += '<div class="row">';
 			codeHtml += '<div class="col-6">';
-			codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique2_'+rubrique2_count+'_poste2_'+poste2_count+'" placeholder="Nouveau poste" value="">';
+			codeHtml += '<input type="text" class="form-control input-rounded" name="rubrique2_'+rubrique2_count+'_poste2_'+poste2_count+'" placeholder="Nouvelle rubrique" value="">';
 			codeHtml += '</div>';
 			codeHtml += '<div class="col-5">';
 			codeHtml += '<input type="text" class="form-control input-rounded value" name="rubrique2_'+rubrique2_count+'_poste2_'+poste2_count+'_value" placeholder="Budget annuel" value="0.00">';

@@ -34,8 +34,8 @@ $rubriques = getSuiviBudgetRows($GLOBALS["id_exercice"], $connection);
 									<table class="table table-bordered table-striped">
 										<thead>
 											<tr>
-												<th rowspan="2">Rubrique</th>
 												<th rowspan="2">Poste</th>
+												<th rowspan="2">Rubrique</th>
 												<th rowspan="2">Montant budget</th>
 												<th rowspan="2">Consommation</th>
 												<th colspan="2" class="text-center">Suivi budget annuel</th>

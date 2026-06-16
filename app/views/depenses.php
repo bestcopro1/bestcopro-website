@@ -176,7 +176,7 @@ if (isset($_POST["select"])) {
     $id_syndic = $_SESSION["id"];
 
     if ($id_poste == "") {
-        $error_msg .= "Veuillez sélectionner un poste";
+        $error_msg .= "Veuillez sélectionner une rubrique";
         echo $error_msg;
         exit();
     }
@@ -231,7 +231,7 @@ if (isset($_POST["select"])) {
     }
     $poste = getPoste($id_poste, null, null, $connection);
     if (floatval($montant) > floatval($poste[0]["montant"])) {
-        $error_msg .= "Vous avez dépassé le budget de ce poste";
+        $error_msg .= "Vous avez dépassé le budget de cette rubrique";
         echo $error_msg;
         exit();
     }
@@ -469,7 +469,7 @@ if (isset($_GET["action"], $_GET["id"])):
 													<input type="hidden" name="id" value="<?= $depense[0]["id"] ?>">
 													<input type="hidden" name="update" value="true">
 													<input type="hidden" name="id_exercice" value="<?= $GLOBALS["id_exercice"] ?>">
-                                                    <label class="text-label">Rubrique</label>
+                                                    <label class="text-label">Poste</label>
                                                     <select name="id_rubrique" id="depenses_rubrique" class="single-select2 form-control wide mb-3">
                                                         <?php
                                                         $rubriques = getRubrique(
@@ -496,7 +496,7 @@ if (isset($_GET["action"], $_GET["id"])):
                                             </div>
                                             <div class="col-6 mb-2">
                                                 <div class="form-group">
-                                                    <label class="text-label">Poste de dépense*</label>
+                                                    <label class="text-label">Rubrique de dépense*</label>
                                                     <select name="id_poste" id="id_poste" class="single-select2 form-control wide mb-3">
                                                         <?php $poste = getPoste(
                                                             $depense[0][
@@ -668,7 +668,7 @@ elseif (isset($_GET["action"])):
 											<div class="col-6 mb-2">
                                                 <div class="form-group">
 													<input type="hidden" name="id_exercice" value="<?= $GLOBALS["id_exercice"] ?>">
-                                                    <label class="text-label">Rubrique</label>
+                                                    <label class="text-label">Poste</label>
                                                     <select name="id_rubrique" id="depenses_rubrique" class="single-select2 form-control wide mb-3">
                                                         <?php
                                                         $rubriques = getRubrique(
@@ -695,7 +695,7 @@ elseif (isset($_GET["action"])):
                                             </div>
                                             <div class="col-6 mb-2">
                                                 <div class="form-group">
-                                                    <label class="text-label">Poste de dépense*</label>
+                                                    <label class="text-label">Rubrique de dépense*</label>
                                                     <select name="id_poste" id="id_poste" class="single-select2 form-control wide mb-3">
                                                         <?php
                                                         $postes = getPoste(
@@ -878,7 +878,7 @@ else:
                                         <thead>
                                             <tr>
                                                 <th>Date de Facture</th>
-                                                <th>Poste</th>
+                                                <th>Rubrique</th>
                                                 <th>Montant de facture</th>
                                                 <th>Date de paiment</th>
                                                 <th>Montant payé</th>
@@ -1011,7 +1011,7 @@ else:
                                         <thead>
                                             <tr>
                                                 <th>Date de Facture</th>
-                                                <th>Poste</th>
+                                                <th>Rubrique</th>
                                                 <th>Montant de facture</th>
                                                 <th>Responsable</th>
                                                 <th>Fournisseur</th>

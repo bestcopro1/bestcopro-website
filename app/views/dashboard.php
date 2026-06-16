@@ -383,8 +383,8 @@ function formatDashboardAmount($amount)
 													<table class="table table-bordered table-responsive-sm">
 														<thead>
 															<tr>
-																<th>Rubrique</th>
-																<th>Poste de dépense</th>
+																<th>Poste</th>
+																<th>Rubrique de dépense</th>
 																<th>Budget mensuel</th>
 																<th>Montant de la dépense</th>
 																<th class="text-start">Ecart</th>

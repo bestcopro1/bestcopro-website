@@ -109,7 +109,7 @@ echo "\xEF\xBB\xBF";
     <tr><td colspan="8" class="section">Factures payees</td></tr>
     <tr>
         <th>Date de Facture</th>
-        <th>Poste</th>
+        <th>Rubrique</th>
         <th>Montant de facture</th>
         <th>Date de paiement</th>
         <th>Montant paye</th>
@@ -135,7 +135,7 @@ echo "\xEF\xBB\xBF";
     <tr><td colspan="5" class="section">Factures non payees</td></tr>
     <tr>
         <th>Date de Facture</th>
-        <th>Poste</th>
+        <th>Rubrique</th>
         <th>Montant de facture</th>
         <th>Responsable</th>
         <th>Fournisseur</th>

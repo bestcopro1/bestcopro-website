@@ -65,8 +65,8 @@ echo "\xEF\xBB\xBF";
     </tr>
     <tr><td colspan="6"></td></tr>
     <tr>
-        <th rowspan="2">Rubrique</th>
         <th rowspan="2">Poste</th>
+        <th rowspan="2">Rubrique</th>
         <th rowspan="2">Montant budget</th>
         <th rowspan="2">Consommation</th>
         <th colspan="2">Suivi budget annuel</th>

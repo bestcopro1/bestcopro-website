@@ -129,8 +129,8 @@ $htmlContent .= '<p><strong>Budget annuel declare : </strong>' .
 
 $htmlContent .= "<table>";
 $htmlContent .= "<tr>";
-$htmlContent .= "<th>Rubrique</th>";
 $htmlContent .= "<th>Poste</th>";
+$htmlContent .= "<th>Rubrique</th>";
 $htmlContent .= "<th>Budget</th>";
 $htmlContent .= "</tr>";
 

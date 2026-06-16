@@ -411,7 +411,7 @@ if ($_SESSION["id_usertype"] !== "1") {
 													<input type="hidden" name="rubrique2_<?= $i ?>_id" value="<?= $rubrique[
     "id"
 ] ?>">
-													<input type="text" class="form-control input-rounded" name="rubrique2_<?= $i ?>" placeholder="Nouvelle rubrique" value="<?= $rubrique[
+													<input type="text" class="form-control input-rounded" name="rubrique2_<?= $i ?>" placeholder="Nouveau poste" value="<?= $rubrique[
     "libelle"
 ] ?>">
 												</div>
@@ -422,7 +422,7 @@ if ($_SESSION["id_usertype"] !== "1") {
 													<input type="hidden" name="rubrique2_<?= $i ?>_id" value="<?= $rubrique[
     "id"
 ] ?>">
-													<input type="text" class="form-control input-rounded" name="rubrique2_<?= $i ?>" placeholder="Nouvelle rubrique" value="<?= $rubrique[
+													<input type="text" class="form-control input-rounded" name="rubrique2_<?= $i ?>" placeholder="Nouveau poste" value="<?= $rubrique[
     "libelle"
 ] ?>">
 												</div>
@@ -437,7 +437,7 @@ if ($_SESSION["id_usertype"] !== "1") {
 													<input type="hidden" name="rubrique2_<?= $i ?>_id" value="<?= $rubrique[
     "id"
 ] ?>">
-													<input type="text" class="form-control input-rounded" name="rubrique2_<?= $i ?>" placeholder="Nouvelle rubrique" value="<?= $rubrique[
+													<input type="text" class="form-control input-rounded" name="rubrique2_<?= $i ?>" placeholder="Nouveau poste" value="<?= $rubrique[
     "libelle"
 ] ?>" disabled>
 												</div>
@@ -460,7 +460,7 @@ if ($_SESSION["id_usertype"] !== "1") {
 														<input type="hidden" name="rubrique2_<?= $i ?>_poste2_<?= $j ?>_id" value="<?= $poste[
     "id"
 ] ?>">
-														<input type="text" class="form-control input-rounded" name="rubrique2_<?= $i ?>_poste2_<?= $j ?>" placeholder="Nouveau poste" value="<?= $poste[
+														<input type="text" class="form-control input-rounded" name="rubrique2_<?= $i ?>_poste2_<?= $j ?>" placeholder="Nouvelle rubrique" value="<?= $poste[
     "libelle"
 ] ?>" <?= $disabled ?>>
 													</div>
@@ -498,7 +498,7 @@ if ($_SESSION["id_usertype"] !== "1") {
 											<li class="list-group-item rubrique2_<?= $i ?>_poste2_1">
 												<div class="row">
 													<div class="col-6">
-														<input type="text" class="form-control input-rounded" name="rubrique2_<?= $i ?>_poste2_1" placeholder="Nouveau poste" value="">
+														<input type="text" class="form-control input-rounded" name="rubrique2_<?= $i ?>_poste2_1" placeholder="Nouvelle rubrique" value="">
 													</div>
 													<div class="col-5">
 														<input type="number" class="form-control input-rounded value" name="rubrique2_<?= $i ?>_poste2_1_value" placeholder="0.00" value="">
@@ -514,7 +514,7 @@ if ($_SESSION["id_usertype"] !== "1") {
 										<li class="list-group-item">
 											<div class="row">
 												<div class="col-12">
-													<a href="#" class="btn light btn-primary btn-block add_poste2" data-rubrique2="<?= $i ?>" data-poste2="<?= $j ?>">Ajouter un poste</a>
+													<a href="#" class="btn light btn-primary btn-block add_poste2" data-rubrique2="<?= $i ?>" data-poste2="<?= $j ?>">Ajouter une rubrique</a>
 												</div>
 											</div>
 										</li>
@@ -530,7 +530,7 @@ if ($_SESSION["id_usertype"] !== "1") {
 										<li class="list-group-item active">
 											<div class="row">
 												<div class="col-11">
-													<input type="text" class="form-control input-rounded" name="rubrique2_1" placeholder="Nouvelle rubrique" value="">
+													<input type="text" class="form-control input-rounded" name="rubrique2_1" placeholder="Nouveau poste" value="">
 												</div>
 												<div class="col-1">
 													<button type="button" class="btn btn-outline-secondary btn-rounded del_rubrique2" data-rubrique2="1"><i class="fa fa-trash"></i></button>
@@ -540,7 +540,7 @@ if ($_SESSION["id_usertype"] !== "1") {
 										<li class="list-group-item rubrique2_1_poste2_1">
 											<div class="row">
 												<div class="col-6">
-													<input type="text" class="form-control input-rounded" name="rubrique2_1_poste2_1" placeholder="Nouveau poste" value="">
+													<input type="text" class="form-control input-rounded" name="rubrique2_1_poste2_1" placeholder="Nouvelle rubrique" value="">
 												</div>
 												<div class="col-5">
 													<input type="number" class="form-control input-rounded value" name="rubrique2_1_poste2_1_value" placeholder="0.00" value="">
@@ -553,7 +553,7 @@ if ($_SESSION["id_usertype"] !== "1") {
 										<li class="list-group-item">
 											<div class="row">
 												<div class="col-12">
-													<a href="#" class="btn light btn-primary btn-block add_poste2" data-rubrique2="1" data-poste2="2">Ajouter un poste</a>
+													<a href="#" class="btn light btn-primary btn-block add_poste2" data-rubrique2="1" data-poste2="2">Ajouter une rubrique</a>
 												</div>
 											</div>
 										</li>
@@ -565,7 +565,7 @@ if ($_SESSION["id_usertype"] !== "1") {
 								<?php if ($_SESSION["id_usertype"] === "1"): ?>
 								<div class="row mt-4 ">
 									<div class="col-12">
-										<a href="#" class="btn btn-outline-primary btn-block add_rubrique2" data-rubrique2="<?= $i ?>">Ajouter une rubrique</a>
+										<a href="#" class="btn btn-outline-primary btn-block add_rubrique2" data-rubrique2="<?= $i ?>">Ajouter un poste</a>
 									</div>
 								</div>
 								<?php endif; ?>

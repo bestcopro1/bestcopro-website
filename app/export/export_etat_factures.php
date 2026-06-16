@@ -125,7 +125,7 @@ $htmlContent .= '<tr><td colspan="8" class="section">Factures payées</td></tr>'
 $htmlContent .=
     "<tr>
         <th>Date de Facture</th>
-        <th>Poste</th>
+        <th>Rubrique</th>
         <th>Montant de facture</th>
         <th>Date de paiement</th>
         <th>Montant payé</th>
@@ -194,7 +194,7 @@ $htmlContent .= '<tr><td colspan="5" class="section">Factures non payées</td></
 $htmlContent .=
     "<tr>
         <th>Date de Facture</th>
-        <th>Poste</th>
+        <th>Rubrique</th>
         <th>Montant de facture</th>
         <th>Responsable</th>
         <th>Fournisseur</th>

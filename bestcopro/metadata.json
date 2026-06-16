@@ -1,0 +1,6 @@
+{
+  "name": "Bestcopro",
+  "description": "Plateforme digitale leader pour la gestion moderne, transparente et efficace de copropriétés au Maroc. Espaces copropriétaire, comptabilité en ligne et suivi des travaux.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

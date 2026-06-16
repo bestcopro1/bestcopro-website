@@ -268,15 +268,15 @@ foreach ($rubriquesInvestTemplates as $r) {
 														<div class="pt-4">
 															<div class="row mb-4 align-items-end">
 																<div class="col-sm-8 col-lg-9 mb-3 mb-sm-0">
-																	<label class="form-label">Choisir une rubrique de fonctionnement</label>
+																	<label class="form-label">Choisir un poste de fonctionnement</label>
 																	<select id="select_rubrique_fonct" class="form-control default-select wide">
-																		<option value="">-- Choisir une rubrique --</option>
+																		<option value="">-- Choisir un poste --</option>
 																		<?php foreach ($rubriquesFonctTemplates as $r): ?>
 																			<option value="<?= htmlspecialchars($r["libelle"]) ?>"><?= htmlspecialchars(
     $r["libelle"],
 ) ?></option>
 																		<?php endforeach; ?>
-																		<option value="NEW">-- Autre (Nouvelle rubrique) --</option>
+																		<option value="NEW">-- Autre (Nouveau poste) --</option>
 																	</select>
 																</div>
 																<div class="col-sm-4 col-lg-3">
@@ -284,7 +284,7 @@ foreach ($rubriquesInvestTemplates as $r) {
 																</div>
 															</div>
 															<div id="container_rubriques_fonct">
-																<!-- Les rubriques seront ajoutées ici -->
+																<!-- Les postes seront ajoutés ici -->
 															</div>
 															<input type="hidden" id="rubrique_count_fonct" value="1">
 														</div>
@@ -293,15 +293,15 @@ foreach ($rubriquesInvestTemplates as $r) {
 														<div class="pt-4">
 															<div class="row mb-4 align-items-end">
 																<div class="col-sm-8 col-lg-9 mb-3 mb-sm-0">
-																	<label class="form-label">Choisir une rubrique d'investissement</label>
+																	<label class="form-label">Choisir un poste d'investissement</label>
 																	<select id="select_rubrique_invest" class="form-control default-select wide">
-																		<option value="">-- Choisir une rubrique --</option>
+																		<option value="">-- Choisir un poste --</option>
 																		<?php foreach ($rubriquesInvestTemplates as $r): ?>
 																			<option value="<?= htmlspecialchars($r["libelle"]) ?>"><?= htmlspecialchars(
     $r["libelle"],
 ) ?></option>
 																		<?php endforeach; ?>
-																		<option value="NEW">-- Autre (Nouvelle rubrique) --</option>
+																		<option value="NEW">-- Autre (Nouveau poste) --</option>
 																	</select>
 																</div>
 																<div class="col-sm-4 col-lg-3">
@@ -309,7 +309,7 @@ foreach ($rubriquesInvestTemplates as $r) {
 																</div>
 															</div>
 															<div id="container_rubriques_invest">
-																<!-- Les rubriques seront ajoutées ici -->
+																<!-- Les postes seront ajoutés ici -->
 															</div>
 															<input type="hidden" id="rubrique_count_invest" value="1">
 														</div>
@@ -770,7 +770,7 @@ foreach ($rubriquesInvestTemplates as $r) {
 				codeHtml += '<li class="list-group-item active">';
 				codeHtml += '<div class="row align-items-center">';
 				codeHtml += '<div class="col-10 col-md-11">';
-				codeHtml += '<input type="text" class="form-control input-rounded" name="' + prefix + rubrique_count + '" placeholder="Nouvelle rubrique" value="' + (name || '') + '">';
+				codeHtml += '<input type="text" class="form-control input-rounded" name="' + prefix + rubrique_count + '" placeholder="Nouveau poste" value="' + (name || '') + '">';
 				codeHtml += '</div>';
 				codeHtml += '<div class="col-2 col-md-1 text-end">';
 				codeHtml += '<button type="button" class="btn btn-outline-secondary btn-rounded ' + del_rubrique_class + '" data-' + prefix.replace('_', '') + '="' + rubrique_count + '"><i class="fa fa-trash"></i></button>';
@@ -792,7 +792,7 @@ foreach ($rubriquesInvestTemplates as $r) {
 				codeHtml += '<li class="list-group-item">';
 				codeHtml += '<div class="row">';
 				codeHtml += '<div class="col-12">';
-				codeHtml += '<a href="#" class="btn light btn-primary btn-block ' + add_poste_class + '" data-' + prefix.replace('_', '') + '="' + rubrique_count + '" data-' + (type == 1 ? 'poste' : 'poste2') + '="' + poste_count + '">Ajouter un poste</a>';
+				codeHtml += '<a href="#" class="btn light btn-primary btn-block ' + add_poste_class + '" data-' + prefix.replace('_', '') + '="' + rubrique_count + '" data-' + (type == 1 ? 'poste' : 'poste2') + '="' + poste_count + '">Ajouter une rubrique</a>';
 				codeHtml += '</div>';
 				codeHtml += '</div>';
 				codeHtml += '</li>';
@@ -812,7 +812,7 @@ foreach ($rubriquesInvestTemplates as $r) {
 				var codeHtml = '<li class="list-group-item ' + prefix + rubrique_count + poste_prefix + poste_count + '">';
 				codeHtml += '<div class="row align-items-center">';
 				codeHtml += '<div class="col-12 col-md-6 mb-2 mb-md-0">';
-				codeHtml += '<input type="text" class="form-control input-rounded" name="' + prefix + rubrique_count + poste_prefix + poste_count + '" placeholder="Nouveau poste" value="' + (pName || '') + '">';
+				codeHtml += '<input type="text" class="form-control input-rounded" name="' + prefix + rubrique_count + poste_prefix + poste_count + '" placeholder="Nouvelle rubrique" value="' + (pName || '') + '">';
 				codeHtml += '</div>';
 				codeHtml += '<div class="col-10 col-md-5">';
 				codeHtml += '<input type="number" class="form-control input-rounded value" name="' + prefix + rubrique_count + poste_prefix + poste_count + '_value" placeholder="0.00" value="">';
