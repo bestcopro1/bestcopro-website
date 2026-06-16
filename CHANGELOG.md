@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-06-16
+
+### Added
+
+- Documentation de la procedure SQL d'inversion des donnees `rubrique` / `poste` et des controles associes.
+
 ## 2026-06-03
 
 ### Changed
