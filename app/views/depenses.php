@@ -855,12 +855,17 @@ else:
      ] ?>&id_exercice=<?= $GLOBALS[
     "id_exercice"
 ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
-						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter
+						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Dépenses annuelles
+					</a>
+					<a href="export/export_etat_factures.php?id_exercice=<?= $GLOBALS[
+         "id_exercice"
+     ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
+						<span class="btn-icon-start text-primary"><i class="fa fa-file-pdf color-primary"></i></span> Etat des factures PDF
 					</a>
 					<a href="export/export_etat_factures_excel.php?id_exercice=<?= $GLOBALS[
          "id_exercice"
      ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
-						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Etat des factures
+						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Etat des factures Excel
 					</a>
 					<?php endif; ?>
 				</div>
