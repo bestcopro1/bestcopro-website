@@ -857,6 +857,11 @@ else:
 ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
 						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter
 					</a>
+					<a href="export/export_etat_factures_excel.php?id_exercice=<?= $GLOBALS[
+         "id_exercice"
+     ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
+						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Etat des factures
+					</a>
 					<?php endif; ?>
 				</div>
                 <div class="row">
@@ -983,28 +988,6 @@ else:
 											<?php endif; ?>
                                             <?php
                                         endforeach; ?>
-                                        <tfoot>
-                                             <tr>
-                                                <th>Date de Facture</th>
-                                                <th>Post</th>
-                                                <th>Montant de facture</th>
-                                                <th>Date de paiment</th>
-                                                <th>Montant payé</th>
-                                                <th>Mode de paiment</th>
-                                                <th>Fournisseur</th>
-                                                <th>Responsable</th>
-                                                <?php if (
-                                                    $_SESSION["id_usertype"] ===
-                                                        "1" ||
-                                                    $_SESSION["id_usertype"] ===
-                                                        "2" ||
-                                                    $_SESSION["id_usertype"] ===
-                                                        "3"
-                                                ): ?>
-												<th class="text-center">Actions</th>
-												<?php endif; ?>
-                                            </tr>
-                                        </tfoot>
                                     </table>
                                 </div>
                             </div>

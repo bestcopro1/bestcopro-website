@@ -17,7 +17,10 @@ $rubriques = getSuiviBudgetRows($GLOBALS["id_exercice"], $connection);
 						<p class="mb-0 fw-bold"><?= htmlspecialchars($GLOBALS["copropriete"][0]["nom"]) ?></p>
 					</div>
 					<a href="export/export_suivi_budget.php?id_exercice=<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>" class="btn btn-rounded btn-primary px-3 my-1 me-2">
-						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter
+						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter PDF
+					</a>
+					<a href="export/export_suivi_budget_excel.php?id_exercice=<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>" class="btn btn-rounded btn-primary px-3 my-1 me-2">
+						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Exporter Excel
 					</a>
 				</div>
 				<div class="alert alert-primary alert-alt fade show p-3 mb-4">

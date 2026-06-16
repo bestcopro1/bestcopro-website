@@ -1813,6 +1813,48 @@ function periodeInfo($id_rel, $connection)
                                     " - 1 month",
                             ),
                         );
+                    } elseif ($exercice[0]["id_periodePaiement"] == "2") {
+                        $nomPeriode =
+                            date(
+                                "m/Y",
+                                strtotime(
+                                    date(
+                                        "Y-m-d",
+                                        strtotime($dateFinPeriode),
+                                    ) . " - 3 month",
+                                ),
+                            ) .
+                            " - " .
+                            date(
+                                "m/Y",
+                                strtotime(
+                                    date(
+                                        "Y-m-d",
+                                        strtotime($dateFinPeriode),
+                                    ) . " - 1 day",
+                                ),
+                            );
+                    } elseif ($exercice[0]["id_periodePaiement"] == "3") {
+                        $nomPeriode =
+                            date(
+                                "m/Y",
+                                strtotime(
+                                    date(
+                                        "Y-m-d",
+                                        strtotime($dateFinPeriode),
+                                    ) . " - 6 month",
+                                ),
+                            ) .
+                            " - " .
+                            date(
+                                "m/Y",
+                                strtotime(
+                                    date(
+                                        "Y-m-d",
+                                        strtotime($dateFinPeriode),
+                                    ) . " - 1 day",
+                                ),
+                            );
                     } elseif ($exercice[0]["id_periodePaiement"] == "4") {
                         $nomPeriode = getExercisePeriodLabel(
                             $exercice[0]["dateDebut"]
