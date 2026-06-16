@@ -881,16 +881,17 @@ if (isset($_GET["action"], $_GET["id"])):
          } elseif ($exercice[0]["id_periodePaiement"] == "4") {
              $nbrMonth = 12;
          }
-         foreach ($relLotExercice as $periode) {
-             if (
-                 strtotime(date("Y-m-d")) <=
+         $isCotisationPeriodDue = function ($dateFinPeriode) use ($nbrMonth) {
+             return strtotime(date("Y-m-d")) >=
                  strtotime(
-                     date("Y-m-d", strtotime($periode["dateFinPeriode"])) .
+                     date("Y-m-d", strtotime($dateFinPeriode)) .
                          " - " .
                          $nbrMonth .
                          " month",
-                 )
-             ) {
+                 );
+         };
+         foreach ($relLotExercice as $periode) {
+             if (!$isCotisationPeriodDue($periode["dateFinPeriode"])) {
                  break;
              }
              $totalImpayeChecker +=
@@ -957,24 +958,31 @@ if (isset($_GET["action"], $_GET["id"])):
             $totalImpaye = 0;
             foreach ($relLotExercice as $periode):
 
-                $totalPaye += floatval($periode["cotisation"]);
-                if (
-                    floatval($periode["cotisation"]) <
+                $isPeriodDue = $isCotisationPeriodDue(
+                    $periode["dateFinPeriode"],
+                );
+                $periodAmount =
                     floatval($periode["partFonct"]) +
-                        floatval($periode["partInv"])
+                    floatval($periode["partInv"]);
+                if ($isPeriodDue) {
+                    $totalPaye += floatval($periode["cotisation"]);
+                }
+                if (
+                    $isPeriodDue &&
+                    floatval($periode["cotisation"]) <
+                    $periodAmount
                 ) {
                     $totalImpaye +=
-                        floatval($periode["partFonct"]) +
-                        floatval($periode["partInv"]) -
-                        floatval($periode["cotisation"]);
+                        $periodAmount - floatval($periode["cotisation"]);
                 }
                 ?>
                                                 <td class="text-center">
-													<?php if (
+													<?php if (!$isPeriodDue) {
+                 echo '<span class="badge badge-rounded badge-secondary">A VENIR</span>';
+             } elseif (
                  number_format(floatval($periode["cotisation"]), 2) ==
                  number_format(
-                     floatval($periode["partFonct"]) +
-                         floatval($periode["partInv"]),
+                     $periodAmount,
                      2,
                  )
              ) {
@@ -997,12 +1005,20 @@ if (isset($_GET["action"], $_GET["id"])):
                                                     as $periode
                                                 ): ?>
                                                 <td class="text-center">
-													<?= number_format(
+													<?php
+             $isPeriodDue = $isCotisationPeriodDue(
+                 $periode["dateFinPeriode"],
+             );
+             $periodAmount =
                  floatval($periode["partFonct"]) +
-                     floatval($periode["partInv"]) -
-                     floatval($periode["cotisation"]),
+                 floatval($periode["partInv"]);
+             echo number_format(
+                 $isPeriodDue
+                     ? $periodAmount - floatval($periode["cotisation"])
+                     : 0,
                  2,
-             ) ?>
+             );
+             ?>
 												</td>
 												<?php endforeach; ?>
                                             </tr>
