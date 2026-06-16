@@ -929,8 +929,26 @@ if (isset($_GET["action"], $_GET["id"])):
                     ); ?>
 													<th class="text-center"><strong><?= $month ?></strong></th>
 												<?php
-                elseif ($exercice[0]["id_periodePaiement"] == "2"): ?>
-													<th class="text-center"><strong>T<?= $trimestre++ ?></strong></th>
+                elseif ($exercice[0]["id_periodePaiement"] == "2"):
+                    $periodStart = date(
+                        "m/Y",
+                        strtotime(
+                            date(
+                                "Y-m-d",
+                                strtotime($periode["dateFinPeriode"]),
+                            ) . " - 3 month",
+                        ),
+                    );
+                    $periodEnd = date(
+                        "m/Y",
+                        strtotime(
+                            date(
+                                "Y-m-d",
+                                strtotime($periode["dateFinPeriode"]),
+                            ) . " - 1 day",
+                        ),
+                    ); ?>
+													<th class="text-center"><strong><?= $periodStart ?> - <?= $periodEnd ?></strong></th>
 												<?php elseif ($exercice[0]["id_periodePaiement"] == "3"): ?>
 													<th class="text-center"><strong>S<?= $semestre++ ?></strong></th>
 												<?php elseif ($exercice[0]["id_periodePaiement"] == "4"): ?>
@@ -978,7 +996,7 @@ if (isset($_GET["action"], $_GET["id"])):
                 ?>
                                                 <td class="text-center">
 													<?php if (!$isPeriodDue) {
-                 echo '<span class="badge badge-rounded badge-secondary">A VENIR</span>';
+                 echo '<span class="badge badge-rounded badge-warning">A VENIR</span>';
              } elseif (
                  number_format(floatval($periode["cotisation"]), 2) ==
                  number_format(
