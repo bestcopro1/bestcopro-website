@@ -840,6 +840,16 @@ else:
      ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
 						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Etat des factures Excel
 					</a>
+					<a href="export/export_factures_non_payees.php?id_exercice=<?= $GLOBALS[
+         "id_exercice"
+     ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
+						<span class="btn-icon-start text-primary"><i class="fa fa-file-pdf color-primary"></i></span> Factures non payees PDF
+					</a>
+					<a href="export/export_factures_non_payees_excel.php?id_exercice=<?= $GLOBALS[
+         "id_exercice"
+     ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
+						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Factures non payees Excel
+					</a>
 					<?php endif; ?>
 				</div>
                 <div class="row">

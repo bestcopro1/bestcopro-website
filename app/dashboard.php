@@ -209,6 +209,8 @@ foreach ($echeances as $echeance) {
                         $page == "copropriete" ||
                         $page == "lots" ||
                         $page == "situation_immeuble" ||
+                        $page == "suivi_cotisations_coproprietaires" ||
+                        $page == "contentieux" ||
                         $page == "proprietaires"
                     ) {
                         echo "mm-active";
@@ -242,6 +244,15 @@ foreach ($echeances as $echeance) {
         ) {
             echo "mm-active";
         } ?>">État des recouvrements et des impayés</a>
+							</li>
+                            <li class="<?php if ($page == "suivi_cotisations_coproprietaires") {
+                                echo "mm-active";
+                            } ?>">
+								<a href="dashboard.php?page=suivi_cotisations_coproprietaires" class="<?php if (
+            $page == "suivi_cotisations_coproprietaires"
+        ) {
+            echo "mm-active";
+        } ?>">Suivi des cotisations des copropriétaires</a>
 							</li>
                             <li class="<?php if ($page == "contentieux") {
                                 echo "mm-active";

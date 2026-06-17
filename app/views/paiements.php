@@ -1282,7 +1282,11 @@ else:
                                             <tr class="trPaiement-<?= $paiement[
                                                 "id"
                                             ] ?>">
-                                                <td><?= date(
+                                                <td data-order="<?= htmlspecialchars(
+                                                    date("Y-m-d", strtotime($paiement["date"])),
+                                                    ENT_QUOTES,
+                                                    "UTF-8",
+                                                ) ?>"><?= date(
                                                     "d/m/Y",
                                                     strtotime(
                                                         $paiement["date"],

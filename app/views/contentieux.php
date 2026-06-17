@@ -430,6 +430,16 @@ else:
 						<h2 class="text-primary font-w600 mb-0">Contentieux</h2>
 						<p class="mb-0"><?= $GLOBALS["copropriete"][0]["nom"] ?></p>
 					</div>
+					<a href="export/export_contentieux.php?id_copropriete=<?= $GLOBALS[
+         "id_copropriete"
+     ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
+						<span class="btn-icon-start text-primary"><i class="fa fa-file-pdf color-primary"></i></span> Contentieux PDF
+					</a>
+					<a href="export/export_contentieux_excel.php?id_copropriete=<?= $GLOBALS[
+         "id_copropriete"
+     ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
+						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Contentieux Excel
+					</a>
 				</div>
                 <div class="row">
                     <div class="col-12">
