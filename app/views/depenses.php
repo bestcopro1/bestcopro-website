@@ -840,16 +840,6 @@ else:
      ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
 						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Etat des factures Excel
 					</a>
-					<a href="export/export_factures_non_payees.php?id_exercice=<?= $GLOBALS[
-         "id_exercice"
-     ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
-						<span class="btn-icon-start text-primary"><i class="fa fa-file-pdf color-primary"></i></span> Factures non payees PDF
-					</a>
-					<a href="export/export_factures_non_payees_excel.php?id_exercice=<?= $GLOBALS[
-         "id_exercice"
-     ] ?>" type="button" class="btn btn-rounded btn-primary me-2">
-						<span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Factures non payees Excel
-					</a>
 					<?php endif; ?>
 				</div>
                 <div class="row">
@@ -987,8 +977,26 @@ else:
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header">
+                            <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                                 <h4 class="card-title">Factures non payées</h4>
+                                <?php if (
+                                    $_SESSION["id_usertype"] === "1" ||
+                                    $_SESSION["id_usertype"] === "2" ||
+                                    $_SESSION["id_usertype"] === "3"
+                                ): ?>
+                                <div class="d-flex flex-wrap justify-content-end gap-2">
+                                    <a href="export/export_factures_non_payees.php?id_exercice=<?= $GLOBALS[
+                                        "id_exercice"
+                                    ] ?>" type="button" class="btn btn-rounded btn-primary">
+                                        <span class="btn-icon-start text-primary"><i class="fa fa-file-pdf color-primary"></i></span> PDF
+                                    </a>
+                                    <a href="export/export_factures_non_payees_excel.php?id_exercice=<?= $GLOBALS[
+                                        "id_exercice"
+                                    ] ?>" type="button" class="btn btn-rounded btn-primary">
+                                        <span class="btn-icon-start text-primary"><i class="fa fa-file-excel color-primary"></i></span> Excel
+                                    </a>
+                                </div>
+                                <?php endif; ?>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
