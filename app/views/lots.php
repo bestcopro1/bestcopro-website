@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
@@ -778,8 +778,15 @@ if (isset($_GET["action"], $_GET["id"])):
          "id"
      ] ?>&id_exercice=<?= $GLOBALS[
     "id_exercice"
-] ?>"" type="button" class="btn btn-rounded btn-primary me-2">
+] ?>" type="button" class="btn btn-rounded btn-primary me-2">
 						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter la situation du propriétaire
+					</a>
+					<a href="export/export_appel_fonds.php?id=<?= $lot[0][
+         "id"
+     ] ?>&id_exercice=<?= $GLOBALS[
+    "id_exercice"
+] ?>" type="button" class="btn btn-rounded btn-primary me-2">
+						<span class="btn-icon-start text-primary"><i class="fa fa-file-word color-primary"></i></span> Appel de Fonds
 					</a>
 					<a href="./dashboard.php?page=lots" type="button" class="btn btn-rounded btn-outline-secondary px-3 my-1 me-2" id="back">Retour à la liste</a>
 				</div>

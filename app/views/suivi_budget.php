@@ -26,12 +26,26 @@ $rubriques = getSuiviBudgetRows($GLOBALS["id_exercice"], $connection);
 				<div class="alert alert-primary alert-alt fade show p-3 mb-4">
 					<strong>Suivi budget de fonctionnement de l'<?= getNameexercice($exercice[0]["dateDebut"]) ?></strong>
 				</div>
+				<style>
+					.suivi-budget-table th,
+					.suivi-budget-table td {
+						background-color: #fff !important;
+						color: #000 !important;
+						font-weight: 400 !important;
+					}
+					.suivi-budget-table .total-row th,
+					.suivi-budget-table .total-row td {
+						background-color: #ff9900 !important;
+						color: #000 !important;
+						font-weight: 700 !important;
+					}
+				</style>
 				<div class="row">
 					<div class="col-12">
 						<div class="card">
 							<div class="card-body">
 								<div class="table-responsive">
-									<table class="table table-bordered table-striped">
+									<table class="table table-bordered suivi-budget-table">
 										<thead>
 											<tr>
 												<th rowspan="2">Poste</th>
@@ -61,7 +75,7 @@ $rubriques = getSuiviBudgetRows($GLOBALS["id_exercice"], $connection);
 												<td><?= formatSuiviBudgetPercent($poste["annuelPourcentageRestant"]) ?></td>
 											</tr>
 											<?php endforeach; ?>
-											<tr class="table-primary fw-bold">
+											<tr class="total-row">
 												<td colspan="2">TOTAL <?= htmlspecialchars($rubrique["libelle"]) ?></td>
 												<td><?= formatSuiviBudgetAmount($rubriqueTotals["budget"]) ?></td>
 												<td><?= formatSuiviBudgetAmount($rubriqueTotals["cout"]) ?></td>
@@ -71,7 +85,7 @@ $rubriques = getSuiviBudgetRows($GLOBALS["id_exercice"], $connection);
 											<?php
            endforeach;
            ?>
-											<tr class="table-info fw-bold">
+											<tr class="total-row">
 												<td colspan="2">TOTAL GENERAL</td>
 												<td><?= formatSuiviBudgetAmount($globalTotals["budget"]) ?></td>
 												<td><?= formatSuiviBudgetAmount($globalTotals["cout"]) ?></td>
