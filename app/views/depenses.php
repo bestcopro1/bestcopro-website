@@ -82,56 +82,29 @@ if (isset($_POST["select"])) {
         exit();
     }
 
-    $montantRestant = floatval($depense[0]["montant"]);
+    $montantDejaPaye = getDepenseMontantPaye($depense[0]);
+    $montantRestant = getDepenseResteDu($depense[0]);
     $montantRegle = floatval($montantPaye);
     if ($montantRegle > $montantRestant) {
         echo "Le montant payé ne peut pas dépasser le montant restant";
         exit();
     }
 
-    if ($montantRegle == $montantRestant) {
+    $nouveauMontantPaye = $montantDejaPaye + $montantRegle;
+    if ($montantRegle >= $montantRestant) {
         $request = "UPDATE depense SET situationPaiement='paye', datePaiement=?, id_modePaiement=?, montantPaye=? WHERE id=?";
         if ($insert_stmt = $connection->prepare($request)) {
-            $insert_stmt->bind_param("ssss", $datePaiement, $id_modePaiement, $montantPaye, $id);
+            $insert_stmt->bind_param("ssss", $datePaiement, $id_modePaiement, $nouveauMontantPaye, $id);
             if (!$insert_stmt->execute()) {
                 echo $connection->error;
                 exit();
             }
         }
     } else {
-        $nouveauRestant = $montantRestant - $montantRegle;
-        $request = "UPDATE depense SET montant=? WHERE id=?";
+        $request = "UPDATE depense SET datePaiement=?, id_modePaiement=?, montantPaye=? WHERE id=?";
         if ($update_stmt = $connection->prepare($request)) {
-            $update_stmt->bind_param("ss", $nouveauRestant, $id);
+            $update_stmt->bind_param("ssss", $datePaiement, $id_modePaiement, $nouveauMontantPaye, $id);
             if (!$update_stmt->execute()) {
-                echo $connection->error;
-                exit();
-            }
-        }
-
-        $request = "INSERT INTO depense (id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic, situationPaiement, datePaiement, montantPaye)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'paye', ?, ?)";
-        if ($insert_stmt = $connection->prepare($request)) {
-            $id_poste_partiel = $depense[0]["id_poste"];
-            $date_facture_partiel = $depense[0]["date"];
-            $id_fournisseur_partiel = $depense[0]["id_fournisseur"];
-            $commentaire_partiel = $depense[0]["commentaire"];
-            $id_exercice_partiel = $depense[0]["id_exercice"];
-            $id_syndic = $_SESSION["id"];
-            $insert_stmt->bind_param(
-                "ssssssssss",
-                $id_poste_partiel,
-                $date_facture_partiel,
-                $montantPaye,
-                $id_fournisseur_partiel,
-                $id_modePaiement,
-                $commentaire_partiel,
-                $id_exercice_partiel,
-                $id_syndic,
-                $datePaiement,
-                $montantPaye,
-            );
-            if (!$insert_stmt->execute()) {
                 echo $connection->error;
                 exit();
             }
@@ -828,10 +801,10 @@ else:
     iomEnd:
     $depenses = getDepense(null, $GLOBALS["id_exercice"], $connection);
     $depensesPayees = array_filter($depenses, function ($depense) {
-        return ($depense["situationPaiement"] ?? "paye") == "paye";
+        return ($depense["situationPaiement"] ?? "paye") == "paye" || getDepenseResteDu($depense) <= 0;
     });
     $depensesNonPayees = array_filter($depenses, function ($depense) {
-        return ($depense["situationPaiement"] ?? "paye") == "non_paye";
+        return ($depense["situationPaiement"] ?? "paye") == "non_paye" && getDepenseResteDu($depense) > 0;
     });
     ?>
 		<div class="content-body">
@@ -882,6 +855,7 @@ else:
                                                 <th>Montant de facture</th>
                                                 <th>Date de paiment</th>
                                                 <th>Montant payé</th>
+                                                <th>Reste du</th>
                                                 <th>Mode de paiment</th>
                                                 <th>Fournisseur</th>
                                                 <th>Responsable</th>
@@ -938,7 +912,8 @@ else:
                                                     "d/m/Y",
                                                     strtotime($depense["datePaiement"] ?: $depense["date"]),
                                                 ) ?></td>
-                                                <td><?= $depense["montantPaye"] ?: $depense["montant"] ?></td>
+                                                <td><?= getDepenseMontantPaye($depense) ?></td>
+                                                <td><?= getDepenseResteDu($depense) ?></td>
                                                 <td><?= count($modepaiement) > 0 ? $modepaiement[0]["libelle"] : "" ?></td>
                                                 <td><?= $fournisseur[0][
                                                     "raisonSocial"
@@ -1013,6 +988,7 @@ else:
                                                 <th>Date de Facture</th>
                                                 <th>Rubrique</th>
                                                 <th>Montant de facture</th>
+                                                <th>Reste du</th>
                                                 <th>Responsable</th>
                                                 <th>Fournisseur</th>
                                                 <?php if (
@@ -1034,6 +1010,7 @@ else:
                                                 <td><?= date("d/m/Y", strtotime($depense["date"])) ?></td>
                                                 <td><?= $poste[0]["libelle"] ?></td>
                                                 <td><?= $depense["montant"] ?></td>
+                                                <td><?= getDepenseResteDu($depense) ?></td>
                                                 <td><?= $syndic[0]["civilite"] . " " . $syndic[0]["prenom"] . " " . $syndic[0]["nom"] ?></td>
                                                 <td><?= $fournisseur[0]["raisonSocial"] ?></td>
                                                 <?php if (
@@ -1075,7 +1052,7 @@ else:
                                                             </div>
                                                             <div class="form-group">
                                                                 <label class="text-label">Montant payé</label>
-                                                                <input type="text" class="form-control input-rounded mb-3 regler-montant" value="<?= $depense["montant"] ?>">
+                                                                <input type="text" class="form-control input-rounded mb-3 regler-montant" value="<?= getDepenseResteDu($depense) ?>">
                                                             </div>
                                                         </div>
                                                         <div class="modal-footer">

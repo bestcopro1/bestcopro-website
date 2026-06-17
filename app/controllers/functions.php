@@ -329,6 +329,20 @@ function ensureDepensePaiementFields($connection)
     }
 }
 
+function getDepenseMontantPaye($depense)
+{
+    if (($depense["situationPaiement"] ?? "paye") == "paye") {
+        return floatval($depense["montantPaye"] ?: $depense["montant"]);
+    }
+
+    return floatval($depense["montantPaye"] ?: 0);
+}
+
+function getDepenseResteDu($depense)
+{
+    return max(0, floatval($depense["montant"]) - getDepenseMontantPaye($depense));
+}
+
 /**
  * getDepense
  *

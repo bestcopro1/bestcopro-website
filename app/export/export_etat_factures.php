@@ -80,10 +80,10 @@ function renderEtatFacturesPdfEmptyRow($colspan)
 
 $depenses = getDepense(null, $id_exercice, $connection);
 $depensesPayees = array_filter($depenses, function ($depense) {
-    return ($depense["situationPaiement"] ?? "paye") == "paye";
+    return ($depense["situationPaiement"] ?? "paye") == "paye" || getDepenseResteDu($depense) <= 0;
 });
 $depensesNonPayees = array_filter($depenses, function ($depense) {
-    return ($depense["situationPaiement"] ?? "paye") == "non_paye";
+    return ($depense["situationPaiement"] ?? "paye") == "non_paye" && getDepenseResteDu($depense) > 0;
 });
 $nameExercice = getNameexercice($exercice[0]["dateDebut"]);
 $copropriete = getCopropriete($exercice[0]["id_copropriete"], $connection);
@@ -121,7 +121,7 @@ $htmlContent .= "</tr>";
 $htmlContent .= "</table>";
 
 $htmlContent .= "<table>";
-$htmlContent .= '<tr><td colspan="8" class="section">Factures payées</td></tr>';
+$htmlContent .= '<tr><td colspan="9" class="section">Factures payees</td></tr>';
 $htmlContent .=
     "<tr>
         <th>Date de Facture</th>
@@ -129,6 +129,7 @@ $htmlContent .=
         <th>Montant de facture</th>
         <th>Date de paiement</th>
         <th>Montant payé</th>
+        <th>Reste du</th>
         <th>Mode de paiement</th>
         <th>Fournisseur</th>
         <th>Responsable</th>
@@ -155,7 +156,16 @@ if (count($depensesPayees) > 0) {
         $htmlContent .=
             '<td class="amount">' .
             number_format(
-                floatval($depense["montantPaye"] ?: $depense["montant"]),
+                getDepenseMontantPaye($depense),
+                2,
+                ",",
+                " "
+            ) .
+            "</td>";
+        $htmlContent .=
+            '<td class="amount">' .
+            number_format(
+                getDepenseResteDu($depense),
                 2,
                 ",",
                 " "
@@ -185,17 +195,18 @@ if (count($depensesPayees) > 0) {
         $htmlContent .= "</tr>";
     }
 } else {
-    $htmlContent .= renderEtatFacturesPdfEmptyRow(8);
+    $htmlContent .= renderEtatFacturesPdfEmptyRow(9);
 }
 $htmlContent .= "</table>";
 
 $htmlContent .= "<table>";
-$htmlContent .= '<tr><td colspan="5" class="section">Factures non payées</td></tr>';
+$htmlContent .= '<tr><td colspan="6" class="section">Factures non payees</td></tr>';
 $htmlContent .=
     "<tr>
         <th>Date de Facture</th>
         <th>Rubrique</th>
         <th>Montant de facture</th>
+        <th>Reste du</th>
         <th>Responsable</th>
         <th>Fournisseur</th>
     </tr>";
@@ -215,6 +226,10 @@ if (count($depensesNonPayees) > 0) {
             number_format(floatval($depense["montant"]), 2, ",", " ") .
             "</td>";
         $htmlContent .=
+            '<td class="amount">' .
+            number_format(getDepenseResteDu($depense), 2, ",", " ") .
+            "</td>";
+        $htmlContent .=
             "<td>" .
             etatFacturesPdfEscape(
                 etatFacturesPdfSyndicName($depense["id_syndic"], $connection)
@@ -232,7 +247,7 @@ if (count($depensesNonPayees) > 0) {
         $htmlContent .= "</tr>";
     }
 } else {
-    $htmlContent .= renderEtatFacturesPdfEmptyRow(5);
+    $htmlContent .= renderEtatFacturesPdfEmptyRow(6);
 }
 $htmlContent .= "</table>";
 $htmlContent .= "</body></html>";

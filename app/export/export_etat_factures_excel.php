@@ -69,10 +69,10 @@ function etatFacturesModeName($id_modePaiement, $connection)
 
 $depenses = getDepense(null, $id_exercice, $connection);
 $depensesPayees = array_filter($depenses, function ($depense) {
-    return ($depense["situationPaiement"] ?? "paye") == "paye";
+    return ($depense["situationPaiement"] ?? "paye") == "paye" || getDepenseResteDu($depense) <= 0;
 });
 $depensesNonPayees = array_filter($depenses, function ($depense) {
-    return ($depense["situationPaiement"] ?? "paye") == "non_paye";
+    return ($depense["situationPaiement"] ?? "paye") == "non_paye" && getDepenseResteDu($depense) > 0;
 });
 $nameExercice = getNameexercice($exercice[0]["dateDebut"]);
 $copropriete = getCopropriete($exercice[0]["id_copropriete"], $connection);
@@ -100,19 +100,20 @@ echo "\xEF\xBB\xBF";
 </head>
 <body>
 <table>
-    <tr><td colspan="8" class="title">Etat des factures</td></tr>
-    <tr><td colspan="8"><?= etatFacturesExcelEscape($residenceName) ?></td></tr>
-    <tr><td colspan="8"><?= etatFacturesExcelEscape($nameExercice) ?></td></tr>
+    <tr><td colspan="9" class="title">Etat des factures</td></tr>
+    <tr><td colspan="9"><?= etatFacturesExcelEscape($residenceName) ?></td></tr>
+    <tr><td colspan="9"><?= etatFacturesExcelEscape($nameExercice) ?></td></tr>
 </table>
 
 <table>
-    <tr><td colspan="8" class="section">Factures payees</td></tr>
+    <tr><td colspan="9" class="section">Factures payees</td></tr>
     <tr>
         <th>Date de Facture</th>
         <th>Rubrique</th>
         <th>Montant de facture</th>
         <th>Date de paiement</th>
         <th>Montant paye</th>
+        <th>Reste du</th>
         <th>Mode de paiement</th>
         <th>Fournisseur</th>
         <th>Responsable</th>
@@ -123,7 +124,8 @@ echo "\xEF\xBB\xBF";
         <td><?= etatFacturesExcelEscape(etatFacturesPosteName($depense["id_poste"], $connection)) ?></td>
         <td class="amount"><?= number_format(floatval($depense["montant"]), 2, ",", " ") ?></td>
         <td><?= etatFacturesDate($depense["datePaiement"] ?: $depense["date"]) ?></td>
-        <td class="amount"><?= number_format(floatval($depense["montantPaye"] ?: $depense["montant"]), 2, ",", " ") ?></td>
+        <td class="amount"><?= number_format(getDepenseMontantPaye($depense), 2, ",", " ") ?></td>
+        <td class="amount"><?= number_format(getDepenseResteDu($depense), 2, ",", " ") ?></td>
         <td><?= etatFacturesExcelEscape(etatFacturesModeName($depense["id_modePaiement"], $connection)) ?></td>
         <td><?= etatFacturesExcelEscape(etatFacturesFournisseurName($depense["id_fournisseur"], $connection)) ?></td>
         <td><?= etatFacturesExcelEscape(etatFacturesSyndicName($depense["id_syndic"], $connection)) ?></td>
@@ -132,11 +134,12 @@ echo "\xEF\xBB\xBF";
 </table>
 
 <table>
-    <tr><td colspan="5" class="section">Factures non payees</td></tr>
+    <tr><td colspan="6" class="section">Factures non payees</td></tr>
     <tr>
         <th>Date de Facture</th>
         <th>Rubrique</th>
         <th>Montant de facture</th>
+        <th>Reste du</th>
         <th>Responsable</th>
         <th>Fournisseur</th>
     </tr>
@@ -145,6 +148,7 @@ echo "\xEF\xBB\xBF";
         <td><?= etatFacturesDate($depense["date"]) ?></td>
         <td><?= etatFacturesExcelEscape(etatFacturesPosteName($depense["id_poste"], $connection)) ?></td>
         <td class="amount"><?= number_format(floatval($depense["montant"]), 2, ",", " ") ?></td>
+        <td class="amount"><?= number_format(getDepenseResteDu($depense), 2, ",", " ") ?></td>
         <td><?= etatFacturesExcelEscape(etatFacturesSyndicName($depense["id_syndic"], $connection)) ?></td>
         <td><?= etatFacturesExcelEscape(etatFacturesFournisseurName($depense["id_fournisseur"], $connection)) ?></td>
     </tr>
