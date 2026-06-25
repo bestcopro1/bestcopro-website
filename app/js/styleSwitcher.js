@@ -53,12 +53,12 @@ function addSwitcher()
 		body.attr('data-theme-version', this.value);
 		
 		/* if(this.value === 'dark'){
-			//jQuery(".nav-header .logo-abbr").attr("src", "./images/logo-white.png");
-			jQuery(".nav-header .logo-compact").attr("src", "images/logo-text-white.png");
-			jQuery(".nav-header .brand-title").attr("src", "images/logo-text-white.png");
+			//jQuery(".nav-header .logo-abbr").attr("src", "./best_copro_logo.svg");
+			jQuery(".nav-header .logo-compact").attr("src", "best_copro_logo.svg");
+			jQuery(".nav-header .brand-title").attr("src", "best_copro_logo.svg");
 			
-			setCookie('logo_src', './images/logo-white.png');
-			setCookie('logo_src2', 'images/logo-text-white.png');
+			setCookie('logo_src', './best_copro_logo.svg');
+			setCookie('logo_src2', 'best_copro_logo.svg');
 		}else{
 			jQuery(".nav-header .logo-abbr").attr("src", "./best_copro_logo.svg");
 			jQuery(".nav-header .logo-compact").attr("src", "best_copro_logo.svg");
@@ -173,15 +173,15 @@ function addSwitcher()
     }); */
     
 	/* jQuery("#sidebar_color_2, #sidebar_color_3, #sidebar_color_4, #sidebar_color_5, #sidebar_color_6, #sidebar_color_7, #sidebar_color_8, #sidebar_color_9, #sidebar_color_10, #sidebar_color_11, #sidebar_color_12, #sidebar_color_13, #sidebar_color_14, #sidebar_color_15").on('click',function(){
-		jQuery(".nav-header .logo-abbr").attr("src", "./images/logo-white.png");
-		jQuery(".nav-header .brand-title").attr("src", "./images/logo-text-white.png");
-		setCookie('logo_src', './images/logo-white.png');
+		jQuery(".nav-header .logo-abbr").attr("src", "./best_copro_logo.svg");
+		jQuery(".nav-header .brand-title").attr("src", "./best_copro_logo.svg");
+		setCookie('logo_src', './best_copro_logo.svg');
 		return false;
     }); */
    
     /* jQuery("#nav_header_color_3").on('click',function(){
-		jQuery(".nav-header .logo-abbr").attr("src", "./images/logo-white.png");
-		setCookie('logo_src', './images/logo-white.png');
+		jQuery(".nav-header .logo-abbr").attr("src", "./best_copro_logo.svg");
+		setCookie('logo_src', './best_copro_logo.svg');
 		return false;
     }); */
 
@@ -213,5 +213,3 @@ function addSwitcher()
 	
 
 })(jQuery);
-
-
