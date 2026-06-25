@@ -1,333 +1,173 @@
 <?php
-/*
-$today = date("Y-m-d-His");
-$fp = fopen('data_'.$today.'.txt', 'w');
-fwrite($fp, serialize($_GET));
-fwrite($fp, "\n --------------------------------------------------------------------------------------------------------------- \n");
-foreach($_GET as $key=>$value){fwrite($fp, "$key=$value");}
-fwrite($fp, "\n --------------------------------------------------------------------------------------------------------------- \n");
-fwrite($fp, serialize($_POST));
-fwrite($fp, "\n --------------------------------------------------------------------------------------------------------------- \n");
-foreach($_POST as $key=>$value){fwrite($fp, "$key=$value");}
-fwrite($fp, "\n --------------------------------------------------------------------------------------------------------------- \n");
-function incoming_files() {
-    $files = $_FILES;
-    $files2 = [];
-    foreach ($files as $input => $infoArr) {
-        $filesByInput = [];
-        foreach ($infoArr as $key => $valueArr) {
-            if (is_array($valueArr)) { // file input "multiple"
-                foreach($valueArr as $i=>$value) {
-                    $filesByInput[$i][$key] = $value;
-                }
-            }
-            else { // -> string, normal file input
-                $filesByInput[] = $infoArr;
-                break;
-            }
-        }
-        $files2 = array_merge($files2,$filesByInput);
-    }
-    $files3 = [];
-    foreach($files2 as $file) { // let's filter empty & errors
-        if (!$file['error']) $files3[] = $file;
-    }
-    return $files3;
+declare(strict_types=1);
+
+include_once __DIR__ . "/_mobile.php";
+
+$token = input_value("token");
+$lotRow = mobile_token_lot($connection, $token);
+
+if (!$lotRow) {
+    mobile_error("Session invalide ou copropriété inactive.");
 }
 
-$tmpFiles = incoming_files();
-fwrite($fp, serialize($tmpFiles));
-fclose($fp);
-*/
-
-/*
-a:1:{s:5:"token";s:32:"c5dfa537e70f2442815c5300f6344a2d";}
- --------------------------------------------------------------------------------------------------------------- 
-token=c5dfa537e70f2442815c5300f6344a2d
- --------------------------------------------------------------------------------------------------------------- 
-a:0:{}
- --------------------------------------------------------------------------------------------------------------- 
-
- --------------------------------------------------------------------------------------------------------------- 
-a:0:{}
-*/
-
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
-$connection = $GLOBALS["connection"];
-header("Content-Type: application/json; charset=utf-8");
-if (!isset($_GET["token"])): ?>
-{}
-<?php //$monthYear = "Impayé de l'année : ".date("Y",strtotime(date("Y-m-d", strtotime($periode["dateFinPeriode"])) . " - 1 year"));
-    //$monthYear = "Impayé de l'année : ".date("Y",strtotime(date("Y-m-d", strtotime($periode["dateFinPeriode"])) . " - 1 year"));
-    else:if ($_GET["token"] == ""): ?>
-{}
-<?php else:$token = $_GET["token"];
-        $token = mysqli_real_escape_string($connection, $token);
-        $sql = "SELECT * From lot WHERE token = '{$token}' AND id_copropriete IN (SELECT id FROM copropriete WHERE display = 1)";
-        $query = mysqli_query($connection, $sql);
-        $rowCount = mysqli_num_rows($query);
-        if (!$query): ?>
-{}
-<?php endif;
-        if ($rowCount <= 0): ?>
-{}
-<?php else:
-            while ($row = mysqli_fetch_array($query)) {
-                $id_lot = $row["id"];
-            }
-            $lot = getLot($id_lot, null, null, $connection);
-            $proprietaire = getProprietaire(
-                $lot[0]["id_proprietaire"],
-                null,
-                $connection,
-            );
-            $copropriete = getCopropriete(
-                $lot[0]["id_copropriete"],
-                $connection,
-            );
-            $exercice = getExercice(null, $copropriete[0]["id"], $connection);
-            $documents = getDocument(
-                null,
-                $lot[0]["id_copropriete"],
-                1,
-                $connection,
-            );
-            $relLotExercice = getRel_lot_exercice(
-                $lot[0]["id"],
-                null,
-                $connection,
-            );
-            $solde = 0;
-            $impayes = [];
-            foreach ($relLotExercice as $periode) {
-                if (
-                    intval($periode["id_exercice"]) < 0 &&
-                    floatval($periode["cotisation"]) <
-                        floatval($periode["partFonct"]) +
-                            floatval($periode["partInv"])
-                ) {
-                    $impayes[] = [
-                        "id_exercice" => $periode["id_exercice"],
-                        "dateFinPeriode" => $periode["dateFinPeriode"],
-                        "cotisation" => $periode["cotisation"],
-                        "partFonct" => $periode["partFonct"],
-                        "partInv" => $periode["partInv"],
-                    ];
-                    $solde +=
-                        floatval($periode["partFonct"]) +
-                        floatval($periode["partInv"]) -
-                        floatval($periode["cotisation"]);
-                }
-            }
-            $relLotExercice = getRel_lot_exercice(
-                $lot[0]["id"],
-                $exercice[0]["id"],
-                $connection,
-            );
-            $paiements = getPaiement(null, null, $lot[0]["id"], $connection);
-            $credit = 0;
-            $debit = 0;
-            foreach ($paiements as $paiement) {
-                $credit += floatval($paiement["montant"]);
-            }
-
-            $totalPayeChecker = 0;
-            $totalImpayeChecker = 0;
-            if ($exercice[0]["id_periodePaiement"] == "1") {
-                $nbrMonth = 1;
-            } elseif ($exercice[0]["id_periodePaiement"] == "2") {
-                $nbrMonth = 3;
-            } elseif ($exercice[0]["id_periodePaiement"] == "3") {
-                $nbrMonth = 6;
-            } elseif ($exercice[0]["id_periodePaiement"] == "4") {
-                $nbrMonth = 12;
-            }
-            foreach ($relLotExercice as $periode) {
-                $debit +=
-                    floatval($periode["partFonct"]) +
-                    floatval($periode["partInv"]);
-            }
-            foreach ($relLotExercice as $periode) {
-                if (
-                    strtotime(date("Y-m-d")) <=
-                    strtotime(
-                        date("Y-m-d", strtotime($periode["dateFinPeriode"])) .
-                            " - " .
-                            $nbrMonth .
-                            " month",
-                    )
-                ) {
-                    break;
-                }
-                $totalImpayeChecker +=
-                    floatval($periode["partFonct"]) +
-                    floatval($periode["partInv"]);
-                $totalPayeChecker += floatval($periode["cotisation"]);
-            }
-            $solde += $totalImpayeChecker - $totalPayeChecker;
-            ?>
-{
-    "civilite": "<?= $proprietaire[0]["civilite"] ?>",
-    "nom": "<?= $proprietaire[0]["nom"] ?>",
-    "prenom": "<?= $proprietaire[0]["prenom"] ?>",
-    "telephone": "<?= $proprietaire[0]["telephone"] ?>",
-    "email": "<?= $proprietaire[0]["email"] ?>",
-    "adresse": "<?= $proprietaire[0]["adresse"] ?>",
-    "code": "<?= $lot[0]["code"] ?>",
-    "Copropriete": "<?= $copropriete[0]["nom"] ?>",
-    "Numero": "<?= $lot[0]["numero"] ?>",
-    "Tantieme": "<?= floatval($lot[0]["tantieme"]) ?>",
-    "Titrefonciere": "<?= $lot[0]["foncier"] ?>",
-    "Debit": "<?= number_format($debit, 2, ",", " ") ?> MAD",
-    "Credit": "<?= number_format($credit, 2, ",", " ") ?> MAD",
-    "CreVotCom": "<?= number_format($solde, 2, ",", " ") ?> MAD",
-    "Exercice":"<?= getNameexercice($exercice[0]["dateDebut"]) ?>",
-    "RIB":"<?= $copropriete[0]["rib"] ?>",
-    "impayes": [
-<?php
-$i = 0;
-foreach ($impayes as $impaye):
-    if ($impaye["id_exercice"] == "0") {
-        continue;
-    } else {
-        $monthYear =
-            "Impayé de l'année : " .
-            date(
-                "Y",
-                strtotime(
-                    date("Y-m-d", strtotime($periode["dateFinPeriode"])) .
-                        " - " .
-                        abs($impaye["id_exercice"]) .
-                        " year",
-                ),
-            );
-    } ?>
-		{
-			"date": "<?= $monthYear ?>",
-			"cotisation": "<?= number_format(
-       abs(
-           floatval($impaye["cotisation"]) -
-               floatval($impaye["partFonct"]) -
-               floatval($impaye["partInv"]),
-       ),
-       2,
-       ",",
-       " ",
-   ) ?> MAD",
-			"statut": "nonpaye"
-		}
-<?php if (++$i < count($impayes)) {
-    echo ",";
+$lot = getLot($lotRow["id"], null, null, $connection);
+if (!$lot) {
+    mobile_error("Lot introuvable.");
 }
-endforeach;
-?>
-	],
-	"situation": [
-<?php
+
+$lot = $lot[0];
+$proprietaire = getProprietaire($lot["id_proprietaire"], null, $connection);
+$copropriete = getCopropriete($lot["id_copropriete"], $connection);
+$exercice = getExercice(null, $copropriete[0]["id"], $connection);
+
+if (!$proprietaire || !$copropriete || !$exercice) {
+    mobile_error("Données de copropriété incomplètes.");
+}
+
+$proprietaire = $proprietaire[0];
+$copropriete = $copropriete[0];
+$exercice = $exercice[0];
+$documents = getDocument(null, $lot["id_copropriete"], 1, $connection);
+$relAll = getRel_lot_exercice($lot["id"], null, $connection);
+$relCurrent = getRel_lot_exercice($lot["id"], $exercice["id"], $connection);
+$paiements = getPaiement(null, null, $lot["id"], $connection);
+
+$debit = 0.0;
+foreach ($relCurrent as $periode) {
+    $debit += (float) $periode["partFonct"] + (float) $periode["partInv"];
+}
+
+$creditCurrent = 0.0;
+$stmt = $connection->prepare(
+    "SELECT COALESCE(SUM(rrp.montant), 0) AS total
+     FROM rel_rel_paiement rrp
+     INNER JOIN rel_lot_exercice rle ON rle.id_rel = rrp.id_rel
+     WHERE rle.id_lot = ? AND rle.id_exercice = ?"
+);
+if ($stmt) {
+    $stmt->bind_param("ss", $lot["id"], $exercice["id"]);
+    $stmt->execute();
+    $stmt->bind_result($totalCredit);
+    if ($stmt->fetch()) {
+        $creditCurrent = (float) $totalCredit;
+    }
+    $stmt->close();
+}
+
+if ($creditCurrent <= 0) {
+    foreach ($relCurrent as $periode) {
+        $creditCurrent += (float) $periode["cotisation"];
+    }
+}
+
+$solde = 0.0;
+$impayes = [];
+foreach ($relAll as $periode) {
+    $due = (float) $periode["partFonct"] + (float) $periode["partInv"];
+    $paid = (float) $periode["cotisation"];
+    if ((int) $periode["id_exercice"] < 0 && $paid < $due) {
+        $missing = $due - $paid;
+        $solde += $missing;
+        $year = date("Y", strtotime($periode["dateFinPeriode"]));
+        $impayes[] = [
+            "date" => "Impayé de l'année : " . $year,
+            "cotisation" => mobile_money($missing),
+            "statut" => "nonpaye",
+        ];
+    }
+}
+
+$nbrMonth = 1;
+if ($exercice["id_periodePaiement"] === "2") {
+    $nbrMonth = 3;
+} elseif ($exercice["id_periodePaiement"] === "3") {
+    $nbrMonth = 6;
+} elseif ($exercice["id_periodePaiement"] === "4") {
+    $nbrMonth = 12;
+}
+
+$totalPayeChecker = 0.0;
+$totalImpayeChecker = 0.0;
+foreach ($relCurrent as $periode) {
+    $periodStartLimit = strtotime(date("Y-m-d", strtotime($periode["dateFinPeriode"])) . " - " . $nbrMonth . " month");
+    if (strtotime(date("Y-m-d")) <= $periodStartLimit) {
+        break;
+    }
+    $totalImpayeChecker += (float) $periode["partFonct"] + (float) $periode["partInv"];
+    $totalPayeChecker += (float) $periode["cotisation"];
+}
+$solde += $totalImpayeChecker - $totalPayeChecker;
+
+$situation = [];
 $trimestre = 1;
 $semestre = 1;
-$i = 0;
-foreach ($relLotExercice as $periode):
-
-    if ($exercice[0]["id_periodePaiement"] == "1"):
-        $monthYear =
-            "Cotisations du mois : " .
-            date(
-                "m/Y",
-                strtotime(
-                    date("Y-m-d", strtotime($periode["dateFinPeriode"])) .
-                        " - 1 month",
-                ),
-            );
-    elseif ($exercice[0]["id_periodePaiement"] == "2"):
+foreach ($relCurrent as $periode) {
+    if ($exercice["id_periodePaiement"] === "1") {
+        $monthYear = "Cotisations du mois : " . date("m/Y", strtotime(date("Y-m-d", strtotime($periode["dateFinPeriode"])) . " - 1 month"));
+    } elseif ($exercice["id_periodePaiement"] === "2") {
         $monthYear = "Cotisations du trimestre : T" . $trimestre++;
-    elseif ($exercice[0]["id_periodePaiement"] == "3"):
+    } elseif ($exercice["id_periodePaiement"] === "3") {
         $monthYear = "Cotisations du semestre : S" . $semestre++;
-    elseif ($exercice[0]["id_periodePaiement"] == "4"):
-        $monthYear =
-            "Cotisations de l'année : " .
-            date(
-                "Y",
-                strtotime(
-                    date("Y-m-d", strtotime($periode["dateFinPeriode"])) .
-                        " - 1 year",
-                ),
-            );
-    endif;
-    if (
-        floatval($periode["cotisation"]) <
-        floatval($periode["partFonct"]) + floatval($periode["partInv"])
-    ) {
-        $statut = "nonpaye";
     } else {
-        $statut = "paye";
+        $monthYear = "Cotisations de l'année : " . date("Y", strtotime(date("Y-m-d", strtotime($periode["dateFinPeriode"])) . " - 1 year"));
     }
-    ?>
-		{
-			"date": "<?= $monthYear ?>",
-			"cotisation": "<?= number_format(
-       floatval($periode["cotisation"]),
-       2,
-       ",",
-       " ",
-   ) ?> MAD",
-			"statut": "<?= $statut ?>"
-		}
-<?php if (++$i < count($relLotExercice)) {
-    echo ",";
-}
-endforeach;
-?>
-    ],
-    "Paiements": [
-<?php
-$i = 0;
-foreach ($paiements as $paiement): ?>
-        {
-            "designation":"<?= $paiement["commentaire"] ?>",
-            "date": "<?= date("d/m/Y", strtotime($paiement["date"])) ?>",
-            "cotisation": "<?= number_format(
-                floatval($paiement["montant"]),
-                2,
-                ",",
-                " ",
-            ) ?> MAD"
-        }
-<?php if (++$i < count($paiements)) {
-    echo ",";
-}endforeach;
-?>
-    ],
-    "documents": [
-<?php
-$i = 0;
-foreach ($documents as $document):
 
+    $due = (float) $periode["partFonct"] + (float) $periode["partInv"];
+    $paid = (float) $periode["cotisation"];
+    $situation[] = [
+        "date" => $monthYear,
+        "cotisation" => mobile_money($paid),
+        "montant_attendu" => mobile_money($due),
+        "reste" => mobile_money(max(0, $due - $paid)),
+        "statut" => $paid >= $due ? "paye" : "nonpaye",
+    ];
+}
+
+$paiementsData = [];
+foreach ($paiements as $paiement) {
+    $paiementsData[] = [
+        "id" => $paiement["id"],
+        "designation" => $paiement["commentaire"] ?: "Paiement",
+        "date" => date("d/m/Y", strtotime($paiement["date"])),
+        "cotisation" => mobile_money((float) $paiement["montant"]),
+        "montant" => (float) $paiement["montant"],
+    ];
+}
+
+$documentsData = [];
+foreach ($documents as $document) {
     $typedocument = getTypedocument($document["id_typedocument"], $connection);
-    $preuves = glob("../justificatifs/documents/" . $document["id"] . ".*");
-    ?>
-        {
-            "titre":"<?= $document["titre"] ?>",
-            "date": "<?= date("d/m/Y", strtotime($document["date"])) ?>",
-            "id": "<?= $document["id"] ?>",
-			"type": "<?= $typedocument[0]["libelle"] ?>",
-<?php if (count($preuves) > 0): ?>
-            "lien": "https://bestcopro.ma/app/<?= str_replace(
-                "../",
-                "",
-                $preuves[0],
-            ) ?>"
-<?php else: ?>
-            "lien": "#"
-<?php endif; ?>
-        }
-<?php if (++$i < count($documents)) {
-    echo ",";
+    $preuves = glob(__DIR__ . "/../justificatifs/documents/" . $document["id"] . ".*");
+    $documentsData[] = [
+        "titre" => $document["titre"],
+        "date" => date("d/m/Y", strtotime($document["date"])),
+        "id" => $document["id"],
+        "type" => $typedocument[0]["libelle"] ?? "",
+        "lien" => count($preuves) > 0 ? mobile_public_url("justificatifs/documents/" . basename($preuves[0])) : "#",
+    ];
 }
-endforeach;
-?>
-    ]
-}
-<?php endif;endif;endif;
-?>
+
+$data = [
+    "civilite" => $proprietaire["civilite"],
+    "nom" => $proprietaire["nom"],
+    "prenom" => $proprietaire["prenom"],
+    "telephone" => $proprietaire["telephone"],
+    "email" => $proprietaire["email"],
+    "adresse" => $proprietaire["adresse"],
+    "code" => $lot["code"],
+    "Copropriete" => $copropriete["nom"],
+    "Numero" => $lot["numero"],
+    "Tantieme" => (float) $lot["tantieme"],
+    "Titrefonciere" => $lot["foncier"],
+    "Debit" => mobile_money($debit),
+    "Credit" => mobile_money($creditCurrent),
+    "CreVotCom" => mobile_money($solde),
+    "Exercice" => getNameexercice($exercice["dateDebut"]),
+    "RIB" => $copropriete["rib"],
+    "impayes" => $impayes,
+    "situation" => $situation,
+    "Paiements" => $paiementsData,
+    "documents" => $documentsData,
+];
+
+mobile_response(true, $data);
