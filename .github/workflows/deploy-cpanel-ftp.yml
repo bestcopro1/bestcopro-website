@@ -28,6 +28,7 @@ jobs:
             config/db.php
             upload/**
             justificatifs/**
+            vendor/chart.js/**
             **/*.sql
             **/*.log
             **/error_log
