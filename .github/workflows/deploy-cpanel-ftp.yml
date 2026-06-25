@@ -35,7 +35,7 @@ jobs:
           set net:timeout 30
           set ftp:list-options -a
           mkdir -p public_html/app
-          mirror --reverse --delete --verbose \
+          mirror --reverse --delete --verbose --no-perms \
             --exclude-glob config/db.php \
             --exclude-glob upload/** \
             --exclude-glob justificatifs/** \
