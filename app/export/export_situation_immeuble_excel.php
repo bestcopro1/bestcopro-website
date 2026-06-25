@@ -19,7 +19,8 @@ function getSituationImmeubleExcelImageData($path)
         return "";
     }
 
-    return "data:image/png;base64," . base64_encode(file_get_contents($path));
+    $mime = strtolower(pathinfo($path, PATHINFO_EXTENSION)) === "svg" ? "image/svg+xml" : "image/png";
+    return "data:" . $mime . ";base64," . base64_encode(file_get_contents($path));
 }
 
 function renderSituationImmeubleExcelTable($title, $rows, $headers, $baseOverride = null)
@@ -84,7 +85,7 @@ $data = getSituationImmeubleData(
     $id_exercice,
     $connection
 );
-$logo = getSituationImmeubleExcelImageData(__DIR__ . "/logo.png");
+$logo = getSituationImmeubleExcelImageData(__DIR__ . "/../best_copro_logo.svg");
 
 $htmlContent =
     '<html><head><meta charset="UTF-8"><style>

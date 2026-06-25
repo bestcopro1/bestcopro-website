@@ -3,8 +3,7 @@
         ***********************************-->
         <div class="nav-header d-print-none">
             <a href="index.php" class="brand-logo">
-				<img class="logo-abbr" src="images\logo.png" alt="logo">
-				<img class="brand-title" src="images\logo-text.png" alt="logo">
+				<img class="brand-title" src="best_copro_logo.svg" alt="Best Copro" style="max-width: 165px; height: auto;">
 
             </a>
             <div class="nav-control">

@@ -107,9 +107,7 @@ if (isset($_POST["id"], $_POST["printZone"])) {
             $codeHtml .= '<div class="col-sm-12">';
             $codeHtml .= '<div class="brand-logo mb-3">';
             $codeHtml .=
-                '<img class="logo-abbr me-2" width="50" src="images\logo.png" alt="">';
-            $codeHtml .=
-                '<img class="brand-title d-inline" width="110" src="images\logo-text.png" alt="">';
+                '<img class="brand-title d-inline" width="160" src="best_copro_logo.svg" alt="Best Copro">';
             $codeHtml .= "</div>";
             $codeHtml .=
                 "<!--<span>+212 66 03 010 51 / +212 66 36 376 20</span><br>";

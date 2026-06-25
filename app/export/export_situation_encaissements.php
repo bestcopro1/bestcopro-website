@@ -18,7 +18,8 @@ function getSituationEncaissementsImageData($path)
         return "";
     }
 
-    return "data:image/png;base64," . base64_encode(file_get_contents($path));
+    $mime = strtolower(pathinfo($path, PATHINFO_EXTENSION)) === "svg" ? "image/svg+xml" : "image/png";
+    return "data:" . $mime . ";base64," . base64_encode(file_get_contents($path));
 }
 
 $id_exercice = isset($_GET["id_exercice"]) ? $_GET["id_exercice"] : null;
@@ -41,7 +42,7 @@ $data = getSituationEncaissementsRows(
     $exercice[0],
     $connection
 );
-$logo = getSituationEncaissementsImageData(__DIR__ . "/logo.png");
+$logo = getSituationEncaissementsImageData(__DIR__ . "/../best_copro_logo.svg");
 
 $htmlContent = "";
 $htmlContent .=

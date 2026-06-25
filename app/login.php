@@ -49,7 +49,7 @@ if (
                                 <div class="auth-form">
 									<div class="text-center mb-3">
 										<a href="index.php" class="brand-logo">
-											<img src="images\logo-full.png" alt="logo">
+											<img src="best_copro_logo.svg" alt="Best Copro" style="max-width: 220px; height: auto;">
 										</a>
 									</div>
                                     <h4 class="text-center mb-4">Authentifiez-vous pour accéder à votre compte</h4>

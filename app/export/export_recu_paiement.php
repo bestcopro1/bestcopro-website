@@ -35,7 +35,8 @@ function recuPaiementImageData($path)
         return "";
     }
 
-    return "data:image/png;base64," . base64_encode(file_get_contents($path));
+    $mime = strtolower(pathinfo($path, PATHINFO_EXTENSION)) === "svg" ? "image/svg+xml" : "image/png";
+    return "data:" . $mime . ";base64," . base64_encode(file_get_contents($path));
 }
 
 function recuPaiementRenderPeriods($relRelPaiements, $connection)
@@ -74,8 +75,8 @@ function recuPaiementRenderPeriods($relRelPaiements, $connection)
 
 $periods = recuPaiementRenderPeriods($relRelPaiements, $connection);
 $avance = floatval($paiement[0]["montant"]) - $periods["totalRelPaiement"];
-$logo = recuPaiementImageData(__DIR__ . "/../images/logo.png");
-$logoText = recuPaiementImageData(__DIR__ . "/../images/logo-text.png");
+$logo = recuPaiementImageData(__DIR__ . "/../best_copro_logo.svg");
+$logoText = "";
 
 $htmlContent = "";
 $htmlContent .=

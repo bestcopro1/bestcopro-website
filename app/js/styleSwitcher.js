@@ -60,12 +60,12 @@ function addSwitcher()
 			setCookie('logo_src', './images/logo-white.png');
 			setCookie('logo_src2', 'images/logo-text-white.png');
 		}else{
-			jQuery(".nav-header .logo-abbr").attr("src", "./images/logo.png");
-			jQuery(".nav-header .logo-compact").attr("src", "images/logo-text.png");
-			jQuery(".nav-header .brand-title").attr("src", "images/logo-text.png");
+			jQuery(".nav-header .logo-abbr").attr("src", "./best_copro_logo.svg");
+			jQuery(".nav-header .logo-compact").attr("src", "best_copro_logo.svg");
+			jQuery(".nav-header .brand-title").attr("src", "best_copro_logo.svg");
 			
-			setCookie('logo_src', './images/logo.png');
-			setCookie('logo_src2', 'images/logo-text.png');
+			setCookie('logo_src', './best_copro_logo.svg');
+			setCookie('logo_src2', 'best_copro_logo.svg');
 		} */
 		
 		setCookie('version', this.value);
@@ -167,8 +167,8 @@ function addSwitcher()
     
 	
 	/* jQuery("#nav_header_color_1").on('click',function(){
-		jQuery(".nav-header .logo-abbr").attr("src", "./images/logo.png");
-		setCookie('logo_src', './images/logo.png');
+		jQuery(".nav-header .logo-abbr").attr("src", "./best_copro_logo.svg");
+		setCookie('logo_src', './best_copro_logo.svg');
 		return false;
     }); */
     

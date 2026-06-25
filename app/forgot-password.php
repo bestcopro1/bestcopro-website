@@ -44,7 +44,7 @@ if (
                             <div class="col-xl-12">
                                 <div class="auth-form">
 									<div class="text-center mb-3">
-										<a href="index.php"><img src="images\logo-full.png" alt=""></a>
+										<a href="index.php"><img src="best_copro_logo.svg" alt="Best Copro" style="max-width: 220px; height: auto;"></a>
 									</div>
                                     <h4 class="text-center mb-4">Réinitialiser le mot de passe</h4>
                                     <form action="index.php">
