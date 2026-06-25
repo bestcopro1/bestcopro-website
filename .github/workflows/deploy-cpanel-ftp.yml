@@ -87,6 +87,7 @@ jobs:
           set net:max-retries 3
           set net:timeout 30
           set ftp:list-options -a
+          cd app
           LFTP
 
           add_upload() {
