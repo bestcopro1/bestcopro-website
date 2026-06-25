@@ -27,11 +27,14 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
           lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" <<'LFTP'
-          set ftp:ssl-allow yes
+          set ftp:ssl-allow no
+          set ftp:passive-mode yes
+          set ftp:use-mlsd no
           set ssl:verify-certificate no
           set net:max-retries 3
           set net:timeout 30
           set ftp:list-options -a
+          mkdir -p public_html/app
           mirror --reverse --delete --verbose \
             --exclude-glob config/db.php \
             --exclude-glob upload/** \
