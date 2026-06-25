@@ -14,19 +14,51 @@ jobs:
     steps:
       - name: Get the code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install lftp
         run: |
           sudo apt-get update
           sudo apt-get install -y lftp
 
-      - name: Sync files to cPanel
+      - name: Deploy changed app files to cPanel
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
         run: |
-          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" <<'LFTP'
+          set -euo pipefail
+
+          is_excluded() {
+            case "$1" in
+              app/config/db.php|app/upload/*|app/justificatifs/*|*.sql|*.log|*/error_log|error_log)
+                return 0
+                ;;
+              *)
+                return 1
+                ;;
+            esac
+          }
+
+          quote_lftp() {
+            printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+          }
+
+          if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            git ls-files -z app > /tmp/app-changes.z
+          else
+            git diff --name-status -z "$BEFORE_SHA" "$AFTER_SHA" -- app > /tmp/app-changes.z
+          fi
+
+          if [ ! -s /tmp/app-changes.z ]; then
+            echo "No app changes to deploy."
+            exit 0
+          fi
+
+          cat > /tmp/deploy.lftp <<'LFTP'
           set ftp:ssl-allow no
           set ftp:passive-mode yes
           set ftp:use-mlsd no
@@ -34,13 +66,63 @@ jobs:
           set net:max-retries 3
           set net:timeout 30
           set ftp:list-options -a
-          mirror --reverse --delete --verbose --no-perms \
-            --exclude-glob config/db.php \
-            --exclude-glob upload/** \
-            --exclude-glob justificatifs/** \
-            --exclude-glob **/*.sql \
-            --exclude-glob **/*.log \
-            --exclude-glob **/error_log \
-            ./app/ ./
-          bye
-          LFTP
+LFTP
+
+          add_upload() {
+            local local_path="$1"
+            local remote_path="${local_path#app/}"
+            local remote_dir
+
+            if is_excluded "$local_path" || [ ! -f "$local_path" ]; then
+              return
+            fi
+
+            remote_dir="$(dirname "$remote_path")"
+            if [ "$remote_dir" != "." ]; then
+              printf 'mkdir -p "%s"\n' "$(quote_lftp "$remote_dir")" >> /tmp/deploy.lftp
+            fi
+            printf 'put -O "%s" "%s"\n' "$(quote_lftp "$remote_dir")" "$(quote_lftp "$local_path")" >> /tmp/deploy.lftp
+          }
+
+          add_delete() {
+            local local_path="$1"
+            local remote_path="${local_path#app/}"
+
+            if is_excluded "$local_path"; then
+              return
+            fi
+
+            printf 'rm -f "%s"\n' "$(quote_lftp "$remote_path")" >> /tmp/deploy.lftp
+          }
+
+          if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            while IFS= read -r -d '' path; do
+              add_upload "$path"
+            done < /tmp/app-changes.z
+          else
+            while IFS= read -r -d '' status; do
+              case "$status" in
+                A|M|T)
+                  IFS= read -r -d '' path
+                  add_upload "$path"
+                  ;;
+                D)
+                  IFS= read -r -d '' path
+                  add_delete "$path"
+                  ;;
+                R*|C*)
+                  IFS= read -r -d '' old_path
+                  IFS= read -r -d '' new_path
+                  add_delete "$old_path"
+                  add_upload "$new_path"
+                  ;;
+                *)
+                  IFS= read -r -d '' path
+                  add_upload "$path"
+                  ;;
+              esac
+            done < /tmp/app-changes.z
+          fi
+
+          echo "bye" >> /tmp/deploy.lftp
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -f /tmp/deploy.lftp
