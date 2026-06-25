@@ -34,7 +34,6 @@ jobs:
           set net:max-retries 3
           set net:timeout 30
           set ftp:list-options -a
-          mkdir -p public_html/app
           mirror --reverse --delete --verbose --no-perms \
             --exclude-glob config/db.php \
             --exclude-glob upload/** \
@@ -42,6 +41,6 @@ jobs:
             --exclude-glob **/*.sql \
             --exclude-glob **/*.log \
             --exclude-glob **/error_log \
-            ./app/ public_html/app/
+            ./app/ ./
           bye
           LFTP
