@@ -53,6 +53,27 @@ jobs:
             git diff --name-status -z "$BEFORE_SHA" "$AFTER_SHA" -- app > /tmp/app-changes.z
           fi
 
+          force_deploy_paths=(
+            app/best_copro_logo.svg
+            app/header.php
+            app/login.php
+            app/forgot-password.php
+            app/views/paiements.php
+            app/views/lots.php
+            app/js/styleSwitcher.js
+            app/export/export_recu_paiement.php
+            app/export/export_situation_immeuble.php
+            app/export/export_situation_immeuble_excel.php
+            app/export/export_situation_encaissements.php
+            app/export/export_situation_encaissements_excel.php
+          )
+
+          for path in "${force_deploy_paths[@]}"; do
+            if [ -f "$path" ]; then
+              printf 'M\0%s\0' "$path" >> /tmp/app-changes.z
+            fi
+          done
+
           if [ ! -s /tmp/app-changes.z ]; then
             echo "No app changes to deploy."
             exit 0
