@@ -3,7 +3,7 @@ if (!isset($_SESSION)) {
     session_start();
 }
 
-require_once "../vendor/dompdf/autoload.inc.php";
+require_once __DIR__ . "/../vendor/dompdf/autoload.inc.php";
 
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
@@ -11,23 +11,46 @@ include_once __DIR__ . "/../controllers/functions.php";
 use Dompdf\Dompdf;
 
 $connection = $GLOBALS["connection"];
-$id = filter_input(INPUT_GET, "id", FILTER_SANITIZE_STRING);
+$id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
 
-if ($id == "") {
+if ($id === null || $id === false) {
     exit("Paiement introuvable");
 }
 
 $paiement = getPaiement($id, null, null, $connection);
-if (count($paiement) == 0) {
+if (!is_array($paiement) || count($paiement) == 0) {
     exit("Paiement introuvable");
 }
 
 $lot = getLot($paiement[0]["id_lot"], null, null, $connection);
+if (!is_array($lot) || count($lot) == 0) {
+    exit("Paiement introuvable");
+}
+
 $proprietaire = getProprietaire($lot[0]["id_proprietaire"], null, $connection);
+if (!is_array($proprietaire)) {
+    $proprietaire = [];
+}
+
 $copropriete = getCopropriete($lot[0]["id_copropriete"], $connection);
+if (!is_array($copropriete) || count($copropriete) == 0) {
+    exit("Paiement introuvable");
+}
+
 $modepaiement = getModepaiement($paiement[0]["id_modePaiement"], $connection);
+if (!is_array($modepaiement) || count($modepaiement) == 0) {
+    exit("Paiement introuvable");
+}
+
 $typeLot = getTypelot($lot[0]["id_typeLot"], $connection);
+if (!is_array($typeLot) || count($typeLot) == 0) {
+    exit("Paiement introuvable");
+}
+
 $relRelPaiements = getRel_rel_paiement($paiement[0]["id"], $connection);
+if (!is_array($relRelPaiements)) {
+    $relRelPaiements = [];
+}
 
 function recuPaiementImageData($path)
 {
@@ -43,6 +66,10 @@ function recuPaiementRenderPeriods($relRelPaiements, $connection)
 {
     $html = "";
     $totalRelPaiement = 0;
+    if (!is_array($relRelPaiements)) {
+        $relRelPaiements = [];
+    }
+
     foreach ($relRelPaiements as $relRelPaiement) {
         $totalRelPaiement += floatval($relRelPaiement["montant"]);
     }
@@ -52,9 +79,13 @@ function recuPaiementRenderPeriods($relRelPaiements, $connection)
         $html .= '<table class="period-table"><tbody><tr>';
         foreach ($chunk as $relRelPaiement) {
             $periodeInfo = periodeInfo($relRelPaiement["id_rel"], $connection);
+            $periodeLabel = "Periode inconnue";
+            if (is_array($periodeInfo) && count($periodeInfo) > 0) {
+                $periodeLabel = $periodeInfo[0]["nomPeriode"];
+            }
             $html .=
                 '<td><strong>' .
-                htmlspecialchars($periodeInfo[0]["nomPeriode"], ENT_QUOTES, "UTF-8") .
+                htmlspecialchars($periodeLabel, ENT_QUOTES, "UTF-8") .
                 "</strong></td>";
         }
         $html .= "</tr><tr>";
