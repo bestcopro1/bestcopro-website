@@ -106,7 +106,11 @@ function recuPaiementRenderPeriods($relRelPaiements, $connection)
 
 $periods = recuPaiementRenderPeriods($relRelPaiements, $connection);
 $avance = floatval($paiement[0]["montant"]) - $periods["totalRelPaiement"];
-$logo = recuPaiementImageData(__DIR__ . "/../best_copro_logo.svg");
+$logoPath = __DIR__ . "/../best_copro_logo.svg";
+if (is_file($logoPath) && filesize($logoPath) > 200000) {
+    $logoPath = __DIR__ . "/logo.png";
+}
+$logo = recuPaiementImageData($logoPath);
 $logoText = "";
 
 $htmlContent = "";
