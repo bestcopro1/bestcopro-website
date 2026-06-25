@@ -981,6 +981,9 @@ if (isset($_GET["action"], $_GET["id"])):
 												<?php
             $totalPaye = 0;
             $totalImpaye = 0;
+            $isCotisationPeriodPaid = function ($cotisation, $periodAmount) {
+                return floatval($cotisation) >= floatval($periodAmount);
+            };
             foreach ($relLotExercice as $periode):
 
                 $isPeriodDue = $isCotisationPeriodDue(
@@ -1002,16 +1005,12 @@ if (isset($_GET["action"], $_GET["id"])):
                 }
                 ?>
                                                 <td class="text-center">
-													<?php if (!$isPeriodDue) {
-                 echo '<span class="badge badge-rounded badge-warning">A VENIR</span>';
-             } elseif (
-                 number_format(floatval($periode["cotisation"]), 2) ==
-                 number_format(
-                     $periodAmount,
-                     2,
-                 )
+													<?php if (
+                 $isCotisationPeriodPaid($periode["cotisation"], $periodAmount)
              ) {
                  echo '<span class="badge badge-rounded badge-success">PAYÉ</span>';
+             } elseif (!$isPeriodDue) {
+                 echo '<span class="badge badge-rounded badge-warning">A VENIR</span>';
              } else {
                  echo '<span class="badge badge-rounded badge-danger">IMPAYÉ</span>';
              } ?>
