@@ -87,7 +87,7 @@ jobs:
           set net:max-retries 3
           set net:timeout 30
           set ftp:list-options -a
-          cd copro.ma/app
+          cd public_html/app
           LFTP
 
           add_upload() {
