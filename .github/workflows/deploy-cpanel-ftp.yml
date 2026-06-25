@@ -28,6 +28,7 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           BEFORE_SHA: ${{ github.event.before }}
+          FTP_TARGET_DIR: ${{ secrets.FTP_TARGET_DIR }}
           AFTER_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
@@ -87,8 +88,11 @@ jobs:
           set net:max-retries 3
           set net:timeout 30
           set ftp:list-options -a
-          cd public_html/app
           LFTP
+
+          FTP_TARGET_DIR="${FTP_TARGET_DIR:-public_html/app}"
+          printf 'cd "%s"\n' "$(quote_lftp "$FTP_TARGET_DIR")" >> /tmp/deploy.lftp
+          printf 'pwd\n' >> /tmp/deploy.lftp
 
           add_upload() {
             local local_path="$1"
