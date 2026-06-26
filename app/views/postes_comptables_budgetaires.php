@@ -5,6 +5,7 @@ $connection = $GLOBALS["connection"];
 $messages = [];
 $errors = [];
 $tableReady = false;
+$mappingReady = false;
 
 function pcbEscape($value)
 {
@@ -73,6 +74,176 @@ function pcbEnsureTable($connection)
     return $connection->query($request) === true;
 }
 
+
+function pcbEnsureMappingTable($connection)
+{
+    $request = "CREATE TABLE IF NOT EXISTS mapping_poste_budgetaire_legacy (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        budget VARCHAR(50) NOT NULL,
+        ancien_poste VARCHAR(255) NOT NULL,
+        ancienne_rubrique VARCHAR(255) NOT NULL,
+        nouveau_poste VARCHAR(255) NOT NULL,
+        nouvelle_rubrique VARCHAR(255) NOT NULL,
+        score DECIMAL(5,4) NOT NULL DEFAULT 0,
+        occurrences INT(11) NOT NULL DEFAULT 0,
+        statut ENUM('propose','valide','rejete') NOT NULL DEFAULT 'propose',
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY uniq_mapping (budget, ancien_poste, ancienne_rubrique),
+        KEY idx_mapping_statut (statut)
+    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+
+    return $connection->query($request) === true;
+}
+
+
+function pcbSeedSuggestedMappings($connection)
+{
+    $rows = [
+        [
+            base64_decode("Rm9uY3Rpb25uZW1lbnQ="), base64_decode("R2VzdGlvbiBBZG1pbmlzdHJhdGl2ZQ=="), base64_decode("UHJpbWUgZXhjZXB0aW9ubmVsbGUgcG91ciBsZSBwZXJzb25uZWwgKE5ldHRveWFnZSwgZ2FyZGllbiDigKYp"),
+            base64_decode("R0VTVElPTiBBRE1JTklTVFJBVElWRQ=="), base64_decode("UFJJTUUgRVhDRVBUSU9OTkVMTEUgUE9VUiBMRSBQRVJTT05ORUwgKE5FVFRZLCBHQVJESUVOLOKApi4p"), 0.9679, 6
+        ],
+        [
+            base64_decode("Rm9uY3Rpb25uZW1lbnQ="), base64_decode("R0FSRElFTk5BR0U="), base64_decode("U8ODwqljdXJpdMODwqkgam91ci9udWl0"),
+            base64_decode("R0FSRElFTk5BR0U="), base64_decode("U0VDVVJUSUUtSk9VUi9OVUlU"), 0.8851, 29
+        ],
+        [
+            base64_decode("Rm9uY3Rpb25uZW1lbnQ="), base64_decode("RlJBSVMgSlVSSURJUVVFUw=="), base64_decode("Q09OVEFOVElFVVgvIEhVSVNTSUVSIERFIEpVU1RJQ0U="),
+            base64_decode("SlVSSURJUVVF"), base64_decode("Q09OVEFOVElFVVgvIEhVSVNTSUVSIERFIEpVU1RJQ0U="), 0.8824, 78
+        ],
+        [
+            base64_decode("Rm9uY3Rpb25uZW1lbnQ="), base64_decode("QVNTVVJBTkNFUw=="), base64_decode("QXNzdXJhbmNlIE11bHRpcmlzcXVlICYgUkM="),
+            base64_decode("QVNTVVJBTkNFUw=="), base64_decode("QVNTIE1VTFRJUklTUVVFUyBFVCBSQw=="), 0.8814, 77
+        ],
+        [
+            base64_decode("Rm9uY3Rpb25uZW1lbnQ="), base64_decode("R0FSRElFTk5BR0U="), base64_decode("U0VDVVJJVEU="),
+            base64_decode("R0FSRElFTk5BR0U="), base64_decode("U0VDVVJUSUUtSk9VUg=="), 0.8357, 3
+        ],
+        [
+            base64_decode("Rm9uY3Rpb25uZW1lbnQ="), base64_decode("R2FyZGllbm5hZ2U="), base64_decode("U0VDVVJUSUU="),
+            base64_decode("R0FSRElFTk5BR0U="), base64_decode("U0VDVVJUSUUtSk9VUg=="), 0.8357, 2
+        ],
+    ];
+
+    $request = "INSERT INTO mapping_poste_budgetaire_legacy (budget, ancien_poste, ancienne_rubrique, nouveau_poste, nouvelle_rubrique, score, occurrences, statut)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'propose')
+        ON DUPLICATE KEY UPDATE nouveau_poste = VALUES(nouveau_poste), nouvelle_rubrique = VALUES(nouvelle_rubrique), score = VALUES(score), occurrences = VALUES(occurrences)";
+
+    $imported = 0;
+    foreach ($rows as $row) {
+        $budget = $row[0];
+        $ancienPoste = $row[1];
+        $ancienneRubrique = $row[2];
+        $nouveauPoste = $row[3];
+        $nouvelleRubrique = $row[4];
+        $score = $row[5];
+        $occurrences = $row[6];
+        if ($stmt = $connection->prepare($request)) {
+            $stmt->bind_param("sssssdi", $budget, $ancienPoste, $ancienneRubrique, $nouveauPoste, $nouvelleRubrique, $score, $occurrences);
+            if (!$stmt->execute()) {
+                return $connection->error;
+            }
+            $imported++;
+        } else {
+            return $connection->error;
+        }
+    }
+
+    return $imported;
+}
+
+function pcbUpdateMappingStatus($connection, $id, $statut)
+{
+    if (!in_array($statut, ["propose", "valide", "rejete"], true)) {
+        return "Statut invalide.";
+    }
+
+    $request = "UPDATE mapping_poste_budgetaire_legacy SET statut = ? WHERE id = ?";
+    if ($stmt = $connection->prepare($request)) {
+        $stmt->bind_param("si", $statut, $id);
+        if ($stmt->execute()) {
+            return "";
+        }
+    }
+
+    return $connection->error;
+}
+
+function pcbApplyValidatedMappings($connection)
+{
+    $suffix = date("Ymd_His");
+    $backupRubrique = "backup_rubrique_before_ref_mapping_" . $suffix;
+    $backupPoste = "backup_poste_before_ref_mapping_" . $suffix;
+
+    $count = 0;
+    $request = "SELECT COUNT(*) FROM mapping_poste_budgetaire_legacy WHERE statut = 'valide'";
+    if ($stmt = $connection->prepare($request)) {
+        $stmt->execute();
+        $stmt->bind_result($count);
+        $stmt->fetch();
+        $stmt->close();
+    }
+
+    if ((int) $count === 0) {
+        return "Aucun mapping valide a appliquer.";
+    }
+
+    if (!$connection->query("CREATE TABLE `" . $backupRubrique . "` AS SELECT * FROM rubrique")) {
+        return $connection->error;
+    }
+
+    if (!$connection->query("CREATE TABLE `" . $backupPoste . "` AS SELECT * FROM poste")) {
+        return $connection->error;
+    }
+
+    $connection->query("DROP TEMPORARY TABLE IF EXISTS tmp_mapping_poste_budgetaire_matches");
+    $request = "CREATE TEMPORARY TABLE tmp_mapping_poste_budgetaire_matches AS
+        SELECT r.id AS rubrique_id,
+               p.id AS poste_id,
+               m.nouveau_poste,
+               m.nouvelle_rubrique
+        FROM rubrique r
+        JOIN poste p ON p.id_rubrique = r.id
+        JOIN mapping_poste_budgetaire_legacy m
+          ON m.ancien_poste = r.libelle
+         AND m.ancienne_rubrique = p.libelle
+         AND m.budget = CASE WHEN r.id_typeRubrique = 1 THEN 'Fonctionnement' ELSE 'Investissement' END
+         AND m.statut = 'valide'";
+
+    if (!$connection->query($request)) {
+        return $connection->error;
+    }
+
+    $request = "UPDATE poste p
+        JOIN tmp_mapping_poste_budgetaire_matches m ON m.poste_id = p.id
+        SET p.libelle = m.nouvelle_rubrique";
+    if (!$connection->query($request)) {
+        return $connection->error;
+    }
+    $affectedPostes = $connection->affected_rows;
+
+    $request = "UPDATE rubrique r
+        JOIN (
+            SELECT rubrique_id, MIN(nouveau_poste) AS nouveau_poste
+            FROM tmp_mapping_poste_budgetaire_matches
+            GROUP BY rubrique_id
+            HAVING COUNT(DISTINCT nouveau_poste) = 1
+        ) m ON m.rubrique_id = r.id
+        SET r.libelle = m.nouveau_poste";
+    if (!$connection->query($request)) {
+        return $connection->error;
+    }
+    $affectedRubriques = $connection->affected_rows;
+
+    return [
+        "affected_postes" => $affectedPostes,
+        "affected_rubriques" => $affectedRubriques,
+        "backup_rubrique" => $backupRubrique,
+        "backup_poste" => $backupPoste,
+    ];
+}
+
 function pcbSaveRow($connection, $code, $budget, $poste, $rubrique)
 {
     $code = pcbCleanText($code);
@@ -105,6 +276,7 @@ function pcbSaveRow($connection, $code, $budget, $poste, $rubrique)
 }
 
 $tableReady = pcbEnsureTable($connection);
+$mappingReady = pcbEnsureMappingTable($connection);
 
 if ($tableReady && $_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST["save_manual"])) {
@@ -162,6 +334,46 @@ if ($tableReady && $_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
+
+if ($mappingReady && $_SERVER["REQUEST_METHOD"] === "POST") {
+
+    if (isset($_POST["seed_mapping_suggestions"])) {
+        $result = pcbSeedSuggestedMappings($connection);
+        if (is_int($result)) {
+            $messages[] = $result . " proposition(s) IA chargee(s).";
+        } else {
+            $errors[] = $result;
+        }
+    }
+
+    if (isset($_POST["update_mapping_status"])) {
+        $error = pcbUpdateMappingStatus(
+            $connection,
+            (int) ($_POST["mapping_id"] ?? 0),
+            $_POST["mapping_status"] ?? ""
+        );
+
+        if ($error === "") {
+            $messages[] = "Statut du mapping mis a jour.";
+        } else {
+            $errors[] = $error;
+        }
+    }
+
+    if (isset($_POST["apply_validated_mappings"])) {
+        if (trim((string) ($_POST["apply_confirmation"] ?? "")) !== "APPLIQUER") {
+            $errors[] = "Tapez APPLIQUER pour confirmer l'application des mappings valides.";
+        } else {
+            $result = pcbApplyValidatedMappings($connection);
+            if (is_array($result)) {
+                $messages[] = $result["affected_postes"] . " rubrique(s) enfant et " . $result["affected_rubriques"] . " poste(s) parent mis a jour. Backups: " . $result["backup_rubrique"] . ", " . $result["backup_poste"] . ".";
+            } else {
+                $errors[] = $result;
+            }
+        }
+    }
+}
+
 $referentiel = [];
 if ($tableReady) {
     $request = "SELECT id, code, budget, poste, rubrique, actif FROM referentiel_poste_budgetaire ORDER BY budget, poste, rubrique";
@@ -181,6 +393,48 @@ if ($tableReady) {
         }
     }
 }
+
+$mappingRows = [];
+$mappingStats = [
+    "propose" => 0,
+    "valide" => 0,
+    "rejete" => 0,
+];
+if ($mappingReady) {
+    $request = "SELECT statut, COUNT(*) FROM mapping_poste_budgetaire_legacy GROUP BY statut";
+    if ($stmt = $connection->prepare($request)) {
+        $stmt->execute();
+        $stmt->store_result();
+        $stmt->bind_result($statut, $count);
+        while ($stmt->fetch()) {
+            $mappingStats[$statut] = (int) $count;
+        }
+        $stmt->close();
+    }
+
+    $request = "SELECT id, budget, ancien_poste, ancienne_rubrique, nouveau_poste, nouvelle_rubrique, score, occurrences, statut
+        FROM mapping_poste_budgetaire_legacy
+        ORDER BY FIELD(statut, 'propose', 'valide', 'rejete'), occurrences DESC, score DESC, id DESC";
+    if ($stmt = $connection->prepare($request)) {
+        $stmt->execute();
+        $stmt->store_result();
+        $stmt->bind_result($id, $budget, $ancienPoste, $ancienneRubrique, $nouveauPoste, $nouvelleRubrique, $score, $occurrences, $statut);
+        while ($stmt->fetch()) {
+            $mappingRows[] = [
+                "id" => $id,
+                "budget" => $budget,
+                "ancien_poste" => $ancienPoste,
+                "ancienne_rubrique" => $ancienneRubrique,
+                "nouveau_poste" => $nouveauPoste,
+                "nouvelle_rubrique" => $nouvelleRubrique,
+                "score" => $score,
+                "occurrences" => $occurrences,
+                "statut" => $statut,
+            ];
+        }
+        $stmt->close();
+    }
+}
 ?>
 <div class="content-body">
     <div class="container-fluid">
@@ -194,6 +448,12 @@ if ($tableReady) {
         <?php if (!$tableReady): ?>
         <div class="alert alert-warning">
             La table <strong>referentiel_poste_budgetaire</strong> n'a pas pu etre creee automatiquement. Verifiez les droits MySQL de l'utilisateur staging ou executez la migration <strong>docs/migrations/2026_06_26_referentiel_poste_budgetaire.sql</strong>.
+        </div>
+        <?php endif; ?>
+
+        <?php if (!$mappingReady): ?>
+        <div class="alert alert-warning">
+            La table <strong>mapping_poste_budgetaire_legacy</strong> n'a pas pu etre creee automatiquement. Verifiez les droits MySQL avant de corriger l'existant.
         </div>
         <?php endif; ?>
 
@@ -296,6 +556,102 @@ if ($tableReady) {
                 </div>
             </div>
         </div>
+
+
+        <?php if ($mappingReady): ?>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center">
+                        <div class="me-auto">
+                            <h4 class="card-title mb-0">Corrections de l'existant</h4>
+                            <small>Validation des anciens postes/rubriques avant application.</small>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="alert alert-info mb-2">Proposes: <strong><?= (int) $mappingStats["propose"] ?></strong></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="alert alert-success mb-2">Valides: <strong><?= (int) $mappingStats["valide"] ?></strong></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="alert alert-secondary mb-2">Rejetes: <strong><?= (int) $mappingStats["rejete"] ?></strong></div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            L'application modifie les tables <strong>rubrique</strong> et <strong>poste</strong>. Elle cree automatiquement deux tables de backup avant l'UPDATE. A utiliser sur staging avant toute production.
+                        </div>
+
+                        <form method="POST" class="mb-3">
+                            <button type="submit" name="seed_mapping_suggestions" class="btn btn-rounded btn-outline-primary">Charger les propositions IA</button>
+                        </form>
+
+
+                        <form method="POST" class="row g-2 align-items-end mb-4">
+                            <div class="col-md-4">
+                                <label class="text-label">Confirmation</label>
+                                <input type="text" class="form-control input-rounded" name="apply_confirmation" placeholder="Tapez APPLIQUER">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" name="apply_validated_mappings" class="btn btn-rounded btn-danger">Appliquer les mappings valides</button>
+                            </div>
+                        </form>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Statut</th>
+                                        <th>Score</th>
+                                        <th>Occurrences</th>
+                                        <th>Budget</th>
+                                        <th>Actuel</th>
+                                        <th>Referentiel</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($mappingRows as $row): ?>
+                                    <tr>
+                                        <td><?= pcbEscape($row["statut"]) ?></td>
+                                        <td><?= pcbEscape($row["score"]) ?></td>
+                                        <td><?= (int) $row["occurrences"] ?></td>
+                                        <td><?= pcbEscape($row["budget"]) ?></td>
+                                        <td>
+                                            <strong><?= pcbEscape($row["ancien_poste"]) ?></strong><br>
+                                            <?= pcbEscape($row["ancienne_rubrique"]) ?>
+                                        </td>
+                                        <td>
+                                            <strong><?= pcbEscape($row["nouveau_poste"]) ?></strong><br>
+                                            <?= pcbEscape($row["nouvelle_rubrique"]) ?>
+                                        </td>
+                                        <td>
+                                            <form method="POST" class="d-flex gap-2 flex-wrap">
+                                                <input type="hidden" name="mapping_id" value="<?= (int) $row["id"] ?>">
+                                                <input type="hidden" name="mapping_status" value="">
+                                                <button type="submit" name="update_mapping_status" value="1" class="btn btn-sm btn-success" onclick="this.form.mapping_status.value='valide'">Valider</button>
+                                                <button type="submit" name="update_mapping_status" value="1" class="btn btn-sm btn-outline-secondary" onclick="this.form.mapping_status.value='propose'">Proposer</button>
+                                                <button type="submit" name="update_mapping_status" value="1" class="btn btn-sm btn-outline-danger" onclick="this.form.mapping_status.value='rejete'">Rejeter</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                    <?php if (count($mappingRows) === 0): ?>
+                                    <tr>
+                                        <td colspan="7" class="text-center">Aucun mapping charge. Importez la migration de mapping generee pour voir les propositions IA.</td>
+                                    </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
         <?php endif; ?>
     </div>
 </div>
