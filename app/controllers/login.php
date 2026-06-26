@@ -31,16 +31,6 @@ if (isset($_POST["login"])) {
     }
 
     if (!empty($email_signin) && !empty($password_signin)) {
-        if (
-            !preg_match(
-                "/^(?=.*\d)(?=.*[@#\-_$%^&+=§!\?])(?=.*[a-z])(?=.*[A-Z])[0-9A-Za-z@#\-_$%^&+=§!\?]{6,20}$/",
-                $pswd,
-            )
-        ) {
-            $wrongPwdErr = '<div class="alert alert-danger">
-                        Password should be between 6 to 20 charcters long, contains atleast one special chacter, lowercase, uppercase and a digit.
-                    </div>';
-        }
         // Check if email exist
         if ($rowCount <= 0) {
             $accountNotExistErr = '<div class="alert alert-danger">
@@ -63,28 +53,22 @@ if (isset($_POST["login"])) {
             // Verify password
             $password = password_verify($password_signin, $pass_word);
 
-            // Allow only verified user
-            if ($is_active == "1") {
-                if ($email_signin == $email && $password_signin == $password) {
-                    header("Location: ./index.php");
+            if ($email_signin == $email && $password === true) {
+                $_SESSION["id"] = $id;
+                $_SESSION["prenom"] = $firstname;
+                $_SESSION["nom"] = $lastname;
+                $_SESSION["email"] = $email;
+                $_SESSION["mobile"] = $mobilenumber;
+                $_SESSION["token"] = $token;
+                $_SESSION["loggedin"] = "ImIn";
+                $_SESSION["id_usertype"] = $id_usertype;
 
-                    $_SESSION["id"] = $id;
-                    $_SESSION["prenom"] = $firstname;
-                    $_SESSION["nom"] = $lastname;
-                    $_SESSION["email"] = $email;
-                    $_SESSION["mobile"] = $mobilenumber;
-                    $_SESSION["token"] = $token;
-                    $_SESSION["loggedin"] = "ImIn";
-                    $_SESSION["id_usertype"] = $id_usertype;
-                } else {
-                    $emailPwdErr = '<div class="alert alert-danger">
+                header("Location: ./index.php");
+                exit();
+            } else {
+                $emailPwdErr = '<div class="alert alert-danger">
                                 Either email or password is incorrect.
                             </div>';
-                }
-            } else {
-                $verificationRequiredErr = '<div class="alert alert-danger">
-                            Account verification is required for login.
-                        </div>';
             }
         }
     } else {
@@ -102,3 +86,4 @@ if (isset($_POST["login"])) {
     }
 }
 ?>
+
