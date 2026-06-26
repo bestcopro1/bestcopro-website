@@ -6,6 +6,10 @@ on:
       - main
       - staging
 
+concurrency:
+  group: cpanel-ftp-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   web-deploy:
     name: Deploy
@@ -74,8 +78,40 @@ jobs:
           set ftp:list-options -a
           LFTP
 
-          FTP_TARGET_DIR="${FTP_TARGET_DIR:-public_html/app}"
-          printf 'cd "%s"\n' "$(quote_lftp "$FTP_TARGET_DIR")" >> /tmp/deploy.lftp
+          FTP_TARGET_DIR="${FTP_TARGET_DIR:-}"
+          if [ -n "$FTP_TARGET_DIR" ]; then
+            target_candidates=("$FTP_TARGET_DIR")
+          else
+            target_candidates=("public_html/app" "app" ".")
+          fi
+
+          selected_target=""
+          for target_dir in "${target_candidates[@]}"; do
+            cat > /tmp/check-target.lftp <<LFTP
+          set ftp:ssl-allow no
+          set ftp:passive-mode yes
+          set ftp:use-mlsd no
+          set ssl:verify-certificate no
+          set cmd:fail-exit yes
+          set net:max-retries 1
+          set net:timeout 10
+          cd "$(quote_lftp "$target_dir")"
+          pwd
+          bye
+          LFTP
+            if timeout 45s lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" < /tmp/check-target.lftp; then
+              selected_target="$target_dir"
+              break
+            fi
+          done
+
+          if [ -z "$selected_target" ]; then
+            echo "No valid FTP target directory found. Set the FTP_TARGET_DIR secret to the cPanel app directory."
+            exit 1
+          fi
+
+          echo "Using FTP target: $selected_target"
+          printf 'cd "%s"\n' "$(quote_lftp "$selected_target")" >> /tmp/deploy.lftp
           printf 'pwd\n' >> /tmp/deploy.lftp
 
           add_upload() {
