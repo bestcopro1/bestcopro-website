@@ -125,7 +125,9 @@ jobs:
 
             remote_dir="$(dirname "$remote_path")"
             if [ "$remote_dir" != "." ]; then
+              printf 'set cmd:fail-exit no\n' >> /tmp/deploy.lftp
               printf 'mkdir -p "%s"\n' "$(quote_lftp "$remote_dir")" >> /tmp/deploy.lftp
+              printf 'set cmd:fail-exit yes\n' >> /tmp/deploy.lftp
             fi
             printf 'put -O "%s" "%s"\n' "$(quote_lftp "$remote_dir")" "$(quote_lftp "$local_path")" >> /tmp/deploy.lftp
           }
