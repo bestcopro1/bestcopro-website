@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if (!isset($_SESSION)) {
     session_start();
 }
@@ -52,6 +52,7 @@ if (
 											<img src="best_copro_logo.svg" alt="Best Copro" style="max-width: 220px; height: auto;">
 										</a>
 									</div>
+                                    <p class="text-center mb-3">Hello BESTCOPRO</p>
                                     <h4 class="text-center mb-4">Authentifiez-vous pour accéder à votre compte</h4>
                                     <?php echo $accountNotExistErr; ?>
 									<?php echo $emailPwdErr; ?>
