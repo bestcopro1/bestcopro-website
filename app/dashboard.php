@@ -211,6 +211,7 @@ foreach ($echeances as $echeance) {
                         $page == "situation_immeuble" ||
                         $page == "suivi_cotisations_coproprietaires" ||
                         $page == "creation_poste_budgetaire" ||
+                        $page == "postes_comptables_budgetaires" ||
                         $page == "contentieux" ||
                         $page == "proprietaires"
                     ) {
@@ -263,6 +264,15 @@ foreach ($echeances as $echeance) {
         ) {
             echo "mm-active";
         } ?>">Creation poste budgétaire</a>
+							</li>
+                            <li class="<?php if ($page == "postes_comptables_budgetaires") {
+                                echo "mm-active";
+                            } ?>">
+								<a href="dashboard.php?page=postes_comptables_budgetaires" class="<?php if (
+            $page == "postes_comptables_budgetaires"
+        ) {
+            echo "mm-active";
+        } ?>">Postes comptables budgétaires</a>
 							</li>
                             <li class="<?php if ($page == "contentieux") {
                                 echo "mm-active";
