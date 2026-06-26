@@ -18,7 +18,6 @@ if (isset($_POST["login"])) {
 
     // clean data
     $user_email = filter_var($email_signin, FILTER_SANITIZE_EMAIL);
-    $pswd = mysqli_real_escape_string($connection, $password_signin);
 
     // Query if email exists in db
     $sql = "SELECT * From syndic WHERE email = '{$email_signin}' ";
@@ -46,7 +45,6 @@ if (isset($_POST["login"])) {
                 $mobilenumber = $row["mobile"];
                 $pass_word = $row["password"];
                 $token = $row["token"];
-                $is_active = $row["is_active"];
                 $id_usertype = $row["id_typeSyndic"];
             }
 
@@ -86,4 +84,3 @@ if (isset($_POST["login"])) {
     }
 }
 ?>
-

@@ -24,6 +24,7 @@ jobs:
           sudo apt-get install -y lftp
 
       - name: Deploy changed app files to cPanel
+        timeout-minutes: 5
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
@@ -55,27 +56,6 @@ jobs:
             git diff --name-status -z "$BEFORE_SHA" "$AFTER_SHA" -- app > /tmp/app-changes.z
           fi
 
-          force_deploy_paths=(
-            app/best_copro_logo.svg
-            app/header.php
-            app/login.php
-            app/forgot-password.php
-            app/views/paiements.php
-            app/views/lots.php
-            app/js/styleSwitcher.js
-            app/export/export_recu_paiement.php
-            app/export/export_situation_immeuble.php
-            app/export/export_situation_immeuble_excel.php
-            app/export/export_situation_encaissements.php
-            app/export/export_situation_encaissements_excel.php
-          )
-
-          for path in "${force_deploy_paths[@]}"; do
-            if [ -f "$path" ]; then
-              printf 'M\0%s\0' "$path" >> /tmp/app-changes.z
-            fi
-          done
-
           if [ ! -s /tmp/app-changes.z ]; then
             echo "No app changes to deploy."
             exit 0
@@ -86,8 +66,11 @@ jobs:
           set ftp:passive-mode yes
           set ftp:use-mlsd no
           set ssl:verify-certificate no
-          set net:max-retries 3
-          set net:timeout 30
+          set cmd:fail-exit yes
+          set net:max-retries 1
+          set net:timeout 15
+          set net:reconnect-interval-base 5
+          set net:reconnect-interval-multiplier 1
           set ftp:list-options -a
           LFTP
 
@@ -152,4 +135,4 @@ jobs:
           fi
 
           echo "bye" >> /tmp/deploy.lftp
-          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" < /tmp/deploy.lftp
+          timeout 180s lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" < /tmp/deploy.lftp
