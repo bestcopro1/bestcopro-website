@@ -1086,11 +1086,11 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 							addReferenceToUi(response.reference);
 							$('#budgetReferenceModal').modal('hide');
 						} else {
-							$('#budgetReferenceError').removeClass('d-none').text((response && response.message) ? response.message : 'Impossible d'ajouter la reference.');
+							$('#budgetReferenceError').removeClass('d-none').text((response && response.message) ? response.message : "Impossible d'ajouter la reference.");
 						}
 					},
 					error: function() {
-						$('#budgetReferenceError').removeClass('d-none').text('Impossible d'ajouter la reference.');
+						$('#budgetReferenceError').removeClass('d-none').text("Impossible d'ajouter la reference.");
 					}
 				});
 			});
