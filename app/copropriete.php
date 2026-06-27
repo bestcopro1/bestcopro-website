@@ -36,6 +36,20 @@ foreach ($rubriquesInvestTemplates as $r) {
         $allPostesTemplates[$r["libelle"]] = array_column($postes, "libelle");
     }
 }
+
+$budgetReferences = ["fonct" => [], "invest" => []];
+foreach ($rubriquesFonctTemplates as $r) {
+    $postes = getPoste(null, null, $r["libelle"], $connection);
+    foreach ($postes as $poste) {
+        $budgetReferences["fonct"][] = ["poste" => $r["libelle"], "rubrique" => $poste["libelle"]];
+    }
+}
+foreach ($rubriquesInvestTemplates as $r) {
+    $postes = getPoste(null, null, $r["libelle"], $connection);
+    foreach ($postes as $poste) {
+        $budgetReferences["invest"][] = ["poste" => $r["libelle"], "rubrique" => $poste["libelle"]];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -254,64 +268,42 @@ foreach ($rubriquesInvestTemplates as $r) {
 												</div>
 											</div>
 											<!-- Nav tabs -->
-											<div class="default-tab">
+											<div class="default-tab budget-builder">
 												<ul class="nav nav-tabs" role="tablist">
-													<li class="nav-item">
-														<a class="nav-link active" data-bs-toggle="tab" href="#fonctionnement">Budget de fonctionnement</a>
-													</li>
-													<li class="nav-item">
-														<a class="nav-link" data-bs-toggle="tab" href="#investissement">Budget d'investissement</a>
-													</li>
+													<li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#fonctionnement">Budget de fonctionnement</a></li>
+													<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#investissement">Budget d'investissement</a></li>
 												</ul>
+												<datalist id="budget_postes_fonct"><?php foreach ($budgetReferences["fonct"] as $ref): ?><option value="<?= htmlspecialchars($ref["poste"], ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($ref["rubrique"], ENT_QUOTES, "UTF-8") ?></option><?php endforeach; ?></datalist>
+												<datalist id="budget_rubriques_fonct"><?php foreach ($budgetReferences["fonct"] as $ref): ?><option value="<?= htmlspecialchars($ref["rubrique"], ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($ref["poste"], ENT_QUOTES, "UTF-8") ?></option><?php endforeach; ?></datalist>
+												<datalist id="budget_postes_invest"><?php foreach ($budgetReferences["invest"] as $ref): ?><option value="<?= htmlspecialchars($ref["poste"], ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($ref["rubrique"], ENT_QUOTES, "UTF-8") ?></option><?php endforeach; ?></datalist>
+												<datalist id="budget_rubriques_invest"><?php foreach ($budgetReferences["invest"] as $ref): ?><option value="<?= htmlspecialchars($ref["rubrique"], ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($ref["poste"], ENT_QUOTES, "UTF-8") ?></option><?php endforeach; ?></datalist>
 												<div class="tab-content">
 													<div class="tab-pane fade show active" id="fonctionnement" role="tabpanel">
-														<div class="pt-4">
-															<div class="row mb-4 align-items-end">
-																<div class="col-sm-8 col-lg-9 mb-3 mb-sm-0">
-																	<label class="form-label">Choisir un poste de fonctionnement</label>
-																	<select id="select_rubrique_fonct" class="form-control default-select wide">
-																		<option value="">-- Choisir un poste --</option>
-																		<?php foreach ($rubriquesFonctTemplates as $r): ?>
-																			<option value="<?= htmlspecialchars($r["libelle"]) ?>"><?= htmlspecialchars(
-    $r["libelle"],
-) ?></option>
-																		<?php endforeach; ?>
-																		<option value="NEW">-- Autre (Nouveau poste) --</option>
-																	</select>
-																</div>
-																<div class="col-sm-4 col-lg-3">
-																	<button type="button" class="btn btn-primary btn-block" id="btn_add_rubrique_fonct">Ajouter</button>
-																</div>
+														<div class="pt-4 budget-entry" data-type="fonct">
+															<div class="row align-items-end">
+																<div class="col-lg-3 mb-3"><label class="form-label">Poste</label><input type="text" class="form-control input-rounded budget-poste-input" list="budget_postes_fonct" placeholder="Ex. GARDIENNAGE"></div>
+																<div class="col-lg-3 mb-3"><label class="form-label">Rubrique</label><input type="text" class="form-control input-rounded budget-rubrique-input" list="budget_rubriques_fonct" placeholder="Ex. SECURTIE-JOUR/NUIT"></div>
+																<div class="col-lg-3 mb-3"><label class="form-label">Liste du r&eacute;f&eacute;rentiel</label><select class="form-control default-select wide budget-reference-select"><option value="">Afficher toute la liste</option><?php foreach ($budgetReferences["fonct"] as $ref): ?><option data-poste="<?= htmlspecialchars($ref["poste"], ENT_QUOTES, "UTF-8") ?>" data-rubrique="<?= htmlspecialchars($ref["rubrique"], ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($ref["poste"] . " / " . $ref["rubrique"], ENT_QUOTES, "UTF-8") ?></option><?php endforeach; ?></select></div>
+																<div class="col-lg-2 mb-3"><label class="form-label">Budget</label><input type="number" min="0" step="0.01" class="form-control input-rounded budget-amount-input" placeholder="0.00"></div>
+																<div class="col-lg-1 mb-3"><button type="button" class="btn btn-primary btn-block budget-add-row">Rajouter</button></div>
 															</div>
-															<div id="container_rubriques_fonct">
-																<!-- Les postes seront ajoutés ici -->
-															</div>
-															<input type="hidden" id="rubrique_count_fonct" value="1">
+															<a href="dashboard.php?page=creation_poste_budgetaire" class="btn btn-outline-primary btn-sm mb-3">Ajouter un nouveau poste budg&eacute;taire</a>
+															<div class="table-responsive"><table class="table table-responsive-sm budget-lines-table"><thead><tr><th>Poste</th><th>Rubrique</th><th>Budget</th><th class="text-center">Actions</th></tr></thead><tbody id="budget_rows_fonct"><tr class="budget-empty"><td colspan="4"><p class="text-center mt-3">Aucun poste ajout&eacute;</p></td></tr></tbody><tfoot><tr><th colspan="2">Budget de fonctionnement</th><th><span id="budget_total_fonct">0.00</span> MAD</th><th></th></tr></tfoot></table></div>
+															<div id="budget_hidden_fonct"></div>
 														</div>
 													</div>
 													<div class="tab-pane fade" id="investissement" role="tabpanel">
-														<div class="pt-4">
-															<div class="row mb-4 align-items-end">
-																<div class="col-sm-8 col-lg-9 mb-3 mb-sm-0">
-																	<label class="form-label">Choisir un poste d'investissement</label>
-																	<select id="select_rubrique_invest" class="form-control default-select wide">
-																		<option value="">-- Choisir un poste --</option>
-																		<?php foreach ($rubriquesInvestTemplates as $r): ?>
-																			<option value="<?= htmlspecialchars($r["libelle"]) ?>"><?= htmlspecialchars(
-    $r["libelle"],
-) ?></option>
-																		<?php endforeach; ?>
-																		<option value="NEW">-- Autre (Nouveau poste) --</option>
-																	</select>
-																</div>
-																<div class="col-sm-4 col-lg-3">
-																	<button type="button" class="btn btn-primary btn-block" id="btn_add_rubrique_invest">Ajouter</button>
-																</div>
+														<div class="pt-4 budget-entry" data-type="invest">
+															<div class="row align-items-end">
+																<div class="col-lg-3 mb-3"><label class="form-label">Poste</label><input type="text" class="form-control input-rounded budget-poste-input" list="budget_postes_invest" placeholder="Ex. EQUIPEMENT"></div>
+																<div class="col-lg-3 mb-3"><label class="form-label">Rubrique</label><input type="text" class="form-control input-rounded budget-rubrique-input" list="budget_rubriques_invest" placeholder="Nouvelle rubrique"></div>
+																<div class="col-lg-3 mb-3"><label class="form-label">Liste du r&eacute;f&eacute;rentiel</label><select class="form-control default-select wide budget-reference-select"><option value="">Afficher toute la liste</option><?php foreach ($budgetReferences["invest"] as $ref): ?><option data-poste="<?= htmlspecialchars($ref["poste"], ENT_QUOTES, "UTF-8") ?>" data-rubrique="<?= htmlspecialchars($ref["rubrique"], ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($ref["poste"] . " / " . $ref["rubrique"], ENT_QUOTES, "UTF-8") ?></option><?php endforeach; ?></select></div>
+																<div class="col-lg-2 mb-3"><label class="form-label">Budget</label><input type="number" min="0" step="0.01" class="form-control input-rounded budget-amount-input" placeholder="0.00"></div>
+																<div class="col-lg-1 mb-3"><button type="button" class="btn btn-primary btn-block budget-add-row">Rajouter</button></div>
 															</div>
-															<div id="container_rubriques_invest">
-																<!-- Les postes seront ajoutés ici -->
-															</div>
-															<input type="hidden" id="rubrique_count_invest" value="1">
+															<a href="dashboard.php?page=creation_poste_budgetaire" class="btn btn-outline-primary btn-sm mb-3">Ajouter un nouveau poste budg&eacute;taire</a>
+															<div class="table-responsive"><table class="table table-responsive-sm budget-lines-table"><thead><tr><th>Poste</th><th>Rubrique</th><th>Budget</th><th class="text-center">Actions</th></tr></thead><tbody id="budget_rows_invest"><tr class="budget-empty"><td colspan="4"><p class="text-center mt-3">Aucun poste ajout&eacute;</p></td></tr></tbody><tfoot><tr><th colspan="2">Budget d'investissement</th><th><span id="budget_total_invest">0.00</span> MAD</th><th></th></tr></tfoot></table></div>
+															<div id="budget_hidden_invest"></div>
 														</div>
 													</div>
 												</div>
@@ -753,76 +745,13 @@ foreach ($rubriquesInvestTemplates as $r) {
 	<script src="js\demo.js"></script>
 	<script>
 		$(document).ready(function(){
-			var budgetPostesTemplates = <?= json_encode($allPostesTemplates) ?>;
+			var budgetReferences = <?= json_encode($budgetReferences, JSON_UNESCAPED_UNICODE) ?>;
+			var budgetLines = { fonct: [], invest: [] };
 
-			function addRubriqueUI(type, name, templatePostes) {
-				var rubrique_count_selector = (type == 1) ? '#rubrique_count_fonct' : '#rubrique_count_invest';
-				var container_selector = (type == 1) ? '#container_rubriques_fonct' : '#container_rubriques_invest';
-				var prefix = (type == 1) ? 'rubrique_' : 'rubrique2_';
-				var poste_prefix = (type == 1) ? '_poste_' : '_poste2_';
-				var add_poste_class = (type == 1) ? 'add_poste' : 'add_poste2';
-				var del_rubrique_class = (type == 1) ? 'del_rubrique' : 'del_rubrique2';
-				
-				var rubrique_count = parseInt($(rubrique_count_selector).val());
-				
-				var codeHtml = '<div class="basic-list-group ' + prefix + rubrique_count + ' mt-4">';
-				codeHtml += '<ul class="list-group">';
-				codeHtml += '<li class="list-group-item active">';
-				codeHtml += '<div class="row align-items-center">';
-				codeHtml += '<div class="col-10 col-md-11">';
-				codeHtml += '<input type="text" class="form-control input-rounded" name="' + prefix + rubrique_count + '" placeholder="Nouveau poste" value="' + (name || '') + '">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-2 col-md-1 text-end">';
-				codeHtml += '<button type="button" class="btn btn-outline-secondary btn-rounded ' + del_rubrique_class + '" data-' + prefix.replace('_', '') + '="' + rubrique_count + '"><i class="fa fa-trash"></i></button>';
-				codeHtml += '</div>';
-				codeHtml += '</div>';
-				codeHtml += '</li>';
-				
-				var poste_count = 1;
-				if (templatePostes && templatePostes.length > 0) {
-					templatePostes.forEach(function(pName) {
-						codeHtml += renderPosteHtml(type, rubrique_count, poste_count, pName);
-						poste_count++;
-					});
-				} else {
-					codeHtml += renderPosteHtml(type, rubrique_count, poste_count, '');
-					poste_count++;
-				}
-				
-				codeHtml += '<li class="list-group-item">';
-				codeHtml += '<div class="row">';
-				codeHtml += '<div class="col-12">';
-				codeHtml += '<a href="#" class="btn light btn-primary btn-block ' + add_poste_class + '" data-' + prefix.replace('_', '') + '="' + rubrique_count + '" data-' + (type == 1 ? 'poste' : 'poste2') + '="' + poste_count + '">Ajouter une rubrique</a>';
-				codeHtml += '</div>';
-				codeHtml += '</div>';
-				codeHtml += '</li>';
-				codeHtml += '</ul>';
-				codeHtml += '</div>';
-				
-				$(container_selector).append(codeHtml);
-				$(rubrique_count_selector).val(rubrique_count + 1);
-				updateTabHeight();
-			}
-
-			function renderPosteHtml(type, rubrique_count, poste_count, pName) {
-				var prefix = (type == 1) ? 'rubrique_' : 'rubrique2_';
-				var poste_prefix = (type == 1) ? '_poste_' : '_poste2_';
-				var del_poste_class = (type == 1) ? 'del_poste' : 'del_poste2';
-				
-				var codeHtml = '<li class="list-group-item ' + prefix + rubrique_count + poste_prefix + poste_count + '">';
-				codeHtml += '<div class="row align-items-center">';
-				codeHtml += '<div class="col-12 col-md-6 mb-2 mb-md-0">';
-				codeHtml += '<input type="text" class="form-control input-rounded" name="' + prefix + rubrique_count + poste_prefix + poste_count + '" placeholder="Nouvelle rubrique" value="' + (pName || '') + '">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-10 col-md-5">';
-				codeHtml += '<input type="number" class="form-control input-rounded value" name="' + prefix + rubrique_count + poste_prefix + poste_count + '_value" placeholder="0.00" value="">';
-				codeHtml += '</div>';
-				codeHtml += '<div class="col-2 col-md-1 text-end">';
-				codeHtml += '<a href="#" class="ti-close fs-35 text-secondary las la-times-circle mt-1 ' + del_poste_class + '" data-' + prefix.replace('_', '') + '="' + rubrique_count + '" data-' + (type == 1 ? 'poste' : 'poste2') + '="' + poste_count + '"></a>';
-				codeHtml += '</div>';
-				codeHtml += '</div>';
-				codeHtml += '</li>';
-				return codeHtml;
+			function escapeHtml(value) {
+				return String(value || '').replace(/[&<>"']/g, function(char) {
+					return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'}[char];
+				});
 			}
 
 			function updateTabHeight() {
@@ -835,37 +764,116 @@ foreach ($rubriquesInvestTemplates as $r) {
 				}, 100);
 			}
 
-			$(window).on('resize', function() {
-				updateTabHeight();
-			});
-
-			$('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-				updateTabHeight();
-			});
-
-			$('#btn_add_rubrique_fonct').on('click', function() {
-				var selected = $('#select_rubrique_fonct').val();
-				if (!selected) return;
-				if (selected === "NEW") {
-					addRubriqueUI(1, '', []);
+			function renderBudgetTable(type) {
+				var $tbody = $('#budget_rows_' + type);
+				$tbody.empty();
+				if (budgetLines[type].length === 0) {
+					$tbody.append('<tr class="budget-empty"><td colspan="4"><p class="text-center mt-3">Aucun poste ajout&eacute;</p></td></tr>');
 				} else {
-					addRubriqueUI(1, selected, budgetPostesTemplates[selected] || []);
+					budgetLines[type].forEach(function(line, index) {
+						$tbody.append('<tr data-index="' + index + '"><td>' + escapeHtml(line.poste) + '</td><td>' + escapeHtml(line.rubrique) + '</td><td><input type="number" min="0" step="0.01" class="form-control input-rounded budget-line-amount" value="' + escapeHtml(line.amount) + '"></td><td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm budget-delete-row"><i class="fa fa-trash"></i></button></td></tr>');
+					});
 				}
-				$('#select_rubrique_fonct').val('').niceSelect('update');
+				rebuildBudgetHiddenFields(type);
+				recalcBudgetTotals();
+				updateTabHeight();
+			}
+
+			function rebuildBudgetHiddenFields(type) {
+				var prefix = type === 'fonct' ? 'rubrique_' : 'rubrique2_';
+				var postePrefix = type === 'fonct' ? '_poste_' : '_poste2_';
+				var $container = $('#budget_hidden_' + type);
+				$container.empty();
+				if (budgetLines[type].length === 0) {
+					$container.append('<input type="hidden" name="' + prefix + '1" value="">');
+					return;
+				}
+				budgetLines[type].forEach(function(line, index) {
+					var i = index + 1;
+					$container.append('<input type="hidden" name="' + prefix + i + '" value="' + escapeHtml(line.poste) + '">');
+					$container.append('<input type="hidden" name="' + prefix + i + postePrefix + '1" value="' + escapeHtml(line.rubrique) + '">');
+					$container.append('<input type="hidden" class="value" name="' + prefix + i + postePrefix + '1_value" value="' + escapeHtml(line.amount) + '">');
+				});
+			}
+
+			function recalcBudgetTotals() {
+				var totalFonct = 0;
+				var totalInvest = 0;
+				budgetLines.fonct.forEach(function(line) { totalFonct += parseAmount(line.amount); });
+				budgetLines.invest.forEach(function(line) { totalInvest += parseAmount(line.amount); });
+				$('#budget_total_fonct').text(totalFonct.toFixed(2));
+				$('#budget_total_invest').text(totalInvest.toFixed(2));
+				$('#totalBudgetFonct').text(totalFonct.toFixed(2));
+				$('#totalBudgetInvest').text(totalInvest.toFixed(2));
+				$('#totalBudget').text((totalFonct + totalInvest).toFixed(2));
+			}
+
+			function fillFromReference($entry, reference) {
+				if (!reference) return;
+				$entry.find('.budget-poste-input').val(reference.poste || '');
+				$entry.find('.budget-rubrique-input').val(reference.rubrique || '');
+			}
+
+			function findReference(type, field, value) {
+				value = String(value || '').toLowerCase();
+				if (value === '') return null;
+				var refs = budgetReferences[type] || [];
+				for (var i = 0; i < refs.length; i++) {
+					if (String(refs[i][field] || '').toLowerCase() === value) return refs[i];
+				}
+				return null;
+			}
+
+			function addBudgetLine($entry) {
+				var type = $entry.data('type');
+				var poste = $.trim($entry.find('.budget-poste-input').val());
+				var rubrique = $.trim($entry.find('.budget-rubrique-input').val());
+				var amount = parseAmount($entry.find('.budget-amount-input').val());
+				if (poste === '' || rubrique === '' || amount <= 0) {
+					$('#erreurMessage').text('Veuillez renseigner le poste, la rubrique et un budget valide.');
+					$('#SuccessErreurAlert').modal('toggle');
+					return;
+				}
+				budgetLines[type].push({ poste: poste, rubrique: rubrique, amount: amount.toFixed(2) });
+				$entry.find('.budget-poste-input, .budget-rubrique-input, .budget-amount-input').val('');
+				$entry.find('.budget-reference-select').val('').niceSelect('update');
+				renderBudgetTable(type);
+			}
+
+			rebuildBudgetHiddenFields('fonct');
+			rebuildBudgetHiddenFields('invest');
+
+			$(window).on('resize', function() { updateTabHeight(); });
+			$('a[data-bs-toggle="tab"]').on('shown.bs.tab', function () { updateTabHeight(); });
+			$('body').on('change', '.budget-reference-select', function() {
+				var $option = $(this).find('option:selected');
+				fillFromReference($(this).closest('.budget-entry'), { poste: $option.data('poste'), rubrique: $option.data('rubrique') });
+			});
+			$('body').on('change', '.budget-poste-input', function() {
+				var $entry = $(this).closest('.budget-entry');
+				fillFromReference($entry, findReference($entry.data('type'), 'poste', $(this).val()));
+			});
+			$('body').on('change', '.budget-rubrique-input', function() {
+				var $entry = $(this).closest('.budget-entry');
+				fillFromReference($entry, findReference($entry.data('type'), 'rubrique', $(this).val()));
+			});
+			$('body').on('click', '.budget-add-row', function() { addBudgetLine($(this).closest('.budget-entry')); });
+			$('body').on('click', '.budget-delete-row', function() {
+				var $row = $(this).closest('tr');
+				var type = $row.closest('tbody').attr('id') === 'budget_rows_fonct' ? 'fonct' : 'invest';
+				budgetLines[type].splice(parseInt($row.data('index')), 1);
+				renderBudgetTable(type);
+			});
+			$('body').on('change keyup', '.budget-line-amount', function() {
+				var $row = $(this).closest('tr');
+				var type = $row.closest('tbody').attr('id') === 'budget_rows_fonct' ? 'fonct' : 'invest';
+				var index = parseInt($row.data('index'));
+				budgetLines[type][index].amount = parseAmount($(this).val()).toFixed(2);
+				rebuildBudgetHiddenFields(type);
+				recalcBudgetTotals();
 			});
 
-			$('#btn_add_rubrique_invest').on('click', function() {
-				var selected = $('#select_rubrique_invest').val();
-				if (!selected) return;
-				if (selected === "NEW") {
-					addRubriqueUI(2, '', []);
-				} else {
-					addRubriqueUI(2, selected, budgetPostesTemplates[selected] || []);
-				}
-				$('#select_rubrique_invest').val('').niceSelect('update');
-			});
-
-			function parseAmount(value) {
+						function parseAmount(value) {
 				value = String(value || '').replace(/\s/g, '').replace(',', '.');
 				var amount = parseFloat(value);
 				return isNaN(amount) ? 0 : amount;
@@ -1073,9 +1081,12 @@ foreach ($rubriquesInvestTemplates as $r) {
 					}
 					var form_data = new FormData();
 					$('#copropriete_Budget input').each(
-						function(index){  
+						function(index){
 							var input = $(this);
-							form_data.append(input.attr('name'), input.val());
+							var name = input.attr('name');
+							if (name) {
+								form_data.append(name, input.val());
+							}
 						}
 					);
 					form_data.append('id_exercice', $('#id_exercice').val());
@@ -1131,125 +1142,6 @@ foreach ($rubriquesInvestTemplates as $r) {
 			$('input[name="nbrLot"]').on("change", function(event) {
 				$("#nbrLot").text($(this).val());
 				$("#nbrLot_bis").text($(this).val());
-			});
-			$("body").on("click", '.add_poste', function(event) {
-				event.preventDefault();
-				var rubrique_count =  parseInt($(this).attr('data-rubrique'));
-				var poste_count =  parseInt($(this).attr('data-poste'));
-				var codeHtml = renderPosteHtml(1, rubrique_count, poste_count, '');
-				$(this).closest('li').before(codeHtml);
-				poste_count += 1;
-				$(this).attr('data-poste',poste_count);
-				updateTabHeight();
-				return false;
-			});
-			$("body").on("click", '.del_rubrique', function(event) {
-				event.preventDefault();
-				var rubrique_count =  parseInt($(this).attr('data-rubrique'));
-				$('.rubrique_'+rubrique_count).remove();
-				var totalBudget = 0;
-				var totalBudgetFonct = 0;
-				var totalBudgetInvest = 0;
-				$('#fonctionnement .value').each(function(i) {
-					totalBudgetFonct += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-				});
-				$('#investissement .value').each(function(i) {
-					totalBudgetInvest += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-				});
-				$('#totalBudgetFonct').text(totalBudgetFonct.toFixed(2));
-				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
-				totalBudget = totalBudgetFonct + totalBudgetInvest;
-				$('#totalBudget').text(totalBudget.toFixed(2));
-				updateTabHeight();
-				return false;
-			});
-			$("body").on("click", '.del_poste', function(event) {
-				event.preventDefault();
-				var rubrique_count =  $(this).attr('data-rubrique');
-				var poste_count =  $(this).attr('data-poste');
-				$('.rubrique_'+rubrique_count+'_poste_'+poste_count).remove();
-				var totalBudget = 0;
-				var totalBudgetFonct = 0;
-				var totalBudgetInvest = 0;
-				$('#fonctionnement .value').each(function(i) {
-					totalBudgetFonct += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-				});
-				$('#investissement .value').each(function(i) {
-					totalBudgetInvest += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-				});
-				$('#totalBudgetFonct').text(totalBudgetFonct.toFixed(2));
-				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
-				totalBudget = totalBudgetFonct + totalBudgetInvest;
-				$('#totalBudget').text(totalBudget.toFixed(2));
-				updateTabHeight();
-				return false;
-			});
-			$("body").on("click", '.add_poste2', function(event) {
-				event.preventDefault();
-				var rubrique2_count =  parseInt($(this).attr('data-rubrique2'));
-				var poste2_count =  parseInt($(this).attr('data-poste2'));
-				var codeHtml = renderPosteHtml(2, rubrique2_count, poste2_count, '');
-				$(this).closest('li').before(codeHtml);
-				poste2_count += 1;
-				$(this).attr('data-poste2',poste2_count);
-				updateTabHeight();
-				return false;
-			});
-			$("body").on("click", '.del_rubrique2', function(event) {
-				event.preventDefault();
-				var rubrique2_count =  parseInt($(this).attr('data-rubrique2'));
-				$('.rubrique2_'+rubrique2_count).remove();
-				var totalBudget = 0;
-				var totalBudgetFonct = 0;
-				var totalBudgetInvest = 0;
-				$('#fonctionnement .value').each(function(i) {
-					totalBudgetFonct += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-				});
-				$('#investissement .value').each(function(i) {
-					totalBudgetInvest += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-				});
-				$('#totalBudgetFonct').text(totalBudgetFonct.toFixed(2));
-				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
-				totalBudget = totalBudgetFonct + totalBudgetInvest;
-				$('#totalBudget').text(totalBudget.toFixed(2));
-				updateTabHeight();
-				return false;
-			});
-			$("body").on("click", '.del_poste2', function(event) {
-				event.preventDefault();
-				var rubrique2_count =  $(this).attr('data-rubrique2');
-				var poste2_count =  $(this).attr('data-poste2');
-				$('.rubrique2_'+rubrique2_count+'_poste2_'+poste2_count).remove();
-				var totalBudget = 0;
-				var totalBudgetFonct = 0;
-				var totalBudgetInvest = 0;
-				$('#fonctionnement .value').each(function(i) {
-					totalBudgetFonct += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-				});
-				$('#investissement .value').each(function(i) {
-					totalBudgetInvest += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-				});
-				$('#totalBudgetFonct').text(totalBudgetFonct.toFixed(2));
-				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
-				totalBudget = totalBudgetFonct + totalBudgetInvest;
-				$('#totalBudget').text(totalBudget.toFixed(2));
-				updateTabHeight();
-				return false;
-			});
-			$("body").on("change", '.value', function(event) {
-				var totalBudget = 0;
-				var totalBudgetFonct = 0;
-				var totalBudgetInvest = 0;
-				$('#fonctionnement .value').each(function(i) {
-					totalBudgetFonct += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-				});
-				$('#investissement .value').each(function(i) {
-					totalBudgetInvest += isNaN(parseFloat($(this).val()))?0:parseFloat($(this).val());
-				});
-				$('#totalBudgetFonct').text(totalBudgetFonct.toFixed(2));
-				$('#totalBudgetInvest').text(totalBudgetInvest.toFixed(2));
-				totalBudget = totalBudgetFonct + totalBudgetInvest;
-				$('#totalBudget').text(totalBudget.toFixed(2));
 			});
 			$('.file_drag_area').on('dragover', function(){
 				$(this).addClass('file_drag_over');  
