@@ -22,34 +22,153 @@ if (
 include_once __DIR__ . "/config/db.php";
 include_once __DIR__ . "/controllers/functions.php";
 
-$rubriquesFonctTemplates = getRubrique(null, null, 1, $connection);
-$rubriquesInvestTemplates = getRubrique(null, null, 2, $connection);
+function coproBudgetCleanText($value)
+{
+    $value = trim((string) $value);
+    if ($value === "") {
+        return "";
+    }
 
-$allPostesTemplates = [];
-foreach ($rubriquesFonctTemplates as $r) {
-    $postes = getPoste(null, null, $r["libelle"], $connection);
-    $allPostesTemplates[$r["libelle"]] = array_column($postes, "libelle");
-}
-foreach ($rubriquesInvestTemplates as $r) {
-    if (!isset($allPostesTemplates[$r["libelle"]])) {
-        $postes = getPoste(null, null, $r["libelle"], $connection);
-        $allPostesTemplates[$r["libelle"]] = array_column($postes, "libelle");
+    if (!preg_match("//u", $value)) {
+        $converted = @iconv("Windows-1252", "UTF-8//IGNORE", $value);
+        if ($converted !== false) {
+            return trim($converted);
+        }
     }
+
+    return $value;
 }
 
-$budgetReferences = ["fonct" => [], "invest" => []];
-foreach ($rubriquesFonctTemplates as $r) {
-    $postes = getPoste(null, null, $r["libelle"], $connection);
-    foreach ($postes as $poste) {
-        $budgetReferences["fonct"][] = ["poste" => $r["libelle"], "rubrique" => $poste["libelle"]];
+function coproBudgetNormalizeBudget($value)
+{
+    $value = coproBudgetCleanText($value);
+    $ascii = function_exists("iconv") ? @iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $value) : false;
+    $normalized = strtoupper($ascii !== false ? $ascii : $value);
+
+    if (in_array($normalized, ["1", "F", "FONCT", "FONCTIONNEMENT"], true)) {
+        return "Fonctionnement";
     }
-}
-foreach ($rubriquesInvestTemplates as $r) {
-    $postes = getPoste(null, null, $r["libelle"], $connection);
-    foreach ($postes as $poste) {
-        $budgetReferences["invest"][] = ["poste" => $r["libelle"], "rubrique" => $poste["libelle"]];
+
+    if (in_array($normalized, ["2", "I", "INV", "INVESTISSEMENT", "INVESSTISSEMENT"], true)) {
+        return "Investissement";
     }
+
+    return $value;
 }
+
+function coproBudgetSignature($budget, $poste, $rubrique)
+{
+    return md5(preg_replace("/\s+/u", " ", trim($budget . "|" . $poste . "|" . $rubrique)));
+}
+
+function coproBudgetEnsureReferentielTable($connection)
+{
+    $request = "CREATE TABLE IF NOT EXISTS referentiel_poste_budgetaire (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        code VARCHAR(20) NOT NULL,
+        budget ENUM('Fonctionnement', 'Investissement') NOT NULL,
+        poste VARCHAR(255) NOT NULL,
+        rubrique VARCHAR(255) NOT NULL,
+        signature CHAR(32) NOT NULL,
+        actif TINYINT(1) NOT NULL DEFAULT 1,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY uniq_ref_signature (signature),
+        KEY idx_ref_code (code),
+        KEY idx_ref_budget_poste (budget, poste(120))
+    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+
+    return $connection->query($request) === true;
+}
+
+function coproBudgetTypeKey($budget)
+{
+    return $budget === "Investissement" ? "invest" : "fonct";
+}
+
+function coproBudgetSaveReference($connection, $code, $budget, $poste, $rubrique)
+{
+    $code = coproBudgetCleanText($code);
+    $budget = coproBudgetNormalizeBudget($budget);
+    $poste = coproBudgetCleanText($poste);
+    $rubrique = coproBudgetCleanText($rubrique);
+
+    if ($code === "" || $budget === "" || $poste === "" || $rubrique === "") {
+        return ["error" => "Code, type budget, poste et rubrique sont obligatoires."];
+    }
+
+    if (!in_array($budget, ["Fonctionnement", "Investissement"], true)) {
+        return ["error" => "Type budget invalide."];
+    }
+
+    $signature = coproBudgetSignature($budget, $poste, $rubrique);
+    $request = "INSERT INTO referentiel_poste_budgetaire (code, budget, poste, rubrique, signature, actif)
+        VALUES (?, ?, ?, ?, ?, 1)
+        ON DUPLICATE KEY UPDATE code = VALUES(code), actif = 1";
+
+    if ($stmt = $connection->prepare($request)) {
+        $stmt->bind_param("sssss", $code, $budget, $poste, $rubrique, $signature);
+        if (!$stmt->execute()) {
+            return ["error" => $connection->error];
+        }
+        return [
+            "error" => "",
+            "reference" => [
+                "code" => $code,
+                "budget" => $budget,
+                "type" => coproBudgetTypeKey($budget),
+                "poste" => $poste,
+                "rubrique" => $rubrique,
+            ],
+        ];
+    }
+
+    return ["error" => $connection->error];
+}
+
+function coproBudgetLoadReferences($connection)
+{
+    $references = ["fonct" => [], "invest" => []];
+    $request = "SELECT code, budget, poste, rubrique FROM referentiel_poste_budgetaire WHERE actif = 1 ORDER BY budget, poste, rubrique";
+    if ($stmt = $connection->prepare($request)) {
+        $stmt->execute();
+        $stmt->store_result();
+        $stmt->bind_result($code, $budget, $poste, $rubrique);
+        while ($stmt->fetch()) {
+            $references[coproBudgetTypeKey($budget)][] = [
+                "code" => $code,
+                "budget" => $budget,
+                "poste" => $poste,
+                "rubrique" => $rubrique,
+            ];
+        }
+    }
+
+    return $references;
+}
+
+coproBudgetEnsureReferentielTable($connection);
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ajax_add_budget_reference"])) {
+    header("Content-Type: application/json; charset=utf-8");
+    $result = coproBudgetSaveReference(
+        $connection,
+        $_POST["code"] ?? "",
+        $_POST["budget"] ?? "",
+        $_POST["poste"] ?? "",
+        $_POST["rubrique"] ?? ""
+    );
+
+    if (($result["error"] ?? "") !== "") {
+        echo json_encode(["success" => false, "message" => $result["error"]]);
+    } else {
+        echo json_encode(["success" => true, "reference" => $result["reference"]], JSON_UNESCAPED_UNICODE);
+    }
+    exit();
+}
+
+$budgetReferences = coproBudgetLoadReferences($connection);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -273,35 +392,29 @@ foreach ($rubriquesInvestTemplates as $r) {
 													<li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#fonctionnement">Budget de fonctionnement</a></li>
 													<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#investissement">Budget d'investissement</a></li>
 												</ul>
-												<datalist id="budget_postes_fonct"><?php foreach ($budgetReferences["fonct"] as $ref): ?><option value="<?= htmlspecialchars($ref["poste"], ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($ref["rubrique"], ENT_QUOTES, "UTF-8") ?></option><?php endforeach; ?></datalist>
-												<datalist id="budget_rubriques_fonct"><?php foreach ($budgetReferences["fonct"] as $ref): ?><option value="<?= htmlspecialchars($ref["rubrique"], ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($ref["poste"], ENT_QUOTES, "UTF-8") ?></option><?php endforeach; ?></datalist>
-												<datalist id="budget_postes_invest"><?php foreach ($budgetReferences["invest"] as $ref): ?><option value="<?= htmlspecialchars($ref["poste"], ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($ref["rubrique"], ENT_QUOTES, "UTF-8") ?></option><?php endforeach; ?></datalist>
-												<datalist id="budget_rubriques_invest"><?php foreach ($budgetReferences["invest"] as $ref): ?><option value="<?= htmlspecialchars($ref["rubrique"], ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($ref["poste"], ENT_QUOTES, "UTF-8") ?></option><?php endforeach; ?></datalist>
 												<div class="tab-content">
 													<div class="tab-pane fade show active" id="fonctionnement" role="tabpanel">
-														<div class="pt-4 budget-entry" data-type="fonct">
+														<div class="pt-4 budget-entry" data-type="fonct" data-budget="Fonctionnement">
 															<div class="row align-items-end">
-																<div class="col-lg-3 mb-3"><label class="form-label">Poste</label><input type="text" class="form-control input-rounded budget-poste-input" list="budget_postes_fonct" placeholder="Ex. GARDIENNAGE"></div>
-																<div class="col-lg-3 mb-3"><label class="form-label">Rubrique</label><input type="text" class="form-control input-rounded budget-rubrique-input" list="budget_rubriques_fonct" placeholder="Ex. SECURTIE-JOUR/NUIT"></div>
-																<div class="col-lg-3 mb-3"><label class="form-label">Liste du r&eacute;f&eacute;rentiel</label><select class="form-control default-select wide budget-reference-select"><option value="">Afficher toute la liste</option><?php foreach ($budgetReferences["fonct"] as $ref): ?><option data-poste="<?= htmlspecialchars($ref["poste"], ENT_QUOTES, "UTF-8") ?>" data-rubrique="<?= htmlspecialchars($ref["rubrique"], ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($ref["poste"] . " / " . $ref["rubrique"], ENT_QUOTES, "UTF-8") ?></option><?php endforeach; ?></select></div>
+																<div class="col-lg-4 mb-3"><label class="form-label">Poste</label><select class="form-control default-select wide budget-poste-select"><option value="">Choisir un poste</option></select></div>
+																<div class="col-lg-4 mb-3"><label class="form-label">Rubrique</label><select class="form-control default-select wide budget-rubrique-select" disabled><option value="">Choisir une rubrique</option></select></div>
 																<div class="col-lg-2 mb-3"><label class="form-label">Budget</label><input type="number" min="0" step="0.01" class="form-control input-rounded budget-amount-input" placeholder="0.00"></div>
-																<div class="col-lg-1 mb-3"><button type="button" class="btn btn-primary btn-block budget-add-row">Rajouter</button></div>
+																<div class="col-lg-2 mb-3"><button type="button" class="btn btn-primary btn-block budget-add-row">Rajouter</button></div>
 															</div>
-															<a href="dashboard.php?page=creation_poste_budgetaire" class="btn btn-outline-primary btn-sm mb-3">Ajouter un nouveau poste budg&eacute;taire</a>
+															<button type="button" class="btn btn-outline-primary btn-sm mb-3 budget-open-reference-modal" data-budget="Fonctionnement">Ajouter un nouveau poste budg&eacute;taire</button>
 															<div class="table-responsive"><table class="table table-responsive-sm budget-lines-table"><thead><tr><th>Poste</th><th>Rubrique</th><th>Budget</th><th class="text-center">Actions</th></tr></thead><tbody id="budget_rows_fonct"><tr class="budget-empty"><td colspan="4"><p class="text-center mt-3">Aucun poste ajout&eacute;</p></td></tr></tbody><tfoot><tr><th colspan="2">Budget de fonctionnement</th><th><span id="budget_total_fonct">0.00</span> MAD</th><th></th></tr></tfoot></table></div>
 															<div id="budget_hidden_fonct"></div>
 														</div>
 													</div>
 													<div class="tab-pane fade" id="investissement" role="tabpanel">
-														<div class="pt-4 budget-entry" data-type="invest">
+														<div class="pt-4 budget-entry" data-type="invest" data-budget="Investissement">
 															<div class="row align-items-end">
-																<div class="col-lg-3 mb-3"><label class="form-label">Poste</label><input type="text" class="form-control input-rounded budget-poste-input" list="budget_postes_invest" placeholder="Ex. EQUIPEMENT"></div>
-																<div class="col-lg-3 mb-3"><label class="form-label">Rubrique</label><input type="text" class="form-control input-rounded budget-rubrique-input" list="budget_rubriques_invest" placeholder="Nouvelle rubrique"></div>
-																<div class="col-lg-3 mb-3"><label class="form-label">Liste du r&eacute;f&eacute;rentiel</label><select class="form-control default-select wide budget-reference-select"><option value="">Afficher toute la liste</option><?php foreach ($budgetReferences["invest"] as $ref): ?><option data-poste="<?= htmlspecialchars($ref["poste"], ENT_QUOTES, "UTF-8") ?>" data-rubrique="<?= htmlspecialchars($ref["rubrique"], ENT_QUOTES, "UTF-8") ?>"><?= htmlspecialchars($ref["poste"] . " / " . $ref["rubrique"], ENT_QUOTES, "UTF-8") ?></option><?php endforeach; ?></select></div>
+																<div class="col-lg-4 mb-3"><label class="form-label">Poste</label><select class="form-control default-select wide budget-poste-select"><option value="">Choisir un poste</option></select></div>
+																<div class="col-lg-4 mb-3"><label class="form-label">Rubrique</label><select class="form-control default-select wide budget-rubrique-select" disabled><option value="">Choisir une rubrique</option></select></div>
 																<div class="col-lg-2 mb-3"><label class="form-label">Budget</label><input type="number" min="0" step="0.01" class="form-control input-rounded budget-amount-input" placeholder="0.00"></div>
-																<div class="col-lg-1 mb-3"><button type="button" class="btn btn-primary btn-block budget-add-row">Rajouter</button></div>
+																<div class="col-lg-2 mb-3"><button type="button" class="btn btn-primary btn-block budget-add-row">Rajouter</button></div>
 															</div>
-															<a href="dashboard.php?page=creation_poste_budgetaire" class="btn btn-outline-primary btn-sm mb-3">Ajouter un nouveau poste budg&eacute;taire</a>
+															<button type="button" class="btn btn-outline-primary btn-sm mb-3 budget-open-reference-modal" data-budget="Investissement">Ajouter un nouveau poste budg&eacute;taire</button>
 															<div class="table-responsive"><table class="table table-responsive-sm budget-lines-table"><thead><tr><th>Poste</th><th>Rubrique</th><th>Budget</th><th class="text-center">Actions</th></tr></thead><tbody id="budget_rows_invest"><tr class="budget-empty"><td colspan="4"><p class="text-center mt-3">Aucun poste ajout&eacute;</p></td></tr></tbody><tfoot><tr><th colspan="2">Budget d'investissement</th><th><span id="budget_total_invest">0.00</span> MAD</th><th></th></tr></tfoot></table></div>
 															<div id="budget_hidden_invest"></div>
 														</div>
@@ -730,6 +843,33 @@ foreach ($rubriquesInvestTemplates as $r) {
 		</div>
 	</div>
 
+
+	<div class="modal fade" id="budgetReferenceModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Ajouter un poste budg&eacute;taire au r&eacute;f&eacute;rentiel</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+				<div class="modal-body">
+					<form id="budgetReferenceForm">
+						<div class="row">
+							<div class="col-md-6 mb-3"><label class="text-label">Code*</label><input type="text" class="form-control input-rounded" name="code" id="budget_ref_code" placeholder="Ex. 61382"></div>
+							<div class="col-md-6 mb-3"><label class="text-label">Type budget*</label><select class="default-select form-control input-rounded wide" name="budget" id="budget_ref_budget"><option value="Fonctionnement">Fonctionnement</option><option value="Investissement">Investissement</option></select></div>
+							<div class="col-md-6 mb-3"><label class="text-label">Poste*</label><input type="text" class="form-control input-rounded" name="poste" id="budget_ref_poste" placeholder="Ex. GARDIENNAGE"></div>
+							<div class="col-md-6 mb-3"><label class="text-label">Rubrique*</label><input type="text" class="form-control input-rounded" name="rubrique" id="budget_ref_rubrique" placeholder="Ex. SECURTIE-JOUR/NUIT"></div>
+						</div>
+					</form>
+					<div class="alert alert-danger d-none" id="budgetReferenceError"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Annuler</button>
+					<button type="button" class="btn btn-outline-primary" id="saveBudgetReference">Ajouter au r&eacute;f&eacute;rentiel</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
     <!--**********************************
         Scripts
     ***********************************-->
@@ -762,6 +902,80 @@ foreach ($rubriquesInvestTemplates as $r) {
 						$('#tab-content').height($('#copropriete_Budget').outerHeight());
 					}
 				}, 100);
+			}
+
+			function refreshNiceSelect($select) {
+				if ($select.next('.nice-select').length) {
+					$select.niceSelect('update');
+				}
+			}
+
+			function getUniquePostes(type) {
+				var postes = [];
+				(budgetReferences[type] || []).forEach(function(reference) {
+					if (postes.indexOf(reference.poste) === -1) {
+						postes.push(reference.poste);
+					}
+				});
+				return postes.sort(function(a, b) { return a.localeCompare(b); });
+			}
+
+			function populatePosteSelect(type) {
+				var $entry = $('.budget-entry[data-type="' + type + '"]');
+				var $select = $entry.find('.budget-poste-select');
+				var current = $select.val();
+				$select.empty().append('<option value="">Choisir un poste</option>');
+				getUniquePostes(type).forEach(function(poste) {
+					$select.append('<option value="' + escapeHtml(poste) + '">' + escapeHtml(poste) + '</option>');
+				});
+				$select.val(current && getUniquePostes(type).indexOf(current) !== -1 ? current : '');
+				refreshNiceSelect($select);
+				populateRubriqueSelect($entry);
+			}
+
+			function populateAllPosteSelects() {
+				populatePosteSelect('fonct');
+				populatePosteSelect('invest');
+			}
+
+			function populateRubriqueSelect($entry) {
+				var type = $entry.data('type');
+				var poste = $entry.find('.budget-poste-select').val();
+				var $rubrique = $entry.find('.budget-rubrique-select');
+				$rubrique.empty().append('<option value="">Choisir une rubrique</option>');
+				if (!poste) {
+					$rubrique.prop('disabled', true);
+					refreshNiceSelect($rubrique);
+					return;
+				}
+				(budgetReferences[type] || []).forEach(function(reference) {
+					if (reference.poste === poste) {
+						$rubrique.append('<option value="' + escapeHtml(reference.rubrique) + '">' + escapeHtml(reference.rubrique) + '</option>');
+					}
+				});
+				$rubrique.prop('disabled', false);
+				refreshNiceSelect($rubrique);
+			}
+
+			function hasReference(type, poste, rubrique) {
+				return (budgetReferences[type] || []).some(function(reference) {
+					return reference.poste === poste && reference.rubrique === rubrique;
+				});
+			}
+
+			function addReferenceToUi(reference) {
+				var type = reference.type || (reference.budget === 'Investissement' ? 'invest' : 'fonct');
+				budgetReferences[type] = budgetReferences[type] || [];
+				if (!hasReference(type, reference.poste, reference.rubrique)) {
+					budgetReferences[type].push(reference);
+				}
+				populatePosteSelect(type);
+				var $entry = $('.budget-entry[data-type="' + type + '"]');
+				$entry.find('.budget-poste-select').val(reference.poste);
+				refreshNiceSelect($entry.find('.budget-poste-select'));
+				populateRubriqueSelect($entry);
+				$entry.find('.budget-rubrique-select').val(reference.rubrique);
+				refreshNiceSelect($entry.find('.budget-rubrique-select'));
 			}
 
 			function renderBudgetTable(type) {
@@ -808,55 +1022,31 @@ foreach ($rubriquesInvestTemplates as $r) {
 				$('#totalBudget').text((totalFonct + totalInvest).toFixed(2));
 			}
 
-			function fillFromReference($entry, reference) {
-				if (!reference) return;
-				$entry.find('.budget-poste-input').val(reference.poste || '');
-				$entry.find('.budget-rubrique-input').val(reference.rubrique || '');
-			}
-
-			function findReference(type, field, value) {
-				value = String(value || '').toLowerCase();
-				if (value === '') return null;
-				var refs = budgetReferences[type] || [];
-				for (var i = 0; i < refs.length; i++) {
-					if (String(refs[i][field] || '').toLowerCase() === value) return refs[i];
-				}
-				return null;
-			}
-
 			function addBudgetLine($entry) {
 				var type = $entry.data('type');
-				var poste = $.trim($entry.find('.budget-poste-input').val());
-				var rubrique = $.trim($entry.find('.budget-rubrique-input').val());
+				var poste = $entry.find('.budget-poste-select').val();
+				var rubrique = $entry.find('.budget-rubrique-select').val();
 				var amount = parseAmount($entry.find('.budget-amount-input').val());
-				if (poste === '' || rubrique === '' || amount <= 0) {
-					$('#erreurMessage').text('Veuillez renseigner le poste, la rubrique et un budget valide.');
+				if (poste === '' || rubrique === '' || amount <= 0 || !hasReference(type, poste, rubrique)) {
+					$('#erreurMessage').text('Veuillez choisir un poste et une rubrique du referentiel, puis renseigner un budget valide.');
 					$('#SuccessErreurAlert').modal('toggle');
 					return;
 				}
 				budgetLines[type].push({ poste: poste, rubrique: rubrique, amount: amount.toFixed(2) });
-				$entry.find('.budget-poste-input, .budget-rubrique-input, .budget-amount-input').val('');
-				$entry.find('.budget-reference-select').val('').niceSelect('update');
+				$entry.find('.budget-poste-select').val('');
+				$entry.find('.budget-amount-input').val('');
+				refreshNiceSelect($entry.find('.budget-poste-select'));
+				populateRubriqueSelect($entry);
 				renderBudgetTable(type);
 			}
 
 			rebuildBudgetHiddenFields('fonct');
 			rebuildBudgetHiddenFields('invest');
+			populateAllPosteSelects();
 
 			$(window).on('resize', function() { updateTabHeight(); });
 			$('a[data-bs-toggle="tab"]').on('shown.bs.tab', function () { updateTabHeight(); });
-			$('body').on('change', '.budget-reference-select', function() {
-				var $option = $(this).find('option:selected');
-				fillFromReference($(this).closest('.budget-entry'), { poste: $option.data('poste'), rubrique: $option.data('rubrique') });
-			});
-			$('body').on('change', '.budget-poste-input', function() {
-				var $entry = $(this).closest('.budget-entry');
-				fillFromReference($entry, findReference($entry.data('type'), 'poste', $(this).val()));
-			});
-			$('body').on('change', '.budget-rubrique-input', function() {
-				var $entry = $(this).closest('.budget-entry');
-				fillFromReference($entry, findReference($entry.data('type'), 'rubrique', $(this).val()));
-			});
+			$('body').on('change', '.budget-poste-select', function() { populateRubriqueSelect($(this).closest('.budget-entry')); });
 			$('body').on('click', '.budget-add-row', function() { addBudgetLine($(this).closest('.budget-entry')); });
 			$('body').on('click', '.budget-delete-row', function() {
 				var $row = $(this).closest('tr');
@@ -873,7 +1063,39 @@ foreach ($rubriquesInvestTemplates as $r) {
 				recalcBudgetTotals();
 			});
 
-						function parseAmount(value) {
+			$('body').on('click', '.budget-open-reference-modal', function() {
+				var budget = $(this).data('budget') || 'Fonctionnement';
+				$('#budgetReferenceForm')[0].reset();
+				$('#budget_ref_budget').val(budget);
+				refreshNiceSelect($('#budget_ref_budget'));
+				$('#budgetReferenceError').addClass('d-none').text('');
+				$('#budgetReferenceModal').modal('show');
+			});
+
+			$('#saveBudgetReference').on('click', function() {
+				var payload = $('#budgetReferenceForm').serializeArray();
+				payload.push({ name: 'ajax_add_budget_reference', value: '1' });
+				$('#budgetReferenceError').addClass('d-none').text('');
+				$.ajax({
+					url: './copropriete.php',
+					method: 'POST',
+					dataType: 'json',
+					data: payload,
+					success: function(response) {
+						if (response && response.success) {
+							addReferenceToUi(response.reference);
+							$('#budgetReferenceModal').modal('hide');
+						} else {
+							$('#budgetReferenceError').removeClass('d-none').text((response && response.message) ? response.message : 'Impossible d'ajouter la reference.');
+						}
+					},
+					error: function() {
+						$('#budgetReferenceError').removeClass('d-none').text('Impossible d'ajouter la reference.');
+					}
+				});
+			});
+
+			function parseAmount(value) {
 				value = String(value || '').replace(/\s/g, '').replace(',', '.');
 				var amount = parseFloat(value);
 				return isNaN(amount) ? 0 : amount;
