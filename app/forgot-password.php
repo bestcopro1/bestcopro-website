@@ -31,6 +31,7 @@ if (
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="images\favicon.png">
     <link href="css\style.css" rel="stylesheet">
+    <link href="css\bestcopro-refresh.css" rel="stylesheet">
 
 </head>
 
@@ -73,6 +74,7 @@ if (
 	<script src="vendor\jquery-nice-select\js\jquery.nice-select.min.js"></script>
     <script src="js\custom.min.js"></script>
     <script src="js\deznav-init.js"></script>
+	<script src="js\bestcopro-refresh.js"></script>
 
 </body>
 

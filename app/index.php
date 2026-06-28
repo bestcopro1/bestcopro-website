@@ -70,6 +70,7 @@ function getVille($connection) {
 	<link rel="shortcut icon" type="image/png" href="images\favicon.png">
 	<link href="vendor\jquery-nice-select\css\nice-select.css" rel="stylesheet">
     <link href="css\style.css" rel="stylesheet">
+    <link href="css\bestcopro-refresh.css" rel="stylesheet">
 
 </head>
 <body>
@@ -231,6 +232,7 @@ function getVille($connection) {
     <script src="js\custom.min.js"></script>
 	<script src="js\dlabnav-init.js"></script>
 	<script src="js\demo.js"></script>
+	<script src="js\bestcopro-refresh.js"></script>
 	<script>
 		(function() {
 			function normalizeText(value) {

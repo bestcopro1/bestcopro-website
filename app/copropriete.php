@@ -194,6 +194,7 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 	<link rel="stylesheet" href="vendor\select2\css\select2.min.css">
 	<link href="vendor\jquery-nice-select\css\nice-select.css" rel="stylesheet">
     <link href="css\style.css" rel="stylesheet">
+    <link href="css\bestcopro-refresh.css" rel="stylesheet">
 
 	<style>
 	<!--
@@ -883,6 +884,7 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 	<script src="js\custom.min.js"></script>
 	<script src="js\dlabnav-init.js"></script>
 	<script src="js\demo.js"></script>
+	<script src="js\bestcopro-refresh.js"></script>
 	<script>
 		$(document).ready(function(){
 			var budgetReferences = <?= json_encode($budgetReferences, JSON_UNESCAPED_UNICODE) ?>;

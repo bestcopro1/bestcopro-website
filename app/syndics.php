@@ -357,6 +357,7 @@ if (isset($_POST["id"], $_POST["delete"])) {
 	<link rel="stylesheet" href="vendor\select2\css\select2.min.css">
 	<link href="vendor\jquery-nice-select\css\nice-select.css" rel="stylesheet">
     <link href="css\style.css" rel="stylesheet">
+    <link href="css\bestcopro-refresh.css" rel="stylesheet">
 </head>
 <body>
 
@@ -959,6 +960,7 @@ if (isset($_POST["id"], $_POST["delete"])) {
 	<script src="js\custom.min.js"></script>
 	<script src="js\dlabnav-init.js"></script>
 	<script src="js\demo.js"></script>
+	<script src="js\bestcopro-refresh.js"></script>
 	
 	<script>
 		$("#saveORedit").on("click", function(event) {
