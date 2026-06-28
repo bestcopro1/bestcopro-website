@@ -572,14 +572,41 @@ function getEtat($id = null, $connection)
  * @param mixed $connection
  * @return mixed
  */
+function ensureExerciceClosureColumns($connection)
+{
+    static $checked = false;
+    if ($checked) {
+        return;
+    }
+    $checked = true;
+
+    $columns = [];
+    if ($result = $connection->query("SHOW COLUMNS FROM exercice")) {
+        while ($row = $result->fetch_assoc()) {
+            $columns[$row["Field"]] = true;
+        }
+    }
+
+    if (!isset($columns["cloture"])) {
+        $connection->query("ALTER TABLE exercice ADD cloture TINYINT(1) NOT NULL DEFAULT 0");
+    }
+    if (!isset($columns["dateCloture"])) {
+        $connection->query("ALTER TABLE exercice ADD dateCloture DATETIME NULL");
+    }
+    if (!isset($columns["id_cloture_par"])) {
+        $connection->query("ALTER TABLE exercice ADD id_cloture_par INT(11) NULL");
+    }
+}
+
 function getExercice($id = null, $id_copropriete = null, $connection)
 {
+    ensureExerciceClosureColumns($connection);
     if ($id != null) {
         $request =
-            "SELECT id, dateDebut, dateFin, id_periodePaiement, id_repartitionFonct, id_repartitionInvest, montantFonct, montantInvest, id_copropriete FROM exercice WHERE id = ?";
+            "SELECT id, dateDebut, dateFin, id_periodePaiement, id_repartitionFonct, id_repartitionInvest, montantFonct, montantInvest, id_copropriete, cloture, dateCloture, id_cloture_par FROM exercice WHERE id = ?";
     } else {
         $request =
-            "SELECT id, dateDebut, dateFin, id_periodePaiement, id_repartitionFonct, id_repartitionInvest, montantFonct, montantInvest, id_copropriete FROM exercice WHERE id_copropriete = ? ORDER BY id DESC";
+            "SELECT id, dateDebut, dateFin, id_periodePaiement, id_repartitionFonct, id_repartitionInvest, montantFonct, montantInvest, id_copropriete, cloture, dateCloture, id_cloture_par FROM exercice WHERE id_copropriete = ? ORDER BY id DESC";
     }
     if ($stmt = $connection->prepare($request)) {
         if ($id != null) {
@@ -601,6 +628,9 @@ function getExercice($id = null, $id_copropriete = null, $connection)
                 $montantFonct,
                 $montantInvest,
                 $id_copropriete,
+                $cloture,
+                $dateCloture,
+                $id_cloture_par,
             );
             while ($stmt->fetch()) {
                 $result[] = [
@@ -613,6 +643,9 @@ function getExercice($id = null, $id_copropriete = null, $connection)
                     "montantFonct" => $montantFonct,
                     "montantInvest" => $montantInvest,
                     "id_copropriete" => $id_copropriete,
+                    "cloture" => $cloture,
+                    "dateCloture" => $dateCloture,
+                    "id_cloture_par" => $id_cloture_par,
                 ];
             }
             return $result;
@@ -620,6 +653,33 @@ function getExercice($id = null, $id_copropriete = null, $connection)
             return [];
         }
     }
+}
+
+function isExerciceCloture($id_exercice, $connection)
+{
+    $exercice = getExercice($id_exercice, null, $connection);
+    return count($exercice) > 0 && intval($exercice[0]["cloture"] ?? 0) === 1;
+}
+
+function getPreviousExerciseRelConditionSql($currentExerciseAlias = "curr", $relAlias = "r", $previousExerciseAlias = "prev")
+{
+    return "(" .
+        $relAlias .
+        ".id_exercice <= 0 OR (" .
+        $previousExerciseAlias .
+        ".id = " .
+        $relAlias .
+        ".id_exercice AND " .
+        $previousExerciseAlias .
+        ".id_copropriete = " .
+        $currentExerciseAlias .
+        ".id_copropriete AND " .
+        $previousExerciseAlias .
+        ".dateFin < " .
+        $currentExerciseAlias .
+        ".dateDebut AND COALESCE(" .
+        $previousExerciseAlias .
+        ".cloture, 0) = 1))";
 }
 // get fournisseur
 /**

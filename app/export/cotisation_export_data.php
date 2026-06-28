@@ -19,7 +19,8 @@ function getCotisationExportData(
             $id_copropriete,
             null,
             $connection,
-            $dateSituation
+            $dateSituation,
+            $id_exercice
         ),
         "currentRelSummaries" => getCotisationExportRelSummaries(
             $id_copropriete,
@@ -77,7 +78,8 @@ function getCotisationExportRelSummaries(
     $id_copropriete,
     $id_exercice,
     $connection,
-    $dateSituation = null
+    $dateSituation = null,
+    $current_id_exercice = null
 ) {
     $summaries = [];
     $paidExpression = "SUM(COALESCE(r.cotisation, 0))";
@@ -99,6 +101,7 @@ function getCotisationExportRelSummaries(
     }
 
     if ($id_exercice === null) {
+        $previousCondition = getPreviousExerciseRelConditionSql("curr", "r", "prev");
         $request =
             "SELECT r.id_lot, " .
             $paidExpression .
@@ -106,8 +109,12 @@ function getCotisationExportRelSummaries(
             $unpaidExpression .
             " " .
             "FROM rel_lot_exercice r INNER JOIN lot l ON l.id = r.id_lot " .
+            "INNER JOIN exercice curr ON curr.id = ? " .
+            "LEFT JOIN exercice prev ON prev.id = r.id_exercice " .
             $joinPaiements .
-            "WHERE l.id_copropriete = ? AND r.id_exercice <= 0 GROUP BY r.id_lot";
+            "WHERE l.id_copropriete = ? AND " .
+            $previousCondition .
+            " GROUP BY r.id_lot";
     } else {
         $request =
             "SELECT r.id_lot, " .
@@ -123,9 +130,9 @@ function getCotisationExportRelSummaries(
     if ($stmt = $connection->prepare($request)) {
         if ($id_exercice === null) {
             if ($dateSituation === null) {
-                $stmt->bind_param("s", $id_copropriete);
+                $stmt->bind_param("ss", $current_id_exercice, $id_copropriete);
             } else {
-                $stmt->bind_param("ss", $dateSituation, $id_copropriete);
+                $stmt->bind_param("sss", $dateSituation, $current_id_exercice, $id_copropriete);
             }
         } else {
             if ($dateSituation === null) {

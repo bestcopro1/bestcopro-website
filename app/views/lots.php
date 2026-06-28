@@ -2,6 +2,10 @@
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($GLOBALS["id_exercice"]) && isExerciceCloture($GLOBALS["id_exercice"], $connection)) {
+    echo "Cet exercice est cloture. Les modifications des lots et cotisations sont bloquees.";
+    exit();
+}
 function getNewProprietaire($connection)
 {
     $request =

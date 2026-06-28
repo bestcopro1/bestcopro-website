@@ -483,6 +483,28 @@ foreach ($echeances as $echeance) {
 			</div>
 		</div>
 		<!-- Modal -->
+		<div class="modal fade" id="closeExerciceModal">
+			<div class="modal-dialog modal-dialog-centered" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Cloturer l'exercice</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					</div>
+					<div class="modal-body">
+						<p>Vous allez cloturer <strong id="closeCurrentExercise"></strong> et creer <strong id="closeNextExercise"></strong>.</p>
+						<p class="mb-1">Lots repris : <strong id="closeLotsCount"></strong></p>
+						<p class="mb-1">Impayes reportes en solde anterieur : <strong id="closeArrearsTotal"></strong> MAD</p>
+						<p class="mb-0">Le budget du nouvel exercice sera vide. L'ancien exercice sera verrouille pour les modifications sensibles.</p>
+						<input type="hidden" id="closeExerciceId" value="">
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-rounded btn-outline-secondary px-3 my-1 me-2" data-bs-dismiss="modal">Annuler</button>
+						<button type="button" class="btn btn-rounded btn-primary px-3 my-1 me-2" id="confirmCloseExercice">Confirmer la cloture</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Modal -->
 		<div class="modal fade" id="notificationModal">
 			<div class="modal-dialog modal-dialog-centered" role="document">
 				<div class="modal-content">
@@ -554,6 +576,43 @@ foreach ($echeances as $echeance) {
 	<script>
 		$(document).on('change', '.changeExercice', function (e) {
 			window.location.replace("./dashboard.php?exercice="+$(this).val());
+		});
+		$(document).on('click', '#openCloseExercice', function () {
+			$('#closeExerciceId').val($(this).data('exercice'));
+			$('#closeCurrentExercise').text($(this).data('current'));
+			$('#closeNextExercise').text($(this).data('next'));
+			$('#closeLotsCount').text($(this).data('lots'));
+			$('#closeArrearsTotal').text($(this).data('arrears'));
+			$('#closeExerciceModal').modal('show');
+		});
+		$(document).on('click', '#confirmCloseExercice', function () {
+			$('#closeExerciceModal').modal('hide');
+			$('.waitModal').css('display', 'flex');
+			$('.successModal').css('display', 'none');
+			$('.errorModal').css('display', 'none');
+			$('#SuccessErreurAlert').modal('show');
+			$.ajax({
+				url: './controllers/exercice.php',
+				method: 'POST',
+				data: { action: 'cloturer', id_exercice: $('#closeExerciceId').val() },
+				success: function(response) {
+					if (String(response).indexOf('done|') === 0) {
+						var newExercice = String(response).split('|')[1];
+						window.location.replace('./dashboard.php?exercice=' + newExercice);
+					} else {
+						$('.waitModal').css('display', 'none');
+						$('.successModal').css('display', 'none');
+						$('.errorModal').css('display', 'flex');
+						$('#erreurMessage').text(String(response).indexOf('error|') === 0 ? String(response).split('|')[1] : response);
+					}
+				},
+				error: function() {
+					$('.waitModal').css('display', 'none');
+					$('.successModal').css('display', 'none');
+					$('.errorModal').css('display', 'flex');
+					$('#erreurMessage').text("Impossible de cloturer l'exercice.");
+				}
+			});
 		});
 		$("#saveORedit").on("click", function(event) {
 			$('.waitModal').css('display', 'flex');

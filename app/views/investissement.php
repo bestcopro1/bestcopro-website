@@ -55,6 +55,12 @@ function getDepenseByRubriqueOrPoste(
     }
 }
 if (isset($_POST["rubrique2_1"], $_POST["id_exercice"])) {
+    $posted_exercice = filter_input(INPUT_POST, "id_exercice", FILTER_SANITIZE_STRING);
+    if ($posted_exercice != "" && isExerciceCloture($posted_exercice, $connection)) {
+        echo "Cet exercice est cloture. Les modifications du budget sont bloquees.";
+        exit();
+    }
+
     $error_msg = "";
 
     $id_exercice = filter_input(
@@ -349,7 +355,7 @@ if (isset($_POST["rubrique2_1"], $_POST["id_exercice"])) {
     }
 }
 $disabled = "";
-if ($_SESSION["id_usertype"] !== "1") {
+if ($_SESSION["id_usertype"] !== "1" || isExerciceCloture($GLOBALS["id_exercice"], $connection)) {
     $disabled = "disabled";
 }
 ?>
@@ -364,7 +370,7 @@ if ($_SESSION["id_usertype"] !== "1") {
 					<a href="export/export_budget.php?id_exercice=<?= htmlspecialchars($GLOBALS["id_exercice"]) ?>&type=investissement" class="btn btn-rounded btn-primary px-3 my-1 me-2">
 						<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Exporter
 					</a>
-					<?php if ($_SESSION["id_usertype"] === "1"): ?>
+					<?php if ($_SESSION["id_usertype"] === "1" && !isExerciceCloture($GLOBALS["id_exercice"], $connection)): ?>
 					<button type="button" class="btn btn-rounded btn-primary px-3 my-1 me-2" id="saveORedit" data-url="investissement">Enregistrer les modifications</button>
 					<?php endif; ?>
 				</div>

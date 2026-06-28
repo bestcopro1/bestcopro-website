@@ -12,19 +12,21 @@ function getSituationEncaissementsPaymentStats($id_copropriete, $id_exercice, $f
         "encours" => 0,
         "total" => 0,
     ];
+    $previousCondition = getPreviousExerciseRelConditionSql("curr", "r", "prev");
     $request =
         "SELECT p.id, p.montant, " .
         "COALESCE(SUM(CASE WHEN r.id_exercice = ? THEN rrp.montant ELSE 0 END), 0) AS montant_encours, " .
-        "COALESCE(SUM(CASE WHEN r.id_exercice <= 0 THEN rrp.montant ELSE 0 END), 0) AS montant_anterieur " .
+        "COALESCE(SUM(CASE WHEN " . $previousCondition . " THEN rrp.montant ELSE 0 END), 0) AS montant_anterieur " .
         "FROM paiement p " .
         "INNER JOIN lot l ON l.id = p.id_lot " .
+        "INNER JOIN exercice curr ON curr.id = ? " .
         "LEFT JOIN rel_rel_paiement rrp ON rrp.id_paiement = p.id " .
         "LEFT JOIN rel_lot_exercice r ON r.id_rel = rrp.id_rel " .
+        "LEFT JOIN exercice prev ON prev.id = r.id_exercice " .
         "WHERE l.id_copropriete = ? AND CAST(p.date as date) BETWEEN ? AND ? " .
         "GROUP BY p.id, p.montant";
-
     if ($stmt = $connection->prepare($request)) {
-        $stmt->bind_param("ssss", $id_exercice, $id_copropriete, $from, $to);
+        $stmt->bind_param("sssss", $id_exercice, $id_exercice, $id_copropriete, $from, $to);
         $stmt->execute();
         $stmt->store_result();
 

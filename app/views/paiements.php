@@ -68,6 +68,17 @@ function getPaymentImpayeLabel($impaye, $connection)
         return "Impayé promoteur";
     }
 
+    if (intval($impaye["id_exercice"]) > 0) {
+        if (isset($GLOBALS["id_exercice"]) && intval($impaye["id_exercice"]) === intval($GLOBALS["id_exercice"])) {
+            return "";
+        }
+
+        $exercice = getExercice($impaye["id_exercice"], null, $connection);
+        if (count($exercice) > 0) {
+            return "Cumul des impayés " . getNameexercice($exercice[0]["dateDebut"]);
+        }
+    }
+
     return "";
 }
 if (isset($_POST["id"], $_POST["printZone"])) {

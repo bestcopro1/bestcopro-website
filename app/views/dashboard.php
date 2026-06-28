@@ -111,18 +111,21 @@ function getPaiementStatsByDates($id_copropriete, $id_exercice, $from, $to, $con
         "encours" => 0,
         "total" => 0,
     ];
+    $previousCondition = getPreviousExerciseRelConditionSql("curr", "r", "prev");
     $request =
         "SELECT p.id, p.montant, " .
         "COALESCE(SUM(CASE WHEN r.id_exercice = ? THEN rrp.montant ELSE 0 END), 0) AS montant_encours, " .
-        "COALESCE(SUM(CASE WHEN r.id_exercice <= 0 THEN rrp.montant ELSE 0 END), 0) AS montant_anterieur " .
+        "COALESCE(SUM(CASE WHEN " . $previousCondition . " THEN rrp.montant ELSE 0 END), 0) AS montant_anterieur " .
         "FROM paiement p " .
         "INNER JOIN lot l ON l.id = p.id_lot " .
+        "INNER JOIN exercice curr ON curr.id = ? " .
         "LEFT JOIN rel_rel_paiement rrp ON rrp.id_paiement = p.id " .
         "LEFT JOIN rel_lot_exercice r ON r.id_rel = rrp.id_rel " .
+        "LEFT JOIN exercice prev ON prev.id = r.id_exercice " .
         "WHERE l.id_copropriete = ? AND CAST(p.date as date) BETWEEN ? AND ? " .
         "GROUP BY p.id, p.montant";
     if ($stmt = $connection->prepare($request)) {
-        $stmt->bind_param("ssss", $id_exercice, $id_copropriete, $from, $to);
+        $stmt->bind_param("sssss", $id_exercice, $id_exercice, $id_copropriete, $from, $to);
         $stmt->execute();
         $stmt->store_result();
 
@@ -153,6 +156,21 @@ function formatDashboardAmount($amount)
 {
     return number_format((float) $amount, 2, ",", " ");
 }
+
+function getDashboardClosureArrears($id_copropriete, $id_exercice, $connection)
+{
+    $total = 0;
+    $lots = 0;
+    $request = "SELECT COUNT(DISTINCT l.id), SUM(CASE WHEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) > COALESCE(r.cotisation, 0) THEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) - COALESCE(r.cotisation, 0) ELSE 0 END) FROM lot l LEFT JOIN rel_lot_exercice r ON r.id_lot = l.id AND r.id_exercice = ? WHERE l.id_copropriete = ?";
+    if ($stmt = $connection->prepare($request)) {
+        $stmt->bind_param("ss", $id_exercice, $id_copropriete);
+        $stmt->execute();
+        $stmt->bind_result($lots, $total);
+        $stmt->fetch();
+    }
+
+    return ["lots" => (int) $lots, "total" => (float) $total];
+}
 ?>
 		<div class="content-body">
             <!-- row -->
@@ -162,27 +180,32 @@ function formatDashboardAmount($amount)
 						<h2 class="text-primary font-w600 mb-0">Tableau de bord</h2>
 						<p class="mb-0"><?= $GLOBALS["copropriete"][0]["nom"] ?></p>
 					</div>
-					<div class="d-flex mt-sm-0 mt-3">
-						<select class="default-select dashboard-select changeExercice">
+					<div class="d-flex mt-sm-0 mt-3 align-items-center flex-wrap">
+						<select class="default-select dashboard-select changeExercice me-2 mb-2">
 							<?php $currentExercice = getExercice(
            $GLOBALS["id_exercice"],
            null,
            $connection,
-       ); ?>
+       );
+       $closureStats = getDashboardClosureArrears($GLOBALS["id_copropriete"], $GLOBALS["id_exercice"], $connection);
+       ?>
 							<option value="<?= $currentExercice[0][
            "id"
        ] ?>" data-display="<?= getNameexercice(
     $currentExercice[0]["dateDebut"],
-) ?>"><?= getNameexercice($currentExercice[0]["dateDebut"]) ?></option>
+) ?>"><?= getNameexercice($currentExercice[0]["dateDebut"]) ?><?= intval($currentExercice[0]["cloture"] ?? 0) === 1 ? " (cloture)" : "" ?></option>
 							<?php
        $exercices = getExercice(null, $GLOBALS["id_copropriete"], $connection);
        foreach ($exercices as $exercice): ?>
 							<option value="<?= $exercice["id"] ?>"><?= getNameexercice(
     $exercice["dateDebut"],
-) ?></option>
+) ?><?= intval($exercice["cloture"] ?? 0) === 1 ? " (cloture)" : "" ?></option>
 							<?php endforeach;
        ?>
 						</select>
+						<?php if (in_array($_SESSION["id_usertype"], ["1", "2", "3"], true) && intval($currentExercice[0]["cloture"] ?? 0) !== 1): ?>
+						<button type="button" class="btn btn-rounded btn-outline-primary mb-2" id="openCloseExercice" data-exercice="<?= htmlspecialchars($currentExercice[0]["id"]) ?>" data-current="<?= htmlspecialchars(getNameexercice($currentExercice[0]["dateDebut"])) ?>" data-next="<?= htmlspecialchars(getNameexercice(date("Y-m-d", strtotime($currentExercice[0]["dateFin"] . " + 1 day")))) ?>" data-lots="<?= $closureStats["lots"] ?>" data-arrears="<?= formatDashboardAmount($closureStats["total"]) ?>">Cloturer l'exercice</button>
+						<?php endif; ?>
 					</div>
 				</div>
 				<div class="row">

@@ -35,23 +35,37 @@ function getSituationImmeublePercent($amount, $base)
 function getSituationImmeubleRows($id_copropriete, $id_exercice, $isCurrent, $connection)
 {
     $rows = [];
-    $exerciseCondition = $isCurrent ? "r.id_exercice = ?" : "r.id_exercice <= 0";
-    $request =
-        "SELECT l.numeroImm, " .
-        "SUM(COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0)) AS base_total, " .
-        "SUM(COALESCE(r.cotisation, 0)) AS encaissement_total, " .
-        "SUM(CASE WHEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) > COALESCE(r.cotisation, 0) " .
-        "THEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) - COALESCE(r.cotisation, 0) ELSE 0 END) AS reste_total " .
-        "FROM lot l INNER JOIN rel_lot_exercice r ON r.id_lot = l.id " .
-        "WHERE l.id_copropriete = ? AND " .
-        $exerciseCondition .
-        " GROUP BY l.numeroImm ORDER BY l.numeroImm ASC";
+    if ($isCurrent) {
+        $request =
+            "SELECT l.numeroImm, " .
+            "SUM(COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0)) AS base_total, " .
+            "SUM(COALESCE(r.cotisation, 0)) AS encaissement_total, " .
+            "SUM(CASE WHEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) > COALESCE(r.cotisation, 0) " .
+            "THEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) - COALESCE(r.cotisation, 0) ELSE 0 END) AS reste_total " .
+            "FROM lot l INNER JOIN rel_lot_exercice r ON r.id_lot = l.id " .
+            "WHERE l.id_copropriete = ? AND r.id_exercice = ? " .
+            "GROUP BY l.numeroImm ORDER BY l.numeroImm ASC";
+    } else {
+        $previousCondition = getPreviousExerciseRelConditionSql("curr", "r", "prev");
+        $request =
+            "SELECT l.numeroImm, " .
+            "SUM(COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0)) AS base_total, " .
+            "SUM(COALESCE(r.cotisation, 0)) AS encaissement_total, " .
+            "SUM(CASE WHEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) > COALESCE(r.cotisation, 0) " .
+            "THEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) - COALESCE(r.cotisation, 0) ELSE 0 END) AS reste_total " .
+            "FROM lot l INNER JOIN rel_lot_exercice r ON r.id_lot = l.id " .
+            "INNER JOIN exercice curr ON curr.id = ? " .
+            "LEFT JOIN exercice prev ON prev.id = r.id_exercice " .
+            "WHERE l.id_copropriete = ? AND " .
+            $previousCondition .
+            " GROUP BY l.numeroImm ORDER BY l.numeroImm ASC";
+    }
 
     if ($stmt = $connection->prepare($request)) {
         if ($isCurrent) {
             $stmt->bind_param("ss", $id_copropriete, $id_exercice);
         } else {
-            $stmt->bind_param("s", $id_copropriete);
+            $stmt->bind_param("ss", $id_exercice, $id_copropriete);
         }
 
         $stmt->execute();
@@ -74,7 +88,6 @@ function getSituationImmeubleRows($id_copropriete, $id_exercice, $isCurrent, $co
 
     return $rows;
 }
-
 function getSituationImmeubleData($id_copropriete, $id_exercice, $connection)
 {
     return [

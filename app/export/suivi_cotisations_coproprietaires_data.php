@@ -8,6 +8,7 @@ function formatSuiviCotisationsCoproprietairesAmount($value)
 function getSuiviCotisationsCoproprietairesRows($id_copropriete, $id_exercice, $connection)
 {
     $rows = [];
+    $previousCondition = getPreviousExerciseRelConditionSql("curr", "r", "prev");
     $request =
         "SELECT l.id, l.code, p.civilite, p.prenom, p.nom, " .
         "COALESCE(prev.solde_anterieur, 0) AS solde_anterieur, " .
@@ -18,7 +19,9 @@ function getSuiviCotisationsCoproprietairesRows($id_copropriete, $id_exercice, $
         "LEFT JOIN (" .
         "SELECT id_lot, SUM(CASE WHEN COALESCE(partFonct, 0) + COALESCE(partInv, 0) > COALESCE(cotisation, 0) " .
         "THEN COALESCE(partFonct, 0) + COALESCE(partInv, 0) - COALESCE(cotisation, 0) ELSE 0 END) AS solde_anterieur " .
-        "FROM rel_lot_exercice WHERE id_exercice <= 0 GROUP BY id_lot" .
+        "FROM rel_lot_exercice r INNER JOIN exercice curr ON curr.id = ? LEFT JOIN exercice prev ON prev.id = r.id_exercice WHERE " .
+        $previousCondition .
+        " GROUP BY r.id_lot" .
         ") prev ON prev.id_lot = l.id " .
         "LEFT JOIN (" .
         "SELECT id_lot, SUM(COALESCE(partFonct, 0) + COALESCE(partInv, 0)) AS base_cotisation, " .
@@ -28,7 +31,7 @@ function getSuiviCotisationsCoproprietairesRows($id_copropriete, $id_exercice, $
         "WHERE l.id_copropriete = ? ORDER BY p.nom ASC, p.prenom ASC, l.code ASC";
 
     if ($stmt = $connection->prepare($request)) {
-        $stmt->bind_param("ss", $id_exercice, $id_copropriete);
+        $stmt->bind_param("sss", $id_exercice, $id_exercice, $id_copropriete);
         $stmt->execute();
         $stmt->store_result();
         $stmt->bind_result(
