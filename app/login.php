@@ -5,8 +5,9 @@ if (session_status() === PHP_SESSION_NONE) {
     $cookiePath = ($scriptDir === '.' || $scriptDir === '/') ? '/' : rtrim($scriptDir, '/');
     $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
 
-    if ($cookiePath !== '/') {
-        setcookie(session_name(), '', time() - 3600, '/', $cookieParams['domain'], $isHttps, true);
+    if ($cookiePath !== '/' && !headers_sent()) {
+        $secureCookie = $isHttps ? '; Secure' : '';
+        header('Set-Cookie: ' . session_name() . '=deleted; expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; path=/' . $secureCookie . '; HttpOnly', false);
     }
 
     session_set_cookie_params(0, $cookiePath, $cookieParams['domain'], $isHttps, true);
