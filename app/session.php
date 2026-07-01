@@ -46,6 +46,7 @@ function bestcopro_expire_legacy_session_cookies($cookiePath, $domain, $secure)
 
 function bestcopro_start_session()
 {
+    // Keep staging and production cookies isolated on the same domain.
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
     }
