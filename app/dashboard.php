@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . "/config/session.php";
+require_once __DIR__ . "/session.php";
 bestcopro_start_session();
 // If the user is not logged in redirect to the login page...
 if (

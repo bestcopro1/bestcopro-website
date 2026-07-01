@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . "/../config/session.php";
+require_once __DIR__ . "/../session.php";
 bestcopro_start_session();
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
