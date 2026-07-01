@@ -18,6 +18,7 @@ function redirect_to_accueil()
     }
 
     if (!headers_sent()) {
+        header('Location: ' . $accueilUrl, true, 303);
         header('Content-Type: text/html; charset=utf-8');
         header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         header('Pragma: no-cache');

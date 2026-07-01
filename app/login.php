@@ -1,5 +1,11 @@
 <?php
-if (!isset($_SESSION)) {
+if (session_status() === PHP_SESSION_NONE) {
+    $cookieParams = session_get_cookie_params();
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
+    $cookiePath = ($scriptDir === '.' || $scriptDir === '/') ? '/' : rtrim($scriptDir, '/');
+    $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+
+    session_set_cookie_params(0, $cookiePath, $cookieParams['domain'], $isHttps, true);
     session_start();
 }
 // If the user is logged in redirect to the dashboard page...
