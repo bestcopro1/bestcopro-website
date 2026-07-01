@@ -96,10 +96,6 @@ if (!$user_found) {
     return;
 }
 
-if ((string) $is_active !== '1') {
-    $verificationRequiredErr = '<div class="alert alert-danger">Account verification is required for login.</div>';
-    return;
-}
 
 if (!password_verify($password_signin, (string) $password_hash)) {
     $emailPwdErr = '<div class="alert alert-danger">Either email or password is incorrect.</div>';
