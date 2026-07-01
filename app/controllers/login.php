@@ -11,7 +11,7 @@ $pass_empty_err = '';
 
 function redirect_to_accueil()
 {
-    $accueilUrl = '/app/index.php';
+    $accueilUrl = 'index.php';
 
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
