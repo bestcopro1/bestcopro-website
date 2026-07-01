@@ -5,6 +5,10 @@ if (session_status() === PHP_SESSION_NONE) {
     $cookiePath = ($scriptDir === '.' || $scriptDir === '/') ? '/' : rtrim($scriptDir, '/');
     $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
 
+    if ($cookiePath !== '/') {
+        setcookie(session_name(), '', time() - 3600, '/', $cookieParams['domain'], $isHttps, true);
+    }
+
     session_set_cookie_params(0, $cookiePath, $cookieParams['domain'], $isHttps, true);
     session_start();
 }
