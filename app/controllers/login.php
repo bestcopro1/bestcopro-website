@@ -9,7 +9,7 @@ $verificationRequiredErr = '';
 $email_empty_err = '';
 $pass_empty_err = '';
 
-if (!isset($_POST['login'])) {
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     return;
 }
 

@@ -61,6 +61,7 @@ include __DIR__ . "/controllers/login.php";
 									<?php echo $email_empty_err; ?>
 									<?php echo $pass_empty_err; ?>
                                     <form action="" method="post">
+                                        <input type="hidden" name="login" value="1">
                                         <div class="mb-3">
                                             <input type="email" class="form-control input-rounded input-default mb-3" name="email_signin" id="email_signin" value="" placeholder="Adresse e-mail">
                                         </div>
