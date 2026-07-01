@@ -97,6 +97,7 @@ if (!$user_found) {
 }
 
 
+// Staging imports can contain syndic accounts before the activation flag is normalized.
 if (!password_verify($password_signin, (string) $password_hash)) {
     $emailPwdErr = '<div class="alert alert-danger">Either email or password is incorrect.</div>';
     return;
