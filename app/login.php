@@ -11,6 +11,9 @@ if (
     header("Location: ./index.php");
     exit();
 }
+
+// Login script must run before any HTML so redirect and session cookies are reliable.
+include __DIR__ . "/controllers/login.php";
 ?>
 <!DOCTYPE html>
 <html lang="fr" class="h-100">
@@ -36,9 +39,6 @@ if (
 </head>
 
 <body class="vh-100">
-
-    <!-- Login script -->
-    <?php include "./controllers/login.php"; ?>
 
     <div class="authincation h-100">
         <div class="container h-100">
