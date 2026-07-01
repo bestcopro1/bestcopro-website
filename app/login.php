@@ -8,7 +8,7 @@ if (
     $_SESSION["loggedin"] === "ImIn" &&
     is_int(intval($_SESSION["id"]))
 ) {
-    header("Location: ./index.php");
+    header("Location: /app/index.php");
     exit();
 }
 

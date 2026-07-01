@@ -9,6 +9,37 @@ $verificationRequiredErr = '';
 $email_empty_err = '';
 $pass_empty_err = '';
 
+function redirect_to_accueil()
+{
+    $accueilUrl = '/app/index.php';
+
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
+    if (!headers_sent()) {
+        header('Content-Type: text/html; charset=utf-8');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+    }
+
+    echo '<!DOCTYPE html>';
+    echo '<html lang="fr">';
+    echo '<head>';
+    echo '<meta charset="utf-8">';
+    echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
+    echo '<meta http-equiv="refresh" content="0;url=' . htmlspecialchars($accueilUrl, ENT_QUOTES, 'UTF-8') . '">';
+    echo '<title>Redirection</title>';
+    echo '<script>window.location.replace("' . htmlspecialchars($accueilUrl, ENT_QUOTES, 'UTF-8') . '");</script>';
+    echo '</head>';
+    echo '<body>';
+    echo '<p><a href="' . htmlspecialchars($accueilUrl, ENT_QUOTES, 'UTF-8') . '">Continuer vers l\'accueil</a></p>';
+    echo '</body>';
+    echo '</html>';
+    exit();
+}
+
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     return;
 }
@@ -85,5 +116,4 @@ $_SESSION['token'] = (string) $token;
 $_SESSION['loggedin'] = 'ImIn';
 $_SESSION['id_usertype'] = (string) $id_usertype;
 
-header('Location: ./index.php');
-exit();
+redirect_to_accueil();
