@@ -1,5 +1,5 @@
 <?php
-session_start();
-session_destroy();
+require_once __DIR__ . "/config/session.php";
+bestcopro_destroy_session();
 
 header("Location: ./index.php"); ?>

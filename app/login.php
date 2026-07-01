@@ -1,18 +1,6 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    $cookieParams = session_get_cookie_params();
-    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
-    $cookiePath = ($scriptDir === '.' || $scriptDir === '/') ? '/' : rtrim($scriptDir, '/');
-    $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
-
-    session_set_cookie_params(0, $cookiePath, $cookieParams['domain'], $isHttps, true);
-    session_start();
-
-    if ($cookiePath !== '/' && !headers_sent()) {
-        $secureCookie = $isHttps ? '; Secure' : '';
-        header('Set-Cookie: ' . session_name() . '=deleted; expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; path=/' . $secureCookie . '; HttpOnly', false);
-    }
-}
+require_once __DIR__ . "/config/session.php";
+bestcopro_start_session();
 // If the user is logged in redirect to the dashboard page...
 if (
     isset($_SESSION["loggedin"], $_SESSION["id"]) &&

@@ -1,8 +1,6 @@
 <?php
-if (!isset($_SESSION)) {
-    session_start();
-}
-
+require_once __DIR__ . "/../config/session.php";
+bestcopro_start_session();
 require_once "../vendor/dompdf/autoload.inc.php";
 
 include_once __DIR__ . "/../config/db.php";

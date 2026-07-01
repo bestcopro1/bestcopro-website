@@ -1,7 +1,6 @@
-﻿<?php
-if (!isset($_SESSION)) {
-    session_start();
-}
+<?php
+require_once __DIR__ . "/config/session.php";
+bestcopro_start_session();
 // If the user is logged in redirect to the dashboard page...
 if (
     isset($_SESSION["loggedin"], $_SESSION["id"]) &&

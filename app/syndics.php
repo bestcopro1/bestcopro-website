@@ -1,7 +1,6 @@
 <?php
-if (!isset($_SESSION)) {
-    session_start();
-}
+require_once __DIR__ . "/config/session.php";
+bestcopro_start_session();
 // If the user is not logged in redirect to the login page...
 if (
     !isset($_SESSION["loggedin"], $_SESSION["id"]) ||
