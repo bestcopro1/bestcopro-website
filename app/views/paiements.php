@@ -81,6 +81,17 @@ function getPaymentImpayeLabel($impaye, $connection)
 
     return "";
 }
+
+function isChequePaymentMode($id_modePaiement, $connection)
+{
+    $modepaiement = getModepaiement($id_modePaiement, $connection);
+    if (count($modepaiement) === 0) {
+        return false;
+    }
+
+    return preg_match('/ch[eéèêë]que/ui', $modepaiement[0]["libelle"]) === 1;
+}
+
 if (isset($_POST["id"], $_POST["printZone"])) {
     $id = filter_input(INPUT_POST, "id", FILTER_SANITIZE_STRING);
     $printZone = filter_input(INPUT_POST, "printZone", FILTER_SANITIZE_STRING);
@@ -459,6 +470,15 @@ if (isset($_POST["id"], $_POST["printZone"])) {
         "commentaire",
         FILTER_SANITIZE_STRING,
     );
+    $dateEcheance = filter_input(
+        INPUT_POST,
+        "dateEcheance",
+        FILTER_SANITIZE_STRING,
+    );
+    $isCheque = isChequePaymentMode($id_modePaiement, $connection);
+    if (!$isCheque) {
+        $dateEcheance = null;
+    }
     if (isset($_SESSION["id"])) {
         $id_syndic = $_SESSION["id"];
     } else {
@@ -488,6 +508,11 @@ if (isset($_POST["id"], $_POST["printZone"])) {
     }
     if ($id_modePaiement == "") {
         $error_msg .= "Veuillez sélectionner un mode de paiment";
+        echo $error_msg;
+        exit();
+    }
+    if ($isCheque && $dateEcheance == "") {
+        $error_msg .= "Veuillez entrer la date d'échéance du chèque";
         echo $error_msg;
         exit();
     }
@@ -526,12 +551,13 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                 }
             }
             $request =
-                "UPDATE paiement SET id_lot=?, date=?, montant=?, id_modePaiement=?, commentaire=? WHERE id=?";
+                "UPDATE paiement SET id_lot=?, date=?, dateEcheance=?, montant=?, id_modePaiement=?, commentaire=? WHERE id=?";
             if ($insert_stmt = $connection->prepare($request)) {
                 $insert_stmt->bind_param(
-                    "ssssss",
+                    "sssssss",
                     $id_lot,
                     $date,
+                    $dateEcheance,
                     $montant,
                     $id_modePaiement,
                     $commentaire,
@@ -685,16 +711,17 @@ if (isset($_POST["id"], $_POST["printZone"])) {
             exit();
         }
     } elseif (empty($error_msg)) {
-        $request = "INSERT INTO paiement (id_lot, date, montant, id_modePaiement, commentaire, id_syndic) 
-		VALUES (?, ?, ?, ?, ?, ?)";
+        $request = "INSERT INTO paiement (id_lot, date, dateEcheance, montant, id_modePaiement, commentaire, id_syndic)
+		VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         $insert_id = "";
 
         if ($insert_stmt = $connection->prepare($request)) {
             $insert_stmt->bind_param(
-                "ssssss",
+                "sssssss",
                 $id_lot,
                 $date,
+                $dateEcheance,
                 $montant,
                 $id_modePaiement,
                 $commentaire,
@@ -955,7 +982,7 @@ if (isset($_GET["action"], $_GET["id"])):
               foreach ($modepaiements as $modepaiement): ?>
                                                         <option value="<?= $modepaiement[
                                                             "id"
-                                                        ] ?>" <?php if (
+                                                        ] ?>" data-cheque="<?= preg_match('/ch[eéèêë]que/ui', $modepaiement["libelle"]) ? "1" : "0" ?>" <?php if (
     $modepaiement["id"] == $paiement[0]["id_modePaiement"]
 ) {
     echo "selected";
@@ -965,6 +992,12 @@ if (isset($_GET["action"], $_GET["id"])):
                                                     </select>
                                                 </div>
                                             </div>
+											<div class="col-6 mb-2 cheque-echeance-field" style="display: none;">
+												<div class="form-group">
+													<label class="text-label">Date d'échéance du chèque*</label>
+													<input type="date" class="form-control input-rounded input-default mb-3" name="dateEcheance" value="<?= $paiement[0]["dateEcheance"] ?>">
+												</div>
+											</div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
 													<label class="text-label">Commentaire</label>
@@ -1140,7 +1173,7 @@ elseif (isset($_GET["action"])):
               foreach ($modepaiements as $modepaiement): ?>
                                                         <option value="<?= $modepaiement[
                                                             "id"
-                                                        ] ?>"><?= $modepaiement[
+                                                        ] ?>" data-cheque="<?= preg_match('/ch[eéèêë]que/ui', $modepaiement["libelle"]) ? "1" : "0" ?>"><?= $modepaiement[
     "libelle"
 ] ?></option>
                                                         <?php endforeach;
@@ -1148,6 +1181,12 @@ elseif (isset($_GET["action"])):
                                                     </select>
                                                 </div>
                                             </div>
+											<div class="col-6 mb-2 cheque-echeance-field" style="display: none;">
+												<div class="form-group">
+													<label class="text-label">Date d'échéance du chèque*</label>
+													<input type="date" class="form-control input-rounded input-default mb-3" name="dateEcheance">
+												</div>
+											</div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
 													<label class="text-label">Commentaire</label>
@@ -1254,6 +1293,7 @@ else:
                                         <thead>
                                             <tr>
                                                 <th>Date</th>
+                                                <th>Date d'échéance</th>
                                                 <th>Code lot</th>
                                                 <th>Propriétaire</th>
                                                 <th>Montant</th>
@@ -1301,6 +1341,7 @@ else:
                                                         $paiement["date"],
                                                     ),
                                                 ) ?></td>
+                                                <td><?= $paiement["dateEcheance"] ? date("d/m/Y", strtotime($paiement["dateEcheance"])) : "-" ?></td>
                                                 <td><?= $lot[0]["code"] ?></td>
                                                 <td><?= $proprietaire[0][
                                                     "civilite"
@@ -1366,6 +1407,7 @@ else:
                                         <tfoot>
                                              <tr>
                                                 <th>Date</th>
+                                                <th>Date d'échéance</th>
                                                 <th>Code lot</th>
                                                 <th>Propriétaire</th>
                                                 <th>Montant</th>

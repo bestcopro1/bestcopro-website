@@ -979,13 +979,13 @@ function getPaiement(
 ) {
     if ($id != null) {
         $request =
-            "SELECT id, id_lot, date, montant, id_modePaiement, commentaire, id_syndic FROM paiement WHERE id = ?";
+            "SELECT id, id_lot, date, dateEcheance, montant, id_modePaiement, commentaire, id_syndic FROM paiement WHERE id = ?";
     } elseif ($id_lot != null) {
         $request =
-            "SELECT id, id_lot, date, montant, id_modePaiement, commentaire, id_syndic FROM paiement WHERE id_lot = ? ORDER BY id DESC";
+            "SELECT id, id_lot, date, dateEcheance, montant, id_modePaiement, commentaire, id_syndic FROM paiement WHERE id_lot = ? ORDER BY id DESC";
     } elseif ($id_copropriete != null) {
         $request =
-            "SELECT id, id_lot, date, montant, id_modePaiement, commentaire, id_syndic FROM paiement WHERE id_lot IN (SELECT id FROM lot WHERE id_copropriete = ?) ORDER BY id DESC";
+            "SELECT id, id_lot, date, dateEcheance, montant, id_modePaiement, commentaire, id_syndic FROM paiement WHERE id_lot IN (SELECT id FROM lot WHERE id_copropriete = ?) ORDER BY id DESC";
     }
     if ($stmt = $connection->prepare($request)) {
         if ($id != null) {
@@ -1003,6 +1003,7 @@ function getPaiement(
                 $id,
                 $id_lot,
                 $date,
+                $dateEcheance,
                 $montant,
                 $id_modePaiement,
                 $commentaire,
@@ -1013,6 +1014,7 @@ function getPaiement(
                     "id" => $id,
                     "id_lot" => $id_lot,
                     "date" => $date,
+                    "dateEcheance" => $dateEcheance,
                     "montant" => $montant,
                     "id_modePaiement" => $id_modePaiement,
                     "commentaire" => $commentaire,

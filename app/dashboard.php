@@ -734,6 +734,15 @@ foreach ($echeances as $echeance) {
 	</script>
 	<?php if ($page == "paiements"): ?>
 	<script>
+		function toggleChequeEcheance() {
+			var isCheque = String($('[name="id_modePaiement"] option:selected').data('cheque')) === '1';
+			$('.cheque-echeance-field').toggle(isCheque);
+			$('[name="dateEcheance"]').prop('required', isCheque);
+		}
+
+		$('[name="id_modePaiement"]').on('change', toggleChequeEcheance);
+		toggleChequeEcheance();
+
 		$('#id_lot').on('change', function() {
 			var id_lot = $(this).val();
 			var id_paiement = $(this).attr('data-paiement');
