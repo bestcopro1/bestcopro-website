@@ -40,7 +40,7 @@ $data = getSituationEncaissementsRows(
     $exercice[0],
     $connection
 );
-$logo = getSituationEncaissementsImageData(__DIR__ . "/../best_copro_logo.svg");
+$logo = getSituationEncaissementsImageData(__DIR__ . "/best_copro_logo_pdf.png");
 
 $htmlContent = "";
 $htmlContent .=
