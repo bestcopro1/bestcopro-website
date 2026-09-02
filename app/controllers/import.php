@@ -32,14 +32,39 @@ function id_typeLot($typelot, $connection)
 
 function id_typeProprietaire($typeProprietaire, $connection)
 {
-    $request = "SELECT id FROM typeproprietaire WHERE libelle LIKE ? LIMIT 1";
+    $typeProprietaire = trim((string) $typeProprietaire);
+    $alternatives = [$typeProprietaire];
+    if ($typeProprietaire === "Résident") {
+        $alternatives[] = "Resident";
+    } elseif ($typeProprietaire === "Resident") {
+        $alternatives[] = "Résident";
+    }
+
+    $request = "SELECT id FROM typeproprietaire WHERE LOWER(TRIM(libelle)) = LOWER(TRIM(?)) LIMIT 1";
     if ($stmt = $connection->prepare($request)) {
-        $stmt->bind_param("s", $typeProprietaire);
-        $stmt->execute();
-        $stmt->store_result();
-        $stmt->bind_result($id);
-        $stmt->fetch();
-        return $stmt->num_rows === 1 ? $id : "";
+        foreach ($alternatives as $alternative) {
+            $stmt->bind_param("s", $alternative);
+            $stmt->execute();
+            $stmt->store_result();
+            $stmt->bind_result($id);
+            $stmt->fetch();
+            if ($stmt->num_rows === 1) {
+                return $id;
+            }
+        }
+        $stmt->close();
+    }
+
+    // Les deux types utilisés par le modèle Majorelle sont des référentiels
+    // globaux. Les créer ici permet d'importer une copropriété sur une base
+    // fraîche, sans intervention manuelle dans phpMyAdmin.
+    $insert = $connection->prepare("INSERT INTO typeproprietaire (libelle) VALUES (?)");
+    if ($insert) {
+        $insert->bind_param("s", $typeProprietaire);
+        if ($insert->execute()) {
+            return $connection->insert_id;
+        }
+        $insert->close();
     }
     return "";
 }
