@@ -17,6 +17,14 @@ if (!isset($_SESSION["id"])) {
     exit();
 }
 
+function parseAllocationAmount($value, &$valid)
+{
+    $normalized = str_replace([" ", "\xc2\xa0", "\xa0"], "", trim((string) $value));
+    $normalized = str_replace(",", ".", $normalized);
+    $valid = $normalized !== "" && is_numeric($normalized);
+    return $valid ? (float) $normalized : 0.0;
+}
+
 if (
     isset(
         $_POST["id_copropriete"],
@@ -458,6 +466,102 @@ if (
     );
     if ($id_exercice != "") {
         $exercice = getExercice($id_exercice, null, $connection);
+        if (empty($exercice)) {
+            http_response_code(404);
+            echo "error|L'exercice est introuvable.";
+            exit();
+        }
+        if (!in_array((string) $id_periodePaiement, ["1", "2", "3", "4"], true)) {
+            http_response_code(400);
+            echo "error|La période de paiement est invalide.";
+            exit();
+        }
+
+        $montantFonct = (float) $exercice[0]["montantFonct"];
+        $montantInvest = (float) $exercice[0]["montantInvest"];
+        $id_repartitionFonct = 3;
+        $id_repartitionInvest = 3;
+        $validatedAllocations = [];
+        $totalPartFonct = 0.0;
+        $totalPartInv = 0.0;
+        $allocationIndex = 1;
+
+        while (isset($_POST["id_lot2_" . $allocationIndex])) {
+            $id_lot = trim((string) $_POST["id_lot2_" . $allocationIndex]);
+            $partFonct = parseAllocationAmount(
+                $_POST["partFonct_" . $allocationIndex] ?? "",
+                $validPartFonct,
+            );
+            $partInv = parseAllocationAmount(
+                $_POST["partInv_" . $allocationIndex] ?? "",
+                $validPartInv,
+            );
+            if (
+                $id_lot === "" ||
+                !$validPartFonct ||
+                !$validPartInv ||
+                $partFonct < 0 ||
+                $partInv < 0
+            ) {
+                http_response_code(400);
+                echo "error|Montant invalide pour le lot numéro " . $allocationIndex . ".";
+                exit();
+            }
+            $validatedAllocations[$allocationIndex] = [
+                "id_lot" => $id_lot,
+                "partFonct" => $partFonct,
+                "partInv" => $partInv,
+            ];
+            $totalPartFonct += $partFonct;
+            $totalPartInv += $partInv;
+            ++$allocationIndex;
+        }
+
+        if (empty($validatedAllocations)) {
+            http_response_code(400);
+            echo "error|Aucun lot n'a été reçu pour la répartition.";
+            exit();
+        }
+
+        $lotCount = 0;
+        $lotCountStmt = $connection->prepare(
+            "SELECT COUNT(*) FROM lot WHERE id_copropriete = ?",
+        );
+        if (!$lotCountStmt) {
+            http_response_code(500);
+            echo "error|Impossible de vérifier les lots de la copropriété.";
+            exit();
+        }
+        $lotCountStmt->bind_param("s", $exercice[0]["id_copropriete"]);
+        if (!$lotCountStmt->execute()) {
+            http_response_code(500);
+            echo "error|Impossible de vérifier les lots de la copropriété.";
+            exit();
+        }
+        $lotCountStmt->bind_result($lotCount);
+        $lotCountStmt->fetch();
+        $lotCountStmt->close();
+        if ((int) $lotCount !== count($validatedAllocations)) {
+            http_response_code(400);
+            echo "error|La répartition doit contenir tous les lots de la copropriété.";
+            exit();
+        }
+
+	        if (
+	            abs(round($totalPartFonct * 100) - round($montantFonct * 100)) > 1 ||
+	            abs(round($totalPartInv * 100) - round($montantInvest * 100)) > 1
+	        ) {
+            http_response_code(400);
+            echo "error|Les totaux des lots ne correspondent pas aux budgets. Fonctionnement : " .
+                number_format($totalPartFonct, 2, ".", " ") . " / " .
+                number_format($montantFonct, 2, ".", " ") .
+                " MAD. Investissement : " .
+                number_format($totalPartInv, 2, ".", " ") . " / " .
+                number_format($montantInvest, 2, ".", " ") . " MAD.";
+            exit();
+        }
+
+        $connection->begin_transaction();
         $request =
             "UPDATE exercice SET id_periodePaiement = ?, id_repartitionFonct = ?, id_repartitionInvest = ?, montantFonct = ?, montantInvest = ? WHERE id = ?";
         if ($insert_stmt = $connection->prepare($request)) {
@@ -471,11 +575,16 @@ if (
                 $id_exercice,
             );
             // Execute the prepared query.
-            if (!$insert_stmt->execute()) {
-                echo $connection->error;
-                exit();
-            }
-        }
+	            if (!$insert_stmt->execute()) {
+	                $connection->rollback();
+	                echo $connection->error;
+	                exit();
+	            }
+	        } else {
+	            $connection->rollback();
+	            echo "error|Impossible de mettre à jour l'exercice.";
+	            exit();
+	        }
         if (
             $insert_stmt_history = $connection->prepare(
                 "INSERT INTO historique (date, action, id_collaborateur) VALUES (?, ?, ?)",
@@ -490,39 +599,43 @@ if (
                 $_SESSION["id"],
             );
             // Execute the prepared query.
-            if (!$insert_stmt_history->execute()) {
-                echo $connection->error;
-                exit();
-            }
-        }
-        $i = 1;
-        while (isset($_POST["id_lot2_" . $i])) {
-            $id_lot = filter_input(
-                INPUT_POST,
-                "id_lot2_" . $i,
-                FILTER_SANITIZE_STRING,
-            );
-            $partFonct = floatval(
-                filter_input(
-                    INPUT_POST,
-                    "partFonct_" . $i,
-                    FILTER_SANITIZE_STRING,
-                ),
-            );
-            $partInv = floatval(
-                filter_input(
-                    INPUT_POST,
-                    "partInv_" . $i,
-                    FILTER_SANITIZE_STRING,
-                ),
-            );
-            if ($id_lot != "" && $partFonct > 0) {
-                $request = "INSERT INTO rel_lot_exercice (id_lot, id_exercice, partFonct, partInv, dateFinPeriode) 
-				VALUES (?, ?, ?, ?, ?)";
-                $nbrPeriode = 12;
+	            if (!$insert_stmt_history->execute()) {
+	                $connection->rollback();
+	                echo $connection->error;
+	                exit();
+	            }
+	        } else {
+	            $connection->rollback();
+	            echo "error|Impossible d'enregistrer l'historique.";
+	            exit();
+	        }
+	        $request = "INSERT INTO rel_lot_exercice (id_lot, id_exercice, partFonct, partInv, dateFinPeriode) VALUES (?, ?, ?, ?, ?)";
+	        $relLotStmt = $connection->prepare($request);
+	        if (!$relLotStmt) {
+	            $connection->rollback();
+	            echo "error|Impossible de préparer les échéances des lots.";
+	            exit();
+	        }
+	        $i = 1;
+        while (isset($validatedAllocations[$i])) {
+            $id_lot = $validatedAllocations[$i]["id_lot"];
+            $partFonct = $validatedAllocations[$i]["partFonct"];
+            $partInv = $validatedAllocations[$i]["partInv"];
+            if ($id_lot != "" && $partFonct >= 0 && $partInv >= 0) {
+	                $nbrPeriode = 12;
                 $nbrMonth = 1;
                 $dateFinPeriode = $exercice[0]["dateDebut"];
                 $lot = getLot($id_lot, null, null, $connection);
+                if (
+                    empty($lot) ||
+                    (string) $lot[0]["id_copropriete"] !==
+                        (string) $exercice[0]["id_copropriete"]
+                ) {
+                    $connection->rollback();
+                    http_response_code(400);
+                    echo "error|Un lot de la répartition n'appartient pas à cette copropriété.";
+                    exit();
+                }
                 for ($j = 0; $j < 6; $j++) {
                     if (floatval($lot[0]["impaye" . $j]) > 0) {
                         $dateFinAE = date(
@@ -541,21 +654,19 @@ if (
                         } else {
                             $id_AE = "-" . $j;
                         }
-                        if ($insert_stmt = $connection->prepare($request)) {
-                            $insert_stmt->bind_param(
-                                "sssss",
-                                $id_lot,
-                                $id_AE,
-                                $impayeF,
-                                $impayeI,
-                                $dateFinAE,
-                            );
-                            // Execute the prepared query.
-                            if (!$insert_stmt->execute()) {
-                                echo $connection->error;
-                                exit();
-                            }
-                        }
+	                        $relLotStmt->bind_param(
+	                            "sssss",
+	                            $id_lot,
+	                            $id_AE,
+	                            $impayeF,
+	                            $impayeI,
+	                            $dateFinAE,
+	                        );
+	                        if (!$relLotStmt->execute()) {
+	                            $connection->rollback();
+	                            echo $connection->error;
+	                            exit();
+	                        }
                     }
                 }
                 if ($id_periodePaiement == "1") {
@@ -583,21 +694,19 @@ if (
                                 " month",
                         ),
                     );
-                    if ($insert_stmt = $connection->prepare($request)) {
-                        $insert_stmt->bind_param(
-                            "sssss",
-                            $id_lot,
-                            $id_exercice,
-                            $partFonct,
-                            $partInv,
-                            $dateFinPeriode,
-                        );
-                        // Execute the prepared query.
-                        if (!$insert_stmt->execute()) {
-                            echo $connection->error;
-                            exit();
-                        }
-                    }
+	                    $relLotStmt->bind_param(
+	                        "sssss",
+	                        $id_lot,
+	                        $id_exercice,
+	                        $partFonct,
+	                        $partInv,
+	                        $dateFinPeriode,
+	                    );
+	                    if (!$relLotStmt->execute()) {
+	                        $connection->rollback();
+	                        echo $connection->error;
+	                        exit();
+	                    }
                 }
             }
             $i = $i + 1;
@@ -608,12 +717,18 @@ if (
         if ($insert_stmt = $connection->prepare($request)) {
             $insert_stmt->bind_param("s", $exercice[0]["id_copropriete"]);
             // Execute the prepared query.
-            if (!$insert_stmt->execute()) {
-                echo $connection->error;
-                exit();
-            }
-        }
+	            if (!$insert_stmt->execute()) {
+	                $connection->rollback();
+	                echo $connection->error;
+	                exit();
+	            }
+	        } else {
+	            $connection->rollback();
+	            echo "error|Impossible d'activer la copropriété.";
+	            exit();
+	        }
 
+        $connection->commit();
         echo "done|0";
         exit();
     }

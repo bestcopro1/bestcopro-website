@@ -433,8 +433,11 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 																<h5 class="modal-title">Importer les lots</h5>
 																<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 															</div>
-															<div class="modal-body">
-																<div class="basic-form">
+												<div class="modal-body">
+													<div class="alert alert-primary">
+														Utilisez le format du fichier <strong>Import lots Majorelle - Exercice 2026 - 2027 CSV.csv</strong>. La colonne <strong>BASE COTISATION</strong> alimentera les parts de fonctionnement.
+													</div>
+													<div class="basic-form">
 																	<form>
 																		<div class="form-group mb-4">
 																			<h5>Faites glisser et déposez le fichier</h5>
@@ -442,7 +445,7 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 																				Glisser et Déposer ici 
 																			</div>
 																			<div id="uploaded_file" class="text-center mt-3"></div>
-																			<input type="file" id="foo" name="file1" style="display: none;" />
+																			<input type="file" id="foo" name="file1" accept=".csv,text/csv" style="display: none;" />
 																		</div>
 																	</form>
 																</div>
@@ -722,7 +725,7 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 											<div class="basic-form mt-5">
 												<form>
 													<div class="row">
-														<div class="col-4 mb-2">
+													<div class="col-md-5 mb-2">
 															<div class="form-group">
 																<label class="text-label">Période de paiement*</label>
 																<select name="id_periodePaiement" class="default-select form-control input-rounded wide mb-3">
@@ -740,45 +743,29 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 																</select>
 															</div>
 														</div>
-														<div class="col-4 mb-2">
-															<div class="form-group">
-																<label class="text-label">Mode de répartition des charges de fonctionnement*</label>
-																<select id="id_repartitionFonct" name="id_repartitionFonct" class="default-select form-control input-rounded wide mb-3">
-																	<?php
-                 $repartitionfoncts = getRepartitionfonct(
-                     null,
-                     $GLOBALS["connection"],
-                 );
-                 foreach ($repartitionfoncts as $repartitionfonct): ?>
-																	<option value="<?= $repartitionfonct["id"] ?>"><?= $repartitionfonct[
-    "libelle"
-] ?></option>
-																	<?php endforeach;
-                 ?>
-																</select>
-															</div>
-														</div>
-														<div class="col-4 mb-2">
-															<div class="form-group">
-																<label class="text-label">Mode de répartition des charges d'investissement*</label>
-																<select id="id_repartitionInvest" name="id_repartitionInvest" class="default-select form-control input-rounded wide mb-3">
-																	<?php
-                 $repartitioninvests = getRepartitioninvest(
-                     null,
-                     $GLOBALS["connection"],
-                 );
-                 foreach ($repartitioninvests as $repartitioninvest): ?>
-																	<option value="<?= $repartitioninvest["id"] ?>"><?= $repartitioninvest[
-    "libelle"
-] ?></option>
-																	<?php endforeach;
-                 ?>
-																</select>
-															</div>
+													<div class="col-md-7 mb-2">
+														<div class="alert alert-primary mb-0" role="alert">
+															Les montants importés depuis <strong>BASE COTISATION</strong> restent modifiables. Les totaux doivent correspondre aux budgets avant de terminer.
 														</div>
 													</div>
-												</form>
+												</div>
+												<input type="hidden" name="id_repartitionFonct" value="3">
+												<input type="hidden" name="id_repartitionInvest" value="3">
+											</form>
+										</div>
+										<div class="row mb-3">
+											<div class="col-md-6 mb-2">
+												<div id="allocationFonctStatus" class="alert alert-danger mb-0" role="status">
+													Fonctionnement affecté : <strong><span id="allocatedFonct">0.00</span> MAD</strong> — Écart : <span id="differenceFonct">0.00</span> MAD
+												</div>
 											</div>
+											<div class="col-md-6 mb-2">
+												<div id="allocationInvestStatus" class="alert alert-success mb-0" role="status">
+													Investissement affecté : <strong><span id="allocatedInvest">0.00</span> MAD</strong> — Écart : <span id="differenceInvest">0.00</span> MAD
+												</div>
+											</div>
+										</div>
+										<div id="allocationError" class="alert alert-danger d-none" role="alert"></div>
 											<div class="table-responsive">
 												<table class="table table-responsive-sm">
 													<thead>
@@ -1098,114 +1085,73 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 				return isNaN(amount) ? 0 : amount;
 			}
 
-			function getRowTantieme($input) {
-				return parseAmount($input.closest('tr').find('td:eq(3)').text());
-			}
-
-			function getLotLine($input, prefix) {
-				return String($input.attr('name') || '').replace(prefix, '');
-			}
-
-			function getInputTantieme($input, prefix) {
-				var lotLine = getLotLine($input, prefix);
-				var tantieme = parseAmount($('input[name="tantieme_'+lotLine+'"]').val());
-				return tantieme > 0 ? tantieme : getRowTantieme($input);
-			}
-
-			function getRepartitionMode($select) {
-				var value = String($select.val() || '');
-				var label = String($select.find('option:selected').text() || '');
-				var niceSelectLabel = String($select.next('.nice-select').find('.current').text() || '');
-				var groupNiceSelectLabel = String($select.closest('.form-group').find('.nice-select .current').text() || '');
-				label = (label + ' ' + niceSelectLabel).toLowerCase();
-				label = (label + ' ' + groupNiceSelectLabel).toLowerCase();
-				if (label.normalize) {
-					label = label.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-				}
-				if (value == '3' || label.indexOf('manuel') !== -1) {
-					return 'manual';
-				}
-				if (value == '2' || label.indexOf('egal') !== -1) {
-					return 'equal';
-				}
-				return 'tantieme';
-			}
-
-			function applyRepartitionFonct() {
-				var nbrLot = parseInt($('#nbrLot_bis').text()) || $('.partFonct').length;
-				var totalBudgetFonct = parseAmount($('#totalBudgetFonct').text());
-				var mode = getRepartitionMode($('#id_repartitionFonct'));
-
-				if (mode == 'tantieme') {
-					var sommeTantieme = 0;
-					$('.tantieme').each(function() {
-						sommeTantieme += parseAmount($(this).val());
-					});
-					$('.partFonct').each(function() {
-						var lotLine = getLotLine($(this), 'partFonct_');
-						var tantieme = parseAmount($('input[name="tantieme_'+lotLine+'"]').val());
-						$(this).val(sommeTantieme > 0 ? (totalBudgetFonct * tantieme / sommeTantieme).toFixed(2) : '0.00');
-					});
-					$('.partFonct').attr('readonly', true);
-				} else if (mode == 'equal' && nbrLot != 0) {
-					$('.partFonct').val((totalBudgetFonct / nbrLot).toFixed(2));
-					$('.partFonct').attr('readonly', true);
-				} else if (mode == 'manual') {
-					copyTantiemeToFonct();
-				}
-			}
-
-			function applyRepartitionInvest() {
-				var nbrLot = parseInt($('#nbrLot_bis').text()) || $('.partInv').length;
-				var totalBudgetInvest = parseAmount($('#totalBudgetInvest').text());
-				var mode = getRepartitionMode($('#id_repartitionInvest'));
-
-				if (mode == 'tantieme') {
-					var sommeTantieme = 0;
-					$('.tantieme').each(function() {
-						sommeTantieme += parseAmount($(this).val());
-					});
-					$('.partInv').each(function() {
-						var lotLine = getLotLine($(this), 'partInv_');
-						var tantieme = parseAmount($('input[name="tantieme_'+lotLine+'"]').val());
-						$(this).val(sommeTantieme > 0 ? (totalBudgetInvest * tantieme / sommeTantieme).toFixed(2) : '0.00');
-					});
-					$('.partInv').attr('readonly', true);
-				} else if (mode == 'equal' && nbrLot != 0) {
-					$('.partInv').val((totalBudgetInvest / nbrLot).toFixed(2));
-					$('.partInv').attr('readonly', true);
-				} else if (mode == 'manual') {
-					copyTantiemeToInvest();
-				}
-			}
-
-			function applyRepartitions() {
-				applyRepartitionFonct();
-				applyRepartitionInvest();
-			}
-
-			function syncManualVisibleRepartitions() {
-				if (getRepartitionMode($('#id_repartitionFonct')) == 'manual') {
-					copyTantiemeToFonct();
-				}
-				if (getRepartitionMode($('#id_repartitionInvest')) == 'manual') {
-					copyTantiemeToInvest();
-				}
-			}
-
-			function copyTantiemeToFonct() {
-				$('.partFonct').each(function() {
-					$(this).val(getInputTantieme($(this), 'partFonct_').toFixed(2));
+			function readAllocationValues(selector) {
+				var total = 0;
+				var valid = true;
+				$(selector).each(function() {
+					var rawValue = String($(this).val() || '').trim();
+					var value = parseAmount(rawValue);
+					if (rawValue === '' || !isFinite(value) || value < 0) {
+						valid = false;
+						$(this).addClass('is-invalid');
+					} else {
+						$(this).removeClass('is-invalid');
+						total += value;
+					}
 				});
-				$('.partFonct').attr('readonly', false);
+				return { total: total, valid: valid };
 			}
 
-			function copyTantiemeToInvest() {
-				$('.partInv').each(function() {
-					$(this).val(getInputTantieme($(this), 'partInv_').toFixed(2));
-				});
-				$('.partInv').attr('readonly', false);
+			function allocationMatchesBudget(total, budget) {
+				return Math.abs(Math.round(total * 100) - Math.round(budget * 100)) <= 1;
 			}
+
+			function updateAllocationTotals() {
+				var fonctionnement = readAllocationValues('.partFonct');
+				var investissement = readAllocationValues('.partInv');
+				var budgetFonct = parseAmount($('#totalBudgetFonct').text());
+				var budgetInvest = parseAmount($('#totalBudgetInvest').text());
+				var fonctOk = fonctionnement.valid && allocationMatchesBudget(fonctionnement.total, budgetFonct);
+				var investOk = investissement.valid && allocationMatchesBudget(investissement.total, budgetInvest);
+
+				$('#allocatedFonct').text(fonctionnement.total.toFixed(2));
+				$('#allocatedInvest').text(investissement.total.toFixed(2));
+				$('#differenceFonct').text(Math.abs(budgetFonct - fonctionnement.total).toFixed(2));
+				$('#differenceInvest').text(Math.abs(budgetInvest - investissement.total).toFixed(2));
+				$('#allocationFonctStatus').toggleClass('alert-success', fonctOk).toggleClass('alert-danger', !fonctOk);
+				$('#allocationInvestStatus').toggleClass('alert-success', investOk).toggleClass('alert-danger', !investOk);
+
+				return {
+					valid: fonctionnement.valid && investissement.valid && fonctOk && investOk,
+					fonctionnement: fonctionnement.total,
+					investissement: investissement.total,
+					budgetFonct: budgetFonct,
+					budgetInvest: budgetInvest
+				};
+			}
+
+			function validateAllocations(showError) {
+				var state = updateAllocationTotals();
+				var message = '';
+				if ($('.partFonct').length === 0) {
+					message = 'Aucun lot n\'a été ajouté.';
+				} else if (!state.valid) {
+					message = 'Les montants doivent être positifs ou nuls et leurs totaux doivent correspondre aux budgets. ' +
+						'Fonctionnement : ' + state.fonctionnement.toFixed(2) + ' / ' + state.budgetFonct.toFixed(2) + ' MAD. ' +
+						'Investissement : ' + state.investissement.toFixed(2) + ' / ' + state.budgetInvest.toFixed(2) + ' MAD.';
+				}
+				$('#allocationError').toggleClass('d-none', message === '').text(message);
+				if (showError && message !== '') {
+					$('#erreurMessage').text(message);
+					$('#SuccessErreurAlert').modal('toggle');
+				}
+				return message === '';
+			}
+
+			$('body').on('input change', '.allocation-value', function() {
+				updateAllocationTotals();
+				$('#allocationError').addClass('d-none').text('');
+			});
 
 			// SmartWizard initialize
 			$("#smartwizard").smartWizard({
@@ -1336,8 +1282,8 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 						}
 					});
 				} else if(currentStepIndex == 2){
-					if(parseInt($('#lotCounter').text()) < parseInt($('#nbrLot').text())){
-						$('#erreurMessage').text("Veuillez compléter la liste des lots");
+					if(parseInt($('#lotCounter').text()) !== parseInt($('#nbrLot').text())){
+						$('#erreurMessage').text("Le nombre de lots ajoutés doit correspondre au nombre de lots de la copropriété.");
 						$('#SuccessErreurAlert').modal('toggle');
 						return false;
 					}
@@ -1357,7 +1303,7 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 					$('#stepName').text('Informations relatives aux lots');
 				} else if(nextStepIndex == 3){ 
 					$('#stepName').text('Répartition des charges');
-					applyRepartitions();
+					updateAllocationTotals();
 				}
 			});
 			$('input[name="nbrLot"]').on("change", function(event) {
@@ -1377,7 +1323,7 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 				e.preventDefault();  
 				$(this).removeClass('file_drag_over');  
 				var files_list = e.originalEvent.dataTransfer.files;
-				formDataImport.append('file', files_list[0]);
+				formDataImport.set('file', files_list[0]);
 				$('#uploaded_file').text(files_list[0].name);
 			});
 			$('.file_drag_area').on('click', function(){
@@ -1385,7 +1331,7 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 				return false;  
 			});  
 			$('#foo').on('change', function() {
-				formDataImport.append('file', $(this).get(0).files[0]);
+				formDataImport.set('file', $(this).get(0).files[0]);
 				$('#uploaded_file').text($(this).get(0).files[0].name);
 				return false;
 			});
@@ -1475,13 +1421,17 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 							$('#lotCounter').text(words[3]);
 							var widthProgress = (parseInt($('#lotCounter').text()) * 100)/parseInt($('#nbrLot').text());
 							$('.progress-bar').css('width', widthProgress+'%');
-							applyRepartitions();
-							syncManualVisibleRepartitions();
+							updateAllocationTotals();
 						} else {
 							$('#list_lots .list_lots_empty').html('<td colspan="8" class="text-center"><p class="mt-3">Aucune donnée disponible dans le tableau</p></td>');
 							$('#erreurMessage').html(response);
 							$('#SuccessErreurAlert').modal('toggle');
 						}
+					},
+					error : function(xhr) {
+						$('#list_lots .list_lots_empty').html('<td colspan="8" class="text-center"><p class="mt-3">Aucune donnée disponible dans le tableau</p></td>');
+						$('#erreurMessage').html(xhr.responseText || "Impossible d'importer le fichier CSV.");
+						$('#SuccessErreurAlert').modal('toggle');
 					},
 					complete : function (data) {
 						formDataImport = new FormData();
@@ -1574,12 +1524,9 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 								$('#tdProprio2_'+currentLot).text($('select[name="id_proprietaire"]').find(":selected").text());
 								$('#tdTantieme_'+currentLot).text($('input[name="tantieme"]').val());
 								$('#tdTantieme2_'+currentLot).text($('input[name="tantieme"]').val());
-								$('input[name="partFonct_'+currentLot+'"]').val($('input[name="tantieme"]').val());
-								$('input[name="partInv_'+currentLot+'"]').val($('input[name="tantieme"]').val());
 								$('#tdAcqui_'+currentLot).text($('input[name="dateAcquisition"]').val());
 								$('#tdRemise_'+currentLot).text($('input[name="dateRemiseCle"]').val());
-								applyRepartitions();
-								syncManualVisibleRepartitions();
+								updateAllocationTotals();
 								
 								$('#update_lot').val("");
 								$('#update_lot').attr("data-lot-line", "");
@@ -1661,13 +1608,12 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 								codeHtml += '<td><span id="tdType2_'+currentLot+'">'+$('select[name="id_typeLot"]').find(":selected").text()+'</span></td>';
 								codeHtml += '<td><span id="tdProprio2_'+currentLot+'">'+$('select[name="id_proprietaire"]').find(":selected").text()+'</span></td>';
 								codeHtml += '<td><span id="tdTantieme2_'+currentLot+'">'+$('input[name="tantieme"]').val()+'</span></td>';
-								codeHtml += '<td><input type="number" class="form-control input-rounded input-defaultmb-3 partFonct" name="partFonct_'+currentLot+'" value="'+$('input[name="tantieme"]').val()+'" placeholder="0.00" readonly></td>';
-								codeHtml += '<td><input type="number" class="form-control input-rounded input-defaultmb-3 partInv" name="partInv_'+currentLot+'" value="'+$('input[name="tantieme"]').val()+'" placeholder="0.00" readonly></td>';
+								codeHtml += '<td><input type="number" min="0" step="0.01" class="form-control input-rounded input-defaultmb-3 partFonct allocation-value" name="partFonct_'+currentLot+'" value="0.00" placeholder="0.00"></td>';
+								codeHtml += '<td><input type="number" min="0" step="0.01" class="form-control input-rounded input-defaultmb-3 partInv allocation-value" name="partInv_'+currentLot+'" value="0.00" placeholder="0.00"></td>';
 								codeHtml += '</tr>';
 								$('#list_lots_bis').append(codeHtml);
 								$('#tab-content').height($('#copropriete_Lots').height());
-								applyRepartitions();
-								syncManualVisibleRepartitions();
+								updateAllocationTotals();
 								
 								$('#add_lot').modal('toggle');
 							} else {
@@ -1709,52 +1655,13 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 				$('#update_lot').attr("data-lot-line", lot_line);
 				$('#add_lot').modal('toggle');
 			});
-			$('#id_repartitionFonct').on('change', function() {
-				applyRepartitionFonct();
-			});
-			$('#id_repartitionInvest').on('change', function() {
-				applyRepartitionInvest();
-			});
-			$(document).on('click', '.nice-select .option', function() {
-				var selectId = $(this).closest('.nice-select').prev('select').attr('id');
-				var fieldLabel = String($(this).closest('.form-group').find('label').text() || '').toLowerCase();
-				if (fieldLabel.normalize) {
-					fieldLabel = fieldLabel.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-				}
-				if (selectId != 'id_repartitionFonct' && fieldLabel.indexOf('fonctionnement') === -1) {
-					return;
-				}
-				var label = String($(this).text() || '').toLowerCase();
-				if (label.normalize) {
-					label = label.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-				}
-				if (label.indexOf('manuel') !== -1) {
-					copyTantiemeToFonct();
-				} else {
-					setTimeout(applyRepartitionFonct, 0);
-				}
-			});
-			$(document).on('click', '.nice-select .option', function() {
-				var selectId = $(this).closest('.nice-select').prev('select').attr('id');
-				var fieldLabel = String($(this).closest('.form-group').find('label').text() || '').toLowerCase();
-				if (fieldLabel.normalize) {
-					fieldLabel = fieldLabel.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-				}
-				if (selectId != 'id_repartitionInvest' && fieldLabel.indexOf('investissement') === -1) {
-					return;
-				}
-				var label = String($(this).text() || '').toLowerCase();
-				if (label.normalize) {
-					label = label.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-				}
-				if (label.indexOf('manuel') !== -1) {
-					copyTantiemeToInvest();
-				} else {
-					setTimeout(applyRepartitionInvest, 0);
-				}
-			});
 			$("body").on("click", '#finish', function(event) {
-				syncManualVisibleRepartitions();
+				event.preventDefault();
+				if (!validateAllocations(true)) {
+					return false;
+				}
+				var $finishButton = $(this);
+				$finishButton.prop('disabled', true);
 				var form_data = new FormData();
 				$('#copropriete_Charges input, #copropriete_Charges select').each(
 					function(index){  
@@ -1776,9 +1683,21 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 					success:function(response) {
 						if (response.includes('done|')) {
 							window.location.replace("./index.php");
+						} else {
+							$('#erreurMessage').html(response.includes('|') ? response.split('|')[1] : response);
+							$('#SuccessErreurAlert').modal('toggle');
 						}
+					},
+					error:function(xhr) {
+						var response = String(xhr.responseText || '');
+						$('#erreurMessage').html(response.includes('|') ? response.split('|')[1] : (response || "Impossible de finaliser la copropriété."));
+						$('#SuccessErreurAlert').modal('toggle');
+					},
+					complete:function() {
+						$finishButton.prop('disabled', false);
 					}
 				});
+				return false;
 			});
 		});
 	</script>
