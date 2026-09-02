@@ -55,6 +55,36 @@
       });
   }
 
+  function clearDropdownHosts() {
+    $(".bc-dropdown-host").removeClass("bc-dropdown-host");
+  }
+
+  function markDropdownHost($select) {
+    clearDropdownHosts();
+    $select
+      .parents(".form-group, .card-body, .card, .modal-body, .modal-content, .tab-content")
+      .addClass("bc-dropdown-host");
+  }
+
+  function manageDropdownLayers() {
+    $(document)
+      .on("click keyup", ".nice-select", function () {
+        var $select = $(this);
+        window.requestAnimationFrame(function () {
+          if ($select.hasClass("open")) {
+            markDropdownHost($select);
+          } else {
+            clearDropdownHosts();
+          }
+        });
+      })
+      .on("select2:open", "select", function () {
+        markDropdownHost($(this));
+      })
+      .on("select2:close", "select", clearDropdownHosts)
+      .on("hidden.bs.modal", ".modal", clearDropdownHosts);
+  }
+
   function syncDynamicContent() {
     $(document).ajaxComplete(function () {
       enhanceTables();
@@ -66,6 +96,7 @@
     revealElements();
     enhanceTables();
     addPressedState();
+    manageDropdownLayers();
     syncDynamicContent();
   });
 })(jQuery);
