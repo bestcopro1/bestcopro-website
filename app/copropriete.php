@@ -1278,8 +1278,10 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 									isStepValid = false;
 								}
 							},
-							error:function() {
-								$('#erreurMessage').text("Impossible d'enregistrer la copropriété. Veuillez réessayer.");
+							error:function(xhr) {
+								var response = String(xhr.responseText || '');
+								var message = response.includes('|') ? response.split('|')[1] : response;
+								$('#erreurMessage').text(message || "Impossible d'enregistrer la copropriété. Veuillez réessayer.");
 								$('#SuccessErreurAlert').modal('toggle');
 								isStepValid = false;
 							}

@@ -1,8 +1,19 @@
 <?php
+require_once __DIR__ . "/../session.php";
+bestcopro_start_session();
+
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
 
 if (!$connection) {
+    http_response_code(500);
+    echo "error|Connexion a la base de donnees indisponible.";
+    exit();
+}
+
+if (!isset($_SESSION["id"])) {
+    http_response_code(401);
+    echo "error|Votre session a expire. Veuillez vous reconnecter.";
     exit();
 }
 
