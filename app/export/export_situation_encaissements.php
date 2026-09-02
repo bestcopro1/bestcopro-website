@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . "/../session.php";
 bestcopro_start_session();
-require_once "../vendor/dompdf/autoload.inc.php";
+require_once __DIR__ . "/../vendor/dompdf/autoload.inc.php";
 
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";

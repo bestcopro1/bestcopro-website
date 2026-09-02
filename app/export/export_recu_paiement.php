@@ -105,9 +105,6 @@ function recuPaiementRenderPeriods($relRelPaiements, $connection)
 $periods = recuPaiementRenderPeriods($relRelPaiements, $connection);
 $avance = floatval($paiement[0]["montant"]) - $periods["totalRelPaiement"];
 $logoPath = __DIR__ . "/../best_copro_logo.svg";
-if (is_file($logoPath) && filesize($logoPath) > 200000) {
-    $logoPath = __DIR__ . "/logo.png";
-}
 $logo = recuPaiementImageData($logoPath);
 $logoText = "";
 
@@ -135,8 +132,7 @@ $htmlContent .=
     "</strong>";
 $htmlContent .=
     '<span class="right">' .
-    htmlspecialchars($copropriete[0]["ville"], ENT_QUOTES, "UTF-8") .
-    " le " .
+    "Édité le " .
     date("d/m/Y") .
     "</span>";
 $htmlContent .= "</div>";
@@ -144,7 +140,7 @@ $htmlContent .= '<div class="body">';
 $htmlContent .= '<div class="row">';
 $htmlContent .= '<div class="col logo">';
 if ($logo != "") {
-    $htmlContent .= '<img width="50" src="' . $logo . '" alt="">';
+    $htmlContent .= '<img width="260" src="' . $logo . '" alt="Best Copro">';
 }
 if ($logoText != "") {
     $htmlContent .= '<img width="110" src="' . $logoText . '" alt="">';
