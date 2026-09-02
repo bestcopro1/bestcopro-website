@@ -58,6 +58,7 @@ function bestcopro_legacy_permission_default($roleId, $permissionCode)
 
 function bestcopro_ensure_access_schema($connection, &$error = null)
 {
+    try {
     $request = "CREATE TABLE IF NOT EXISTS typesyndic_permission (
         id_typeSyndic INT NOT NULL,
         permission_code VARCHAR(80) NOT NULL,
@@ -104,6 +105,10 @@ function bestcopro_ensure_access_schema($connection, &$error = null)
     $stmt->close();
 
     return true;
+    } catch (Throwable $exception) {
+        $error = $exception->getMessage();
+        return false;
+    }
 }
 
 function bestcopro_role_has_permission($roleId, $permissionCode, $connection = null)
@@ -129,23 +134,38 @@ function bestcopro_role_has_permission($roleId, $permissionCode, $connection = n
     $roleKey = (string) $roleId;
     if (!array_key_exists($roleKey, $roleCache)) {
         $roleCache[$roleKey] = [];
-        $stmt = $connection->prepare(
-            "SELECT permission_code, autorise FROM typesyndic_permission WHERE id_typeSyndic = ?"
-        );
-        if (!$stmt) {
-            $roleCache[$roleKey] = null;
-        } else {
-            $roleIdValue = (int) $roleId;
-            $stmt->bind_param("i", $roleIdValue);
-            if ($stmt->execute()) {
-                $stmt->bind_result($storedCode, $allowed);
-                while ($stmt->fetch()) {
-                    $roleCache[$roleKey][$storedCode] = (int) $allowed === 1;
-                }
-            } else {
-                $roleCache[$roleKey] = null;
+        try {
+            $tableResult = $connection->query("SHOW TABLES LIKE 'typesyndic_permission'");
+            $tableExists = $tableResult && $tableResult->num_rows > 0;
+            if ($tableResult) {
+                $tableResult->free();
             }
-            $stmt->close();
+
+            if (!$tableExists) {
+                $roleCache[$roleKey] = null;
+                return bestcopro_legacy_permission_default($roleId, $permissionCode);
+            }
+
+            $stmt = $connection->prepare(
+                "SELECT permission_code, autorise FROM typesyndic_permission WHERE id_typeSyndic = ?"
+            );
+            if (!$stmt) {
+                $roleCache[$roleKey] = null;
+            } else {
+                $roleIdValue = (int) $roleId;
+                $stmt->bind_param("i", $roleIdValue);
+                if ($stmt->execute()) {
+                    $stmt->bind_result($storedCode, $allowed);
+                    while ($stmt->fetch()) {
+                        $roleCache[$roleKey][$storedCode] = (int) $allowed === 1;
+                    }
+                } else {
+                    $roleCache[$roleKey] = null;
+                }
+                $stmt->close();
+            }
+        } catch (Throwable $exception) {
+            $roleCache[$roleKey] = null;
         }
     }
 
