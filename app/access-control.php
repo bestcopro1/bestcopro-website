@@ -261,7 +261,15 @@ $rolePermissions = $selectedRole && $schemaReady
     : [];
 $permissionGroups = [];
 foreach (bestcopro_access_catalog() as $permissionCode => $permission) {
-    $permissionGroups[$permission["group"]][$permissionCode] = $permission["label"];
+    $groupName = $permission["group"];
+    $sectionCode = $permission["section"];
+    if (!isset($permissionGroups[$groupName][$sectionCode])) {
+        $permissionGroups[$groupName][$sectionCode] = [
+            "label" => $permission["label"],
+            "actions" => [],
+        ];
+    }
+    $permissionGroups[$groupName][$sectionCode]["actions"][$permission["action"]] = $permissionCode;
 }
 
 $statusMessages = [
@@ -318,7 +326,7 @@ $status = isset($_GET["status"]) ? (string) $_GET["status"] : "";
                             <div class="card-header border-0 pb-0">
                                 <div>
                                     <h4 class="fs-20 mb-1">Rôles et droits</h4>
-                                    <span>Les droits cochés donnent accès aux rubriques correspondantes.</span>
+                                    <span>Définissez, pour chaque rubrique, les droits de consultation, modification et suppression.</span>
                                 </div>
                             </div>
                             <div class="card-body">
@@ -352,17 +360,32 @@ $status = isset($_GET["status"]) ? (string) $_GET["status"] : "";
                                         <?php foreach ($permissionGroups as $groupName => $groupPermissions): ?>
                                             <div class="border rounded p-3 mb-3">
                                                 <h5 class="text-primary mb-3"><?= accessControlEscape($groupName) ?></h5>
-                                                <div class="row">
-                                                    <?php foreach ($groupPermissions as $permissionCode => $permissionLabel): ?>
-                                                        <div class="col-md-6 mb-2">
-                                                            <div class="form-check">
-                                                                <input class="form-check-input" type="checkbox" name="permissions[]" value="<?= accessControlEscape($permissionCode) ?>" id="permission_<?= accessControlEscape($permissionCode) ?>" <?= !empty($rolePermissions[$permissionCode]) ? "checked" : "" ?>>
-                                                                <label class="form-check-label" for="permission_<?= accessControlEscape($permissionCode) ?>">
-                                                                    <?= accessControlEscape($permissionLabel) ?>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    <?php endforeach; ?>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm align-middle mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Rubrique</th>
+                                                                <th class="text-center">Consulter</th>
+                                                                <th class="text-center">Modifier</th>
+                                                                <th class="text-center">Supprimer</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <?php foreach ($groupPermissions as $sectionCode => $section): ?>
+                                                                <tr>
+                                                                    <td class="font-w600"><?= accessControlEscape($section["label"]) ?></td>
+                                                                    <?php foreach (["view" => "Consulter", "edit" => "Modifier", "delete" => "Supprimer"] as $actionCode => $actionLabel): ?>
+                                                                        <?php $permissionCode = $section["actions"][$actionCode]; ?>
+                                                                        <td class="text-center">
+                                                                            <div class="form-check d-inline-flex justify-content-center m-0">
+                                                                                <input class="form-check-input" type="checkbox" name="permissions[]" value="<?= accessControlEscape($permissionCode) ?>" id="permission_<?= accessControlEscape($permissionCode) ?>" aria-label="<?= accessControlEscape($actionLabel . " : " . $section["label"]) ?>" <?= !empty($rolePermissions[$permissionCode]) ? "checked" : "" ?>>
+                                                                            </div>
+                                                                        </td>
+                                                                    <?php endforeach; ?>
+                                                                </tr>
+                                                            <?php endforeach; ?>
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             </div>
                                         <?php endforeach; ?>

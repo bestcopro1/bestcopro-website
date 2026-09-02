@@ -135,9 +135,13 @@ foreach ($echeances as $echeance) {
 	<?php endif; ?>
 	<link rel="stylesheet" href="vendor\select2\css\select2.min.css">
 	<link href="vendor\jquery-nice-select\css\nice-select.css" rel="stylesheet">
-    <link href="css\style.css" rel="stylesheet">
+	<link href="css\style.css" rel="stylesheet">
 	<style>
-	<?php foreach (array_keys(bestcopro_access_catalog()) as $menuPermission): ?>
+	<?php $menuPermissions = []; ?>
+	<?php foreach (bestcopro_access_catalog() as $permission): ?>
+		<?php $menuPermissions[$permission["section"]] = true; ?>
+	<?php endforeach; ?>
+	<?php foreach (array_keys($menuPermissions) as $menuPermission): ?>
 		<?php if (!in_array($menuPermission, ["gerer_coproprietes", "collaborateurs"], true) && !hadAccess($menuPermission, $_SESSION["id_usertype"])): ?>
 			<?php if ($menuPermission === "dashboard"): ?>
 			#menu a[href="dashboard.php"] { display: none !important; }

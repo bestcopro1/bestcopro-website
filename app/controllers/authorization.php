@@ -2,7 +2,7 @@
 
 function bestcopro_access_catalog()
 {
-    return [
+    $sections = [
         "dashboard" => ["label" => "Tableau de bord", "group" => "Général"],
         "copropriete" => ["label" => "Informations de la copropriété", "group" => "Copropriété"],
         "lots" => ["label" => "Situation des copropriétaires", "group" => "Copropriété"],
@@ -27,6 +27,25 @@ function bestcopro_access_catalog()
         "gerer_coproprietes" => ["label" => "Créer et modifier les copropriétés", "group" => "Administration"],
         "collaborateurs" => ["label" => "Gérer les collaborateurs", "group" => "Administration"],
     ];
+    $actions = [
+        "view" => "Consulter",
+        "edit" => "Modifier",
+        "delete" => "Supprimer",
+    ];
+    $permissions = [];
+    foreach ($sections as $sectionCode => $section) {
+        foreach ($actions as $actionCode => $actionLabel) {
+            $permissions[$sectionCode . "." . $actionCode] = [
+                "label" => $section["label"],
+                "group" => $section["group"],
+                "section" => $sectionCode,
+                "action" => $actionCode,
+                "action_label" => $actionLabel,
+            ];
+        }
+    }
+
+    return $permissions;
 }
 
 function bestcopro_is_access_admin($roleId = null)
@@ -41,6 +60,7 @@ function bestcopro_is_access_admin($roleId = null)
 function bestcopro_legacy_permission_default($roleId, $permissionCode)
 {
     $roleId = (string) $roleId;
+    $permissionCode = explode(".", (string) $permissionCode)[0];
     if (in_array($roleId, ["1", "2", "3"], true)) {
         return true;
     }
@@ -92,8 +112,25 @@ function bestcopro_ensure_access_schema($connection, &$error = null)
     }
 
     foreach ($roleIds as $roleId) {
+        $legacyPermissions = [];
+        $legacyStmt = $connection->prepare(
+            "SELECT permission_code, autorise FROM typesyndic_permission WHERE id_typeSyndic = ?"
+        );
+        if ($legacyStmt) {
+            $legacyStmt->bind_param("i", $roleId);
+            if ($legacyStmt->execute()) {
+                $legacyStmt->bind_result($legacyPermissionCode, $legacyAllowed);
+                while ($legacyStmt->fetch()) {
+                    $legacyPermissions[$legacyPermissionCode] = (int) $legacyAllowed === 1;
+                }
+            }
+            $legacyStmt->close();
+        }
         foreach (array_keys(bestcopro_access_catalog()) as $permissionCode) {
-            $allowed = bestcopro_legacy_permission_default($roleId, $permissionCode) ? 1 : 0;
+            $sectionCode = explode(".", $permissionCode)[0];
+            $allowed = array_key_exists($sectionCode, $legacyPermissions)
+                ? ($legacyPermissions[$sectionCode] ? 1 : 0)
+                : (bestcopro_legacy_permission_default($roleId, $permissionCode) ? 1 : 0);
             $stmt->bind_param("isi", $roleId, $permissionCode, $allowed);
             if (!$stmt->execute()) {
                 $error = $stmt->error;
@@ -119,8 +156,13 @@ function bestcopro_role_has_permission($roleId, $permissionCode, $connection = n
         return bestcopro_is_access_admin($roleId);
     }
 
-    if (!array_key_exists($permissionCode, bestcopro_access_catalog())) {
-        return false;
+    $catalog = bestcopro_access_catalog();
+    if (!array_key_exists($permissionCode, $catalog)) {
+        $viewPermission = $permissionCode . ".view";
+        if (!array_key_exists($viewPermission, $catalog)) {
+            return false;
+        }
+        $permissionCode = $viewPermission;
     }
 
     if (!$connection && isset($GLOBALS["connection"]) && $GLOBALS["connection"] instanceof mysqli) {
