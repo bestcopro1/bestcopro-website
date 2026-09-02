@@ -47,6 +47,7 @@ let dataSet = [
         createdRow: function ( row, data, index ) {
            $(row).addClass('selected')
         } ,
+		pageLength: parseInt($('#example').attr('data-page-length'), 10) || 10,
 		language: {
                 "url": "json/fr-FR.json"
         }

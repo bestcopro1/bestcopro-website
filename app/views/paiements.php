@@ -1239,7 +1239,7 @@ else:
                         <div class="card">
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table id="example" class="display" style="min-width: 845px">
+                                    <table id="example" class="display" data-page-length="30" style="min-width: 845px">
                                         <thead>
                                             <tr>
                                                 <th>Date</th>
