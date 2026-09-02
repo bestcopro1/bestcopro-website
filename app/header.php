@@ -86,7 +86,7 @@
                                 </a>
 							</li>	
 							<?php endif; ?>
-							<?php if (isset($GLOBALS["copropriete"]) && $GLOBALS["copropriete"] != ""): ?>
+							<?php if (isset($GLOBALS["copropriete"]) && $GLOBALS["copropriete"] != "" && hadAccess("notifications", $_SESSION["id_usertype"])): ?>
 							<li class="nav-item dropdown notification_dropdown">
                                 <?php
                                 $notifications = getNotificationsyndic(
@@ -154,10 +154,14 @@
                                 </div>
                             </li>
 							<?php endif; ?>
-							<?php if (
-           $_SESSION["id_usertype"] === "1" ||
-           $_SESSION["id_usertype"] === "2"
-       ): ?>
+							<?php if (bestcopro_is_access_admin()): ?>
+							<li class="nav-item">
+                                <a class="nav-link" href="./access-control.php" title="Gestion des accès" aria-label="Gestion des accès">
+								<i class="fa fa-user-shield" style="font-size: 21px;"></i>
+                                </a>
+							</li>
+							<?php endif; ?>
+							<?php if (hadAccess("collaborateurs", $_SESSION["id_usertype"])): ?>
 							<li class="nav-item">
                                 <a class="nav-link " href="./syndics.php">
 									 <svg xmlns="http://www.w3.org/2000/svg" width="23.262" height="24" viewBox="0 0 23.262 24">

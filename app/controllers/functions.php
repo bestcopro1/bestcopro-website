@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . "/authorization.php";
+
 if (isset($GLOBALS["connection"]) && $GLOBALS["connection"] instanceof mysqli) {
     mysqli_set_charset($GLOBALS["connection"], "utf8mb4");
     mysqli_query($GLOBALS["connection"], "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
@@ -16,14 +18,18 @@ if (!headers_sent()) {
  */
 function getView($page = "dashboard")
 {
-    if (
-        file_exists("views/" . $page . ".php") &&
-        hadAccess($page, $_SESSION["id_usertype"])
-    ) {
-        include_once "views/" . $page . ".php";
-    } else {
-        include_once "views/dashboard.php";
+    $page = $page ?: "dashboard";
+    if (!file_exists("views/" . $page . ".php")) {
+        $page = "dashboard";
     }
+
+    if (!hadAccess($page, $_SESSION["id_usertype"])) {
+        http_response_code(403);
+        include "views/access-denied.php";
+        return;
+    }
+
+    include_once "views/" . $page . ".php";
 }
 /**
  * hadAccess
@@ -34,21 +40,7 @@ function getView($page = "dashboard")
  */
 function hadAccess($page, $id_usertype)
 {
-    if ($id_usertype == "1") {
-        return true;
-    } elseif ($id_usertype == "2") {
-        return true;
-    } elseif ($id_usertype == "3") {
-        return true;
-    } elseif (
-        $id_usertype == "4" &&
-        $page != "assemblee" &&
-        $page != "actions"
-    ) {
-        return true;
-    } else {
-        return false;
-    }
+    return bestcopro_role_has_permission($id_usertype, $page);
 }
 // get action
 /**

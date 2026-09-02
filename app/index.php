@@ -109,7 +109,7 @@ function getVille($connection) {
 					<div class="d-flex align-items-center mb-4">
 						<div>
 							<?php
-							if ($_SESSION['id_usertype'] === "1" || $_SESSION['id_usertype'] === "2" || $_SESSION['id_usertype'] === "3") :
+							if (hadAccess("gerer_coproprietes", $_SESSION['id_usertype'])) :
 							?>
 							<a href="copropriete.php" type="button" class="btn btn-rounded btn-primary">
 								<span class="btn-icon-start text-primary"><i class="fa fa-plus color-primary"></i></span> Ajouter une copropriété

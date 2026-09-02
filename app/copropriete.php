@@ -11,16 +11,13 @@ if (
     header("Location: ./login.php");
     exit();
 }
-if (
-    $_SESSION["id_usertype"] !== "1" &&
-    $_SESSION["id_usertype"] !== "2" &&
-    $_SESSION["id_usertype"] !== "3"
-) {
+include_once __DIR__ . "/config/db.php";
+include_once __DIR__ . "/controllers/functions.php";
+
+if (!hadAccess("gerer_coproprietes", $_SESSION["id_usertype"])) {
     header("Location: ./index.php");
     exit();
 }
-include_once __DIR__ . "/config/db.php";
-include_once __DIR__ . "/controllers/functions.php";
 
 function coproBudgetCleanText($value)
 {

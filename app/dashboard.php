@@ -136,6 +136,17 @@ foreach ($echeances as $echeance) {
 	<link rel="stylesheet" href="vendor\select2\css\select2.min.css">
 	<link href="vendor\jquery-nice-select\css\nice-select.css" rel="stylesheet">
     <link href="css\style.css" rel="stylesheet">
+	<style>
+	<?php foreach (array_keys(bestcopro_access_catalog()) as $menuPermission): ?>
+		<?php if (!in_array($menuPermission, ["gerer_coproprietes", "collaborateurs"], true) && !hadAccess($menuPermission, $_SESSION["id_usertype"])): ?>
+			<?php if ($menuPermission === "dashboard"): ?>
+			#menu a[href="dashboard.php"] { display: none !important; }
+			<?php else: ?>
+			#menu a[href="dashboard.php?page=<?= $menuPermission ?>"] { display: none !important; }
+			<?php endif; ?>
+		<?php endif; ?>
+	<?php endforeach; ?>
+	</style>
 
 </head>
 <body>
@@ -361,11 +372,7 @@ foreach ($echeances as $echeance) {
 							</li>
                         </ul>
                     </li>
-					<?php if (
-         $_SESSION["id_usertype"] === "1" ||
-         $_SESSION["id_usertype"] === "2" ||
-         $_SESSION["id_usertype"] === "3"
-     ): ?>
+					<?php if (hadAccess("assemblee", $_SESSION["id_usertype"])): ?>
 					<li class="<?php if ($page == "assemblee") {
          echo "mm-active";
      } ?>">
@@ -389,11 +396,7 @@ foreach ($echeances as $echeance) {
 							<span class="nav-text">Réclamations</span>
 						</a>
 					</li>
-					<?php if (
-         $_SESSION["id_usertype"] === "1" ||
-         $_SESSION["id_usertype"] === "2" ||
-         $_SESSION["id_usertype"] === "3"
-     ): ?>
+					<?php if (hadAccess("actions", $_SESSION["id_usertype"])): ?>
 					<li class="<?php if ($page == "actions") {
          echo "mm-active";
      } ?>">
@@ -425,6 +428,14 @@ foreach ($echeances as $echeance) {
 							<span class="nav-text">Documents</span>
 						</a>
 					</li>
+					<?php if (bestcopro_is_access_admin()): ?>
+					<li>
+						<a href="access-control.php" aria-expanded="false">
+							<i class="bi-shield-lock"></i>
+							<span class="nav-text">Gestion des accès</span>
+						</a>
+					</li>
+					<?php endif; ?>
                 </ul>
 				<div class="copyright">
 					<p><strong>BEST COPRO</strong> © 2022-<?= date("Y") ?> Tous droits réservés</p>

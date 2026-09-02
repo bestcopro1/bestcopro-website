@@ -11,17 +11,14 @@ if (
     header("Location: ./login.php");
     exit();
 }
-if (
-    $_SESSION["id_usertype"] !== "1" &&
-    $_SESSION["id_usertype"] !== "2" &&
-    $_SESSION["id_usertype"] !== "3"
-) {
-    header("Location: ./index.php");
-    exit();
-}
 include_once __DIR__ . "/config/db.php";
 include_once __DIR__ . "/controllers/functions.php";
 $connection = $GLOBALS["connection"];
+
+if (!hadAccess("collaborateurs", $_SESSION["id_usertype"])) {
+    header("Location: ./index.php");
+    exit();
+}
 function getSVG($number)
 {
     $number %= 8;
