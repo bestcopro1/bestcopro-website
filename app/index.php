@@ -10,8 +10,24 @@ if (!isset($_SESSION['loggedin'], $_SESSION['id']) || (isset($_SESSION['loggedin
 include_once('config/db.php');
 include_once('controllers/functions.php');
 function getSVG($number) {
-	$brandColors = ['165aa7', 'd62f43', '2e75c7', 'ad1f32', '0a3d7c', '6e91bb', 'e24b5c', '456f9f'];
-	return $brandColors[$number % count($brandColors)];
+	$number %= 8;
+	if ($number == 0)
+		return '2769ee';
+	elseif ($number == 1)
+		return '47ae3b';
+	elseif ($number == 2)
+		return '8030d0';
+	elseif ($number == 3)
+		return 'e1b746';
+	elseif ($number == 4)
+		return '314c82';
+	elseif ($number == 5)
+		return '676767';
+	elseif ($number == 6)
+		return 'f94a4a';
+	elseif ($number == 7)
+		return 'ee9827';
+
 }
 function getVille($connection) {
 	$request = "SELECT DISTINCT ville FROM copropriete";
@@ -54,7 +70,6 @@ function getVille($connection) {
 	<link rel="shortcut icon" type="image/png" href="images\favicon.png">
 	<link href="vendor\jquery-nice-select\css\nice-select.css" rel="stylesheet">
     <link href="css\style.css" rel="stylesheet">
-    <link href="css\bestcopro-refresh.css?v=<?= filemtime(__DIR__ . '/css/bestcopro-refresh.css') ?>" rel="stylesheet">
 
 </head>
 <body>
@@ -216,7 +231,6 @@ function getVille($connection) {
     <script src="js\custom.min.js"></script>
 	<script src="js\dlabnav-init.js"></script>
 	<script src="js\demo.js"></script>
-	<script src="js\bestcopro-refresh.js?v=<?= filemtime(__DIR__ . '/js/bestcopro-refresh.js') ?>"></script>
 	<script>
 		(function() {
 			function normalizeText(value) {

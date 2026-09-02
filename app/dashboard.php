@@ -136,7 +136,6 @@ foreach ($echeances as $echeance) {
 	<link rel="stylesheet" href="vendor\select2\css\select2.min.css">
 	<link href="vendor\jquery-nice-select\css\nice-select.css" rel="stylesheet">
     <link href="css\style.css" rel="stylesheet">
-    <link href="css\bestcopro-refresh.css?v=<?= filemtime(__DIR__ . '/css/bestcopro-refresh.css') ?>" rel="stylesheet">
 
 </head>
 <body>
@@ -574,7 +573,6 @@ foreach ($echeances as $echeance) {
     <script src="js\custom.min.js"></script>
 	<script src="js\dlabnav-init.js"></script>
 	<script src="js\demo.js"></script>
-	<script src="js\bestcopro-refresh.js?v=<?= filemtime(__DIR__ . '/js/bestcopro-refresh.js') ?>"></script>
 	<script>
 		$(document).on('change', '.changeExercice', function (e) {
 			window.location.replace("./dashboard.php?exercice="+$(this).val());
