@@ -840,7 +840,14 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 						<div class="row">
 							<div class="col-md-6 mb-3"><label class="text-label">Code*</label><input type="text" class="form-control input-rounded" name="code" id="budget_ref_code" placeholder="Ex. 61382"></div>
 							<div class="col-md-6 mb-3"><label class="text-label">Type budget*</label><select class="default-select form-control input-rounded wide" name="budget" id="budget_ref_budget"><option value="Fonctionnement">Fonctionnement</option><option value="Investissement">Investissement</option></select></div>
-							<div class="col-md-6 mb-3"><label class="text-label">Poste*</label><input type="text" class="form-control input-rounded" name="poste" id="budget_ref_poste" placeholder="Ex. GARDIENNAGE"></div>
+							<div class="col-md-6 mb-3">
+								<label class="text-label" for="budget_ref_poste_select">Poste*</label>
+								<select class="default-select form-control input-rounded wide" id="budget_ref_poste_select">
+									<option value="">Choisir un poste existant</option>
+								</select>
+								<input type="text" class="form-control input-rounded mt-2 d-none" id="budget_ref_poste_new" placeholder="Nom du nouveau poste, ex. GARDIENNAGE">
+								<input type="hidden" name="poste" id="budget_ref_poste">
+							</div>
 							<div class="col-md-6 mb-3"><label class="text-label">Rubrique*</label><input type="text" class="form-control input-rounded" name="rubrique" id="budget_ref_rubrique" placeholder="Ex. SECURTIE-JOUR/NUIT"></div>
 						</div>
 					</form>
@@ -1047,16 +1054,51 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 				recalcBudgetTotals();
 			});
 
+			function populateBudgetReferencePostes() {
+				var type = $('#budget_ref_budget').val() === 'Investissement' ? 'invest' : 'fonct';
+				var postes = [];
+				(budgetReferences[type] || []).forEach(function(reference) {
+					if (reference.poste && postes.indexOf(reference.poste) === -1) {
+						postes.push(reference.poste);
+					}
+				});
+				postes.sort(function(a, b) { return a.localeCompare(b, 'fr'); });
+
+				var $select = $('#budget_ref_poste_select');
+				$select.empty().append('<option value="">Choisir un poste existant</option>');
+				postes.forEach(function(poste) {
+					$select.append('<option value="' + escapeHtml(poste) + '">' + escapeHtml(poste) + '</option>');
+				});
+				$select.append('<option value="__new__">+ Créer un nouveau poste</option>');
+				$select.val('');
+				refreshNiceSelect($select);
+				$('#budget_ref_poste_new').addClass('d-none').val('');
+				$('#budget_ref_poste').val('');
+			}
+
+			function syncBudgetReferencePoste() {
+				var selected = $('#budget_ref_poste_select').val();
+				var isNew = selected === '__new__';
+				$('#budget_ref_poste_new').toggleClass('d-none', !isNew);
+				$('#budget_ref_poste').val(isNew ? $.trim($('#budget_ref_poste_new').val()) : selected);
+			}
+
 			$('body').on('click', '.budget-open-reference-modal', function() {
 				var budget = $(this).data('budget') || 'Fonctionnement';
 				$('#budgetReferenceForm')[0].reset();
 				$('#budget_ref_budget').val(budget);
 				refreshNiceSelect($('#budget_ref_budget'));
+				populateBudgetReferencePostes();
 				$('#budgetReferenceError').addClass('d-none').text('');
 				$('#budgetReferenceModal').modal('show');
 			});
 
+			$('#budget_ref_budget').on('change', populateBudgetReferencePostes);
+			$('#budget_ref_poste_select').on('change', syncBudgetReferencePoste);
+			$('#budget_ref_poste_new').on('input', syncBudgetReferencePoste);
+
 			$('#saveBudgetReference').on('click', function() {
+				syncBudgetReferencePoste();
 				var payload = $('#budgetReferenceForm').serializeArray();
 				payload.push({ name: 'ajax_add_budget_reference', value: '1' });
 				$('#budgetReferenceError').addClass('d-none').text('');
