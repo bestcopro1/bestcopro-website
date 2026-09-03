@@ -25,6 +25,52 @@ function parseAllocationAmount($value, &$valid)
     return $valid ? (float) $normalized : 0.0;
 }
 
+function getExerciseBudgetTotals($id_exercice, $connection)
+{
+    $totals = ["fonctionnement" => 0.0, "investissement" => 0.0];
+    $request =
+        "SELECT " .
+        "COALESCE(SUM(CASE WHEN r.id_typeRubrique = 1 THEN p.montant ELSE 0 END), 0), " .
+        "COALESCE(SUM(CASE WHEN r.id_typeRubrique = 2 THEN p.montant ELSE 0 END), 0) " .
+        "FROM rubrique r LEFT JOIN poste p ON p.id_rubrique = r.id " .
+        "WHERE r.id_exercice = ?";
+    $stmt = $connection->prepare($request);
+    if (!$stmt) {
+        return null;
+    }
+    $stmt->bind_param("s", $id_exercice);
+    if (!$stmt->execute()) {
+        $stmt->close();
+        return null;
+    }
+    $stmt->bind_result($montantFonct, $montantInvest);
+    $stmt->fetch();
+    $stmt->close();
+    $totals["fonctionnement"] = (float) $montantFonct;
+    $totals["investissement"] = (float) $montantInvest;
+    return $totals;
+}
+
+function updateExerciseBudgetTotals($id_exercice, $connection)
+{
+    $totals = getExerciseBudgetTotals($id_exercice, $connection);
+    if ($totals === null) {
+        return null;
+    }
+    $stmt = $connection->prepare(
+        "UPDATE exercice SET montantFonct = ?, montantInvest = ? WHERE id = ?"
+    );
+    if (!$stmt) {
+        return null;
+    }
+    $montantFonct = $totals["fonctionnement"];
+    $montantInvest = $totals["investissement"];
+    $stmt->bind_param("dds", $montantFonct, $montantInvest, $id_exercice);
+    $saved = $stmt->execute();
+    $stmt->close();
+    return $saved ? $totals : null;
+}
+
 if (
     isset(
         $_POST["id_copropriete"],
@@ -422,6 +468,11 @@ if (isset($_POST["rubrique_1"], $_POST["rubrique2_1"], $_POST["id_exercice"])) {
             }
             $i = $i + 1;
         }
+        if (updateExerciseBudgetTotals($id_exercice, $connection) === null) {
+            http_response_code(500);
+            echo "error|Impossible de mettre à jour les totaux du budget.";
+            exit();
+        }
         echo "done|0";
         exit();
     }
@@ -477,8 +528,14 @@ if (
             exit();
         }
 
-        $montantFonct = (float) $exercice[0]["montantFonct"];
-        $montantInvest = (float) $exercice[0]["montantInvest"];
+        $budgetTotals = updateExerciseBudgetTotals($id_exercice, $connection);
+        if ($budgetTotals === null) {
+            http_response_code(500);
+            echo "error|Impossible de recalculer les totaux du budget.";
+            exit();
+        }
+        $montantFonct = $budgetTotals["fonctionnement"];
+        $montantInvest = $budgetTotals["investissement"];
         $id_repartitionFonct = 3;
         $id_repartitionInvest = 3;
         $validatedAllocations = [];
