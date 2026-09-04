@@ -1,11 +1,28 @@
 <?php
+require_once __DIR__ . "/../session.php";
+bestcopro_start_session();
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
-$currentCollaborateurId =
-    isset($_SESSION["id"]) && intval($_SESSION["id"]) > 0
-        ? (string) intval($_SESSION["id"])
-        : "1";
+
+$sessionValide =
+    isset($_SESSION["loggedin"], $_SESSION["id"]) &&
+    $_SESSION["loggedin"] === "ImIn" &&
+    intval($_SESSION["id"]) > 0;
+if (!$sessionValide) {
+    if (
+        isset($_SERVER["REQUEST_METHOD"]) &&
+        $_SERVER["REQUEST_METHOD"] === "POST"
+    ) {
+        http_response_code(401);
+        echo "error|Votre session a expiré. Veuillez vous reconnecter.";
+    } else {
+        header("Location: ../login.php");
+    }
+    exit();
+}
+
+$currentCollaborateurId = (string) intval($_SESSION["id"]);
 // get Impaye
 function getImpaye($id_lot, $id_paiement, $connection)
 {

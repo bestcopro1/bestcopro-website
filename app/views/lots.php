@@ -1610,7 +1610,7 @@ else:
              array_diff_key($periodePaiementOptions, [$currentPeriodePaiement => true]);
          ?>
 					<div class="d-flex align-items-center justify-content-end flex-wrap gap-2 ms-lg-auto w-100 w-lg-auto">
-						<a href="export/export_password.php" type="button" class="btn btn-rounded btn-primary mb-2">
+						<a href="export/export_password.php?id_copropriete=<?= urlencode($GLOBALS["id_copropriete"]) ?>" type="button" class="btn btn-rounded btn-primary mb-2">
 							<span class="btn-icon-start text-primary"><i class="fa fa-download color-primary"></i></span> Mots de passe
 						</a>
 						<form method="get" class="d-flex align-items-center justify-content-end flex-wrap gap-2">
