@@ -1,8 +1,6 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("cotisation_xlsx");
 include_once __DIR__ . "/cotisation_export_data.php";
 $connection = $GLOBALS["connection"];
 
@@ -432,46 +430,38 @@ function buildCotisationRows(
             );
             $totalPaye = $impayeSummary["totalPaye"];
             $totalImpaye = $impayeSummary["totalImpaye"];
-            $currentSummary = getCotisationExportSummary(
-                $exportData["currentRelSummaries"],
-                $lot["id"],
+            $periodRows = getCotisationExportPeriodRowsForLot(
+                $exportData["periodRowsByLot"],
+                $lot["id"]
             );
-            $totalPayeCotisation = $currentSummary["totalPaye"];
-            $totalImpayeCotisation = $currentSummary["totalImpaye"];
-
-            $cotisation =
-                ($totalPayeCotisation + $totalImpayeCotisation) / $periodCount;
-            $tmpCotisation = $totalPayeCotisation;
+            $periodRows = bestcopro_export_rebucket_period_rows(
+                $periodRows,
+                $periodCount
+            );
             $avance = getCotisationExportAdvanceTotal(
                 $exportData["advanceTotals"],
                 $lot["id"],
             );
             $avanceAffichee = getCotisationExportDisplayAdvance($avance);
-            $resteAPayer = 0;
+            $periodCalculation = bestcopro_export_calculate_period_cells(
+                $periodRows,
+                $periodDueFlags,
+                $periodCount
+            );
+            $resteAPayer = $periodCalculation["reste"];
 
             $line = [
                 xlsxTextCell($lot["code"]),
                 xlsxNumberCell($totalImpaye, 4),
             ];
-            for ($i = 0; $i < $periodCount; $i++) {
-                if ($tmpCotisation >= $cotisation) {
-                    $value = $cotisation;
-                    $totalCotisations[$i] += $cotisation;
-                } elseif ($tmpCotisation > 0) {
-                    if ($periodDueFlags[$i]) {
-                        $resteAPayer += $cotisation - $tmpCotisation;
-                    }
-                    $value = $tmpCotisation;
-                    $totalCotisations[$i] += $tmpCotisation;
-                } else {
-                    if ($periodDueFlags[$i]) {
-                        $resteAPayer += $cotisation;
-                    }
-                    $value = "";
+            foreach ($periodCalculation["cells"] as $i => $periodCell) {
+                $value = $periodCell["display"];
+                if ($value !== null) {
+                    $totalCotisations[$i] += $periodCell["montantPaye"];
                 }
-                $line[] =
-                    $value === "" ? xlsxTextCell("") : xlsxNumberCell($value, 4);
-                $tmpCotisation -= $cotisation;
+                $line[] = $value === null
+                    ? xlsxTextCell("")
+                    : xlsxNumberCell($value, 4);
             }
             $resteAPayerAffiche = getCotisationExportDisplayResteAPayer(
                 $resteAPayer + $totalImpaye
@@ -506,9 +496,21 @@ function buildCotisationRows(
     ];
 }
 
-$id_copropriete = $_GET["id_copropriete"];
-$id_exercice = $_GET["id_exercice"];
+$access = bestcopro_export_require_exercise_access(
+    $connection,
+    "lots",
+    isset($_GET["id_exercice"]) ? $_GET["id_exercice"] : null
+);
+$id_exercice = $access["id_exercice"];
+$id_copropriete = bestcopro_export_require_int(
+    isset($_GET["id_copropriete"]) ? $_GET["id_copropriete"] : null,
+    "copropriete"
+);
+bestcopro_export_assert_same_copropriete($access["id_copropriete"], $id_copropriete);
 $exercice = getExercice($id_exercice, null, $connection);
+if (count($exercice) === 0) {
+    bestcopro_export_fail(404, "Exercice introuvable.");
+}
 $dateSituation = null;
 if (
     isset($_GET["date_situation"]) &&

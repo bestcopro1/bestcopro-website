@@ -63,7 +63,7 @@ class StringInputStream implements InputStream
     /**
      * Parse errors.
      */
-    public $errors = [];
+    public $errors = array();
 
     /**
      * Create a new InputStream wrapper.
@@ -72,7 +72,7 @@ class StringInputStream implements InputStream
      * @param string $encoding The encoding to use for the data.
      * @param string $debug    A fprintf format to use to echo the data on stdout.
      */
-    public function __construct($data, $encoding = "UTF-8", $debug = "")
+    public function __construct($data, $encoding = 'UTF-8', $debug = '')
     {
         $data = UTF8Utils::convertToUTF8($data, $encoding);
         if ($debug) {
@@ -108,11 +108,11 @@ class StringInputStream implements InputStream
          * represented by LF characters, and there are never any CR characters in the input to the tokenization
          * stage.
          */
-        $crlfTable = [
+        $crlfTable = array(
             "\0" => "\xEF\xBF\xBD",
             "\r\n" => "\n",
             "\r" => "\n",
-        ];
+        );
 
         return strtr($data, $crlfTable);
     }
@@ -127,12 +127,7 @@ class StringInputStream implements InputStream
         }
         // Add one to $this->char because we want the number for the next
         // byte to be processed.
-        return substr_count(
-            $this->data,
-            "\n",
-            0,
-            min($this->char, $this->EOF),
-        ) + 1;
+        return substr_count($this->data, "\n", 0, min($this->char, $this->EOF)) + 1;
     }
 
     /**
@@ -166,11 +161,7 @@ class StringInputStream implements InputStream
         // However, for here we want the length up until the next byte to be
         // processed, so add one to the current byte ($this->char).
         if (false !== $lastLine) {
-            $findLengthOf = substr(
-                $this->data,
-                $lastLine + 1,
-                $this->char - 1 - $lastLine,
-            );
+            $findLengthOf = substr($this->data, $lastLine + 1, $this->char - 1 - $lastLine);
         } else {
             // After a newline.
             $findLengthOf = substr($this->data, 0, $this->char);
@@ -192,6 +183,7 @@ class StringInputStream implements InputStream
      *
      * @return string The current character.
      */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return $this->data[$this->char];
@@ -201,6 +193,7 @@ class StringInputStream implements InputStream
      * Advance the pointer.
      * This is part of the Iterator interface.
      */
+    #[\ReturnTypeWillChange]
     public function next()
     {
         ++$this->char;
@@ -209,6 +202,7 @@ class StringInputStream implements InputStream
     /**
      * Rewind to the start of the string.
      */
+    #[\ReturnTypeWillChange]
     public function rewind()
     {
         $this->char = 0;
@@ -219,6 +213,7 @@ class StringInputStream implements InputStream
      *
      * @return bool Whether the current pointer location is valid.
      */
+    #[\ReturnTypeWillChange]
     public function valid()
     {
         return $this->char < $this->EOF;
@@ -244,7 +239,7 @@ class StringInputStream implements InputStream
             return $data;
         }
 
-        return ""; // false;
+        return ''; // false;
     }
 
     /**
@@ -316,7 +311,7 @@ class StringInputStream implements InputStream
      */
     public function unconsume($howMany = 1)
     {
-        if ($this->char - $howMany >= 0) {
+        if (($this->char - $howMany) >= 0) {
             $this->char -= $howMany;
         }
     }
@@ -326,13 +321,14 @@ class StringInputStream implements InputStream
      */
     public function peek()
     {
-        if ($this->char + 1 <= $this->EOF) {
+        if (($this->char + 1) <= $this->EOF) {
             return $this->data[$this->char + 1];
         }
 
         return false;
     }
 
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return $this->char;

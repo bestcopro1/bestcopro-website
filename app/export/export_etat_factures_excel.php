@@ -1,15 +1,14 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("etat_factures_excel");
 $connection = $GLOBALS["connection"];
 
-$id_exercice = isset($_GET["id_exercice"]) ? $_GET["id_exercice"] : null;
-if ($id_exercice === null) {
-    http_response_code(400);
-    exit("Parametres invalides");
-}
+$access = bestcopro_export_require_exercise_access(
+    $connection,
+    "depenses",
+    isset($_GET["id_exercice"]) ? $_GET["id_exercice"] : null
+);
+$id_exercice = $access["id_exercice"];
 
 $exercice = getExercice($id_exercice, null, $connection);
 if (count($exercice) === 0) {

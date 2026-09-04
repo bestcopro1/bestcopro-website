@@ -1,10 +1,7 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-require_once "../vendor/dompdf/autoload.inc.php";
-
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("suivi_budget");
+require_once __DIR__ . "/../vendor/dompdf/autoload.inc.php";
 include_once __DIR__ . "/suivi_budget_data.php";
 $connection = $GLOBALS["connection"];
 
@@ -16,6 +13,8 @@ if ($id_exercice === null) {
     exit("Parametres invalides");
 }
 
+$access = bestcopro_export_require_exercise_access($connection, "suivi_budget", $id_exercice);
+$id_exercice = $access["id_exercice"];
 $exercice = getExercice($id_exercice, null, $connection);
 if (count($exercice) === 0) {
     http_response_code(404);
@@ -161,7 +160,7 @@ $htmlContent .= "</tr>";
 $htmlContent .= "</tbody>";
 $htmlContent .= "</table>";
 
-$dompdf = new Dompdf();
+$dompdf = bestcopro_export_create_dompdf();
 $dompdf->loadHtml($htmlContent);
 $dompdf->setPaper("A4", "landscape");
 $dompdf->render();

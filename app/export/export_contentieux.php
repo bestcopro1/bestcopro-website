@@ -1,19 +1,16 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-require_once "../vendor/dompdf/autoload.inc.php";
-
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("contentieux");
+require_once __DIR__ . "/../vendor/dompdf/autoload.inc.php";
 
 use Dompdf\Dompdf;
 
 $connection = $GLOBALS["connection"];
-$id_copropriete = isset($_GET["id_copropriete"]) ? $_GET["id_copropriete"] : null;
-if ($id_copropriete === null) {
-    http_response_code(400);
-    exit("Parametres invalides");
-}
+$id_copropriete = bestcopro_export_require_int(
+    isset($_GET["id_copropriete"]) ? $_GET["id_copropriete"] : null,
+    "copropriete"
+);
+bestcopro_export_require_copropriete_access($connection, "contentieux", $id_copropriete);
 
 function contentieuxPdfEscape($value)
 {
@@ -105,7 +102,7 @@ if (count($contentieuxs) === 0) {
 }
 $htmlContent .= "</tbody></table></body></html>";
 
-$dompdf = new Dompdf();
+$dompdf = bestcopro_export_create_dompdf();
 $dompdf->loadHtml($htmlContent);
 $dompdf->setPaper("A4", "landscape");
 $dompdf->render();

@@ -1,10 +1,7 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-require_once "../vendor/dompdf/autoload.inc.php";
-
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("cotisation");
+require_once __DIR__ . "/../vendor/dompdf/autoload.inc.php";
 include_once __DIR__ . "/cotisation_export_data.php";
 $connection = $GLOBALS["connection"];
 
@@ -172,9 +169,23 @@ function renderCotisationExportTableHeader($nameExercice, $cotisationPeriods)
 use Dompdf\Dompdf;
 
 // instantiate and use the dompdf class
-$dompdf = new Dompdf();
+$dompdf = bestcopro_export_create_dompdf();
 
-$exercice = getExercice($_GET["id_exercice"], null, $connection);
+$access = bestcopro_export_require_exercise_access(
+    $connection,
+    "lots",
+    isset($_GET["id_exercice"]) ? $_GET["id_exercice"] : null
+);
+$idExercice = $access["id_exercice"];
+$idCopropriete = bestcopro_export_require_int(
+    isset($_GET["id_copropriete"]) ? $_GET["id_copropriete"] : null,
+    "copropriete"
+);
+bestcopro_export_assert_same_copropriete($access["id_copropriete"], $idCopropriete);
+$exercice = getExercice($idExercice, null, $connection);
+if (count($exercice) === 0) {
+    bestcopro_export_fail(404, "Exercice introuvable.");
+}
 $dateSituation = null;
 if (
     isset($_GET["date_situation"]) &&
@@ -198,13 +209,13 @@ $nameExercice = str_replace(
     getNameexercice($exercice[0]["dateDebut"]),
 );
 $exportData = getCotisationExportData(
-    $_GET["id_copropriete"],
-    $_GET["id_exercice"],
+    $idCopropriete,
+    $idExercice,
     $connection,
     $dateSituation
 );
 $dateSituation = $exportData["dateLimit"];
-$copropriete = getCopropriete($_GET["id_copropriete"], $connection);
+$copropriete = getCopropriete($idCopropriete, $connection);
 $residenceName = count($copropriete) > 0 ? $copropriete[0]["nom"] : "";
 $immeubles = $exportData["immeubles"];
 $periodDueFlags = getCotisationExportPeriodDueFlags(
@@ -311,21 +322,24 @@ foreach ($immeubles as $immeuble):
         );
         $totalPaye = $impayeSummary["totalPaye"];
         $totalImpaye = $impayeSummary["totalImpaye"];
-        $currentSummary = getCotisationExportSummary(
-            $exportData["currentRelSummaries"],
-            $lotbyimmeuble["id"],
+        $periodRows = getCotisationExportPeriodRowsForLot(
+            $exportData["periodRowsByLot"],
+            $lotbyimmeuble["id"]
         );
-        $totalPayeCotisation = $currentSummary["totalPaye"];
-        $totalImpayeCotisation = $currentSummary["totalImpaye"];
-        $cotisation =
-            ($totalPayeCotisation + $totalImpayeCotisation) /
-            $cotisationPeriodCount;
-        $tmpCotisation = $totalPayeCotisation;
+        $periodRows = bestcopro_export_rebucket_period_rows(
+            $periodRows,
+            $cotisationPeriodCount
+        );
         $avance = getCotisationExportAdvanceTotal(
             $exportData["advanceTotals"],
             $lotbyimmeuble["id"],
         );
         $avanceAffichee = getCotisationExportDisplayAdvance($avance);
+        $periodCalculation = bestcopro_export_calculate_period_cells(
+            $periodRows,
+            $periodDueFlags,
+            $cotisationPeriodCount
+        );
         $htmlContent .= "<tr>";
         $htmlContent .=
             '<td style="border: 1px solid #000;text-align: center;">' .
@@ -335,30 +349,16 @@ foreach ($immeubles as $immeuble):
             '<td style="border: 1px solid #000;text-align: center;">' .
             formatCotisationExportAmount($totalImpaye) .
             "</td>";
-        $resteAPayer = 0;
-        for ($i = 0; $i < $cotisationPeriodCount; $i++):
-            if ($tmpCotisation >= $cotisation):
-                //if (intval(date("m")) < $i)
-                //	$avance += $cotisation;
+        $resteAPayer = $periodCalculation["reste"];
+        foreach ($periodCalculation["cells"] as $i => $periodCell):
+            if ($periodCell["display"] !== null):
                 $htmlContent .=
                     '<td style="border: 1px solid #000;text-align: center;">' .
-                    formatCotisationExportAmount($cotisation) .
+                    formatCotisationExportAmount($periodCell["montantPaye"]) .
                     "</td>";
-                $totalCotisations[$i] += $cotisation;
-                //else
-                //	$avance += $tmpCotisation;
-            elseif ($tmpCotisation > 0):
-                if ($periodDueFlags[$i]) {
-                    $resteAPayer += $cotisation - $tmpCotisation;
-                }
-                $htmlContent .=
-                    '<td style="border: 1px solid #000;text-align: center;">' .
-                    formatCotisationExportAmount($tmpCotisation) .
-                    "</td>";
-                $totalCotisations[$i] += $tmpCotisation;
+                $totalCotisations[$i] += $periodCell["montantPaye"];
             else:
-                if ($periodDueFlags[$i]):
-                    $resteAPayer += $cotisation;
+                if ($periodCell["due"]):
                     $htmlContent .=
                         '<td style="border: 1px solid #000;text-align: center;background-color: #ffe9d5;"></td>';
                 else:
@@ -366,8 +366,7 @@ foreach ($immeubles as $immeuble):
                         '<td style="border: 1px solid #000;text-align: center;"></td>';
                 endif;
             endif;
-            $tmpCotisation -= $cotisation;
-        endfor;
+        endforeach;
         $resteAPayerAffiche = getCotisationExportDisplayResteAPayer(
             $resteAPayer + $totalImpaye
         );
@@ -426,7 +425,9 @@ $dompdf->render();
 
 // Output the generated PDF to Browser
 $filename = getCotisationExportFilename(
-    "releve_cotisations",
+    isset($_GET["export_prefix"]) && $_GET["export_prefix"] === "situation_impayes"
+        ? "situation_impayes"
+        : "releve_cotisations",
     $residenceName,
     $nameExercice,
     $dateSituation,

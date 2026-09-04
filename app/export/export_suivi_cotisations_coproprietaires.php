@@ -1,10 +1,7 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-require_once "../vendor/dompdf/autoload.inc.php";
-
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("suivi_cotisations_coproprietaires");
+require_once __DIR__ . "/../vendor/dompdf/autoload.inc.php";
 include_once __DIR__ . "/suivi_cotisations_coproprietaires_data.php";
 
 use Dompdf\Dompdf;
@@ -16,6 +13,12 @@ if ($id_exercice === null) {
     exit("Parametres invalides");
 }
 
+$access = bestcopro_export_require_exercise_access(
+    $connection,
+    "suivi_cotisations_coproprietaires",
+    $id_exercice
+);
+$id_exercice = $access["id_exercice"];
 $exercice = getExercice($id_exercice, null, $connection);
 if (count($exercice) === 0) {
     http_response_code(404);
@@ -25,7 +28,8 @@ if (count($exercice) === 0) {
 $copropriete = getCopropriete($exercice[0]["id_copropriete"], $connection);
 $residenceName = count($copropriete) > 0 ? $copropriete[0]["nom"] : "";
 $nameExercice = getNameexercice($exercice[0]["dateDebut"]);
-$annee = date("Y", strtotime($exercice[0]["dateDebut"]));
+$dateDebutLabel = date("d/m/Y", strtotime($exercice[0]["dateDebut"]));
+$dateFinLabel = date("d/m/Y", strtotime($exercice[0]["dateFin"]));
 $rows = getSuiviCotisationsCoproprietairesRows(
     $exercice[0]["id_copropriete"],
     $id_exercice,
@@ -69,10 +73,10 @@ $htmlContent .= "</tr></table>";
 $htmlContent .= "<table><thead><tr>";
 $htmlContent .= "<th>NOM &amp; PRENOM des coproprietaires</th>";
 $htmlContent .= "<th>Ref de la propriete</th>";
-$htmlContent .= "<th>Solde au 01/01/" . suiviCotisationsPdfEscape($annee) . "</th>";
+$htmlContent .= "<th>Solde au " . suiviCotisationsPdfEscape($dateDebutLabel) . "</th>";
 $htmlContent .= "<th>Montant annuel de la cotisation</th>";
 $htmlContent .= "<th>Versements de l'exercice</th>";
-$htmlContent .= "<th>Solde restant au 31/12/" . suiviCotisationsPdfEscape($annee) . "</th>";
+$htmlContent .= "<th>Solde restant au " . suiviCotisationsPdfEscape($dateFinLabel) . "</th>";
 $htmlContent .= "</tr></thead><tbody>";
 if (count($rows) === 0) {
     $htmlContent .= '<tr><td colspan="6" class="empty">Aucune donnee disponible dans le tableau</td></tr>';
@@ -95,7 +99,7 @@ $htmlContent .= '<td class="amount">' . formatSuiviCotisationsCoproprietairesAmo
 $htmlContent .= '<td class="amount">' . formatSuiviCotisationsCoproprietairesAmount($totals["soldeRestant"]) . "</td></tr>";
 $htmlContent .= "</tbody></table></body></html>";
 
-$dompdf = new Dompdf();
+$dompdf = bestcopro_export_create_dompdf();
 $dompdf->loadHtml($htmlContent);
 $dompdf->setPaper("A4", "landscape");
 $dompdf->render();

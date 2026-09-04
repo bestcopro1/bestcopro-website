@@ -33,6 +33,7 @@ use FontLib\Exception\FontNotFoundException;
  */
 class CPDF implements Canvas
 {
+
     /**
      * Dimensions of paper sizes in points
      *
@@ -49,16 +50,16 @@ class CPDF implements Canvas
         "a5" => [0.0, 0.0, 419.53, 595.28],
         "a6" => [0.0, 0.0, 297.64, 419.53],
         "a7" => [0.0, 0.0, 209.76, 297.64],
-        "a8" => [0.0, 0.0, 147.4, 209.76],
-        "a9" => [0.0, 0.0, 104.88, 147.4],
-        "a10" => [0.0, 0.0, 73.7, 104.88],
+        "a8" => [0.0, 0.0, 147.40, 209.76],
+        "a9" => [0.0, 0.0, 104.88, 147.40],
+        "a10" => [0.0, 0.0, 73.70, 104.88],
         "b0" => [0.0, 0.0, 2834.65, 4008.19],
         "b1" => [0.0, 0.0, 2004.09, 2834.65],
         "b2" => [0.0, 0.0, 1417.32, 2004.09],
         "b3" => [0.0, 0.0, 1000.63, 1417.32],
         "b4" => [0.0, 0.0, 708.66, 1000.63],
-        "b5" => [0.0, 0.0, 498.9, 708.66],
-        "b6" => [0.0, 0.0, 354.33, 498.9],
+        "b5" => [0.0, 0.0, 498.90, 708.66],
+        "b6" => [0.0, 0.0, 354.33, 498.90],
         "b7" => [0.0, 0.0, 249.45, 354.33],
         "b8" => [0.0, 0.0, 175.75, 249.45],
         "b9" => [0.0, 0.0, 124.72, 175.75],
@@ -74,28 +75,28 @@ class CPDF implements Canvas
         "c8" => [0.0, 0.0, 161.57, 229.61],
         "c9" => [0.0, 0.0, 113.39, 161.57],
         "c10" => [0.0, 0.0, 79.37, 113.39],
-        "ra0" => [0.0, 0.0, 2437.8, 3458.27],
-        "ra1" => [0.0, 0.0, 1729.13, 2437.8],
-        "ra2" => [0.0, 0.0, 1218.9, 1729.13],
-        "ra3" => [0.0, 0.0, 864.57, 1218.9],
+        "ra0" => [0.0, 0.0, 2437.80, 3458.27],
+        "ra1" => [0.0, 0.0, 1729.13, 2437.80],
+        "ra2" => [0.0, 0.0, 1218.90, 1729.13],
+        "ra3" => [0.0, 0.0, 864.57, 1218.90],
         "ra4" => [0.0, 0.0, 609.45, 864.57],
         "sra0" => [0.0, 0.0, 2551.18, 3628.35],
         "sra1" => [0.0, 0.0, 1814.17, 2551.18],
         "sra2" => [0.0, 0.0, 1275.59, 1814.17],
         "sra3" => [0.0, 0.0, 907.09, 1275.59],
-        "sra4" => [0.0, 0.0, 637.8, 907.09],
-        "letter" => [0.0, 0.0, 612.0, 792.0],
-        "half-letter" => [0.0, 0.0, 396.0, 612.0],
-        "legal" => [0.0, 0.0, 612.0, 1008.0],
-        "ledger" => [0.0, 0.0, 1224.0, 792.0],
-        "tabloid" => [0.0, 0.0, 792.0, 1224.0],
-        "executive" => [0.0, 0.0, 521.86, 756.0],
-        "folio" => [0.0, 0.0, 612.0, 936.0],
-        "commercial #10 envelope" => [0.0, 0.0, 684.0, 297.0],
-        "catalog #10 1/2 envelope" => [0.0, 0.0, 648.0, 864.0],
-        "8.5x11" => [0.0, 0.0, 612.0, 792.0],
-        "8.5x14" => [0.0, 0.0, 612.0, 1008.0],
-        "11x17" => [0.0, 0.0, 792.0, 1224.0],
+        "sra4" => [0.0, 0.0, 637.80, 907.09],
+        "letter" => [0.0, 0.0, 612.00, 792.00],
+        "half-letter" => [0.0, 0.0, 396.00, 612.00],
+        "legal" => [0.0, 0.0, 612.00, 1008.00],
+        "ledger" => [0.0, 0.0, 1224.00, 792.00],
+        "tabloid" => [0.0, 0.0, 792.00, 1224.00],
+        "executive" => [0.0, 0.0, 521.86, 756.00],
+        "folio" => [0.0, 0.0, 612.00, 936.00],
+        "commercial #10 envelope" => [0.0, 0.0, 684.00, 297.00],
+        "catalog #10 1/2 envelope" => [0.0, 0.0, 648.00, 864.00],
+        "8.5x11" => [0.0, 0.0, 612.00, 792.00],
+        "8.5x14" => [0.0, 0.0, 612.00, 1008.00],
+        "11x17" => [0.0, 0.0, 792.00, 1224.00],
     ];
 
     /**
@@ -154,11 +155,8 @@ class CPDF implements Canvas
      */
     protected $_current_opacity = 1;
 
-    public function __construct(
-        $paper = "letter",
-        string $orientation = "portrait",
-        ?Dompdf $dompdf = null,
-    ) {
+    public function __construct($paper = "letter", string $orientation = "portrait", ?Dompdf $dompdf = null)
+    {
         if (is_array($paper)) {
             $size = array_map("floatval", $paper);
         } else {
@@ -180,16 +178,17 @@ class CPDF implements Canvas
             $size,
             true,
             $this->_dompdf->getOptions()->getFontCache(),
-            $this->_dompdf->getOptions()->getTempDir(),
+            $this->_dompdf->getOptions()->getTempDir()
         );
 
-        $this->_pdf->addInfo(
-            "Producer",
-            sprintf("%s + CPDF", $this->_dompdf->version),
-        );
-        $time = substr_replace(date("YmdHisO"), '\'', -2, 0) . '\'';
+        $this->_pdf->addInfo("Producer", sprintf("%s + CPDF", $this->_dompdf->version));
+        $time = substr_replace(date('YmdHisO'), '\'', -2, 0) . '\'';
         $this->_pdf->addInfo("CreationDate", "D:$time");
         $this->_pdf->addInfo("ModDate", "D:$time");
+
+        if ($this->_dompdf->getOptions()->isPdfAEnabled()) {
+            $this->_pdf->enablePdfACompliance();
+        }
 
         $this->_width = $size[2] - $size[0];
         $this->_height = $size[3] - $size[1];
@@ -281,7 +280,7 @@ class CPDF implements Canvas
      * @param int $object
      * @param string $where
      */
-    public function add_object($object, $where = "all")
+    public function add_object($object, $where = 'all')
     {
         $this->_pdf->addObject($object, $where);
     }
@@ -454,65 +453,27 @@ class CPDF implements Canvas
         return $this->_height - $y;
     }
 
-    public function line(
-        $x1,
-        $y1,
-        $x2,
-        $y2,
-        $color,
-        $width,
-        $style = [],
-        $cap = "butt",
-    ) {
+    public function line($x1, $y1, $x2, $y2, $color, $width, $style = [], $cap = "butt")
+    {
         $this->_set_stroke_color($color);
         $this->_set_line_style($width, $cap, "", $style);
 
-        $this->_pdf->line($x1, $this->y($y1), $x2, $this->y($y2));
+        $this->_pdf->line($x1, $this->y($y1),
+            $x2, $this->y($y2));
         $this->_set_line_transparency("Normal", $this->_current_opacity);
     }
 
-    public function arc(
-        $x,
-        $y,
-        $r1,
-        $r2,
-        $astart,
-        $aend,
-        $color,
-        $width,
-        $style = [],
-        $cap = "butt",
-    ) {
+    public function arc($x, $y, $r1, $r2, $astart, $aend, $color, $width, $style = [], $cap = "butt")
+    {
         $this->_set_stroke_color($color);
         $this->_set_line_style($width, $cap, "", $style);
 
-        $this->_pdf->ellipse(
-            $x,
-            $this->y($y),
-            $r1,
-            $r2,
-            0,
-            8,
-            $astart,
-            $aend,
-            false,
-            false,
-            true,
-            false,
-        );
+        $this->_pdf->ellipse($x, $this->y($y), $r1, $r2, 0, 8, $astart, $aend, false, false, true, false);
         $this->_set_line_transparency("Normal", $this->_current_opacity);
     }
 
-    public function rectangle(
-        $x1,
-        $y1,
-        $w,
-        $h,
-        $color,
-        $width,
-        $style = [],
-        $cap = "butt",
-    ) {
+    public function rectangle($x1, $y1, $w, $h, $color, $width, $style = [], $cap = "butt")
+    {
         $this->_set_stroke_color($color);
         $this->_set_line_style($width, $cap, "", $style);
         $this->_pdf->rectangle($x1, $this->y($y1) - $h, $w, $h);
@@ -531,26 +492,9 @@ class CPDF implements Canvas
         $this->_pdf->clippingRectangle($x1, $this->y($y1) - $h, $w, $h);
     }
 
-    public function clipping_roundrectangle(
-        $x1,
-        $y1,
-        $w,
-        $h,
-        $rTL,
-        $rTR,
-        $rBR,
-        $rBL,
-    ) {
-        $this->_pdf->clippingRectangleRounded(
-            $x1,
-            $this->y($y1) - $h,
-            $w,
-            $h,
-            $rTL,
-            $rTR,
-            $rBR,
-            $rBL,
-        );
+    public function clipping_roundrectangle($x1, $y1, $w, $h, $rTL, $rTR, $rBR, $rBL)
+    {
+        $this->_pdf->clippingRectangleRounded($x1, $this->y($y1) - $h, $w, $h, $rTL, $rTR, $rBR, $rBL);
     }
 
     public function clipping_polygon(array $points): void
@@ -603,13 +547,8 @@ class CPDF implements Canvas
         $this->_pdf->transform([$a, $b, $c, $d, $e, $f]);
     }
 
-    public function polygon(
-        $points,
-        $color,
-        $width = null,
-        $style = [],
-        $fill = false,
-    ) {
+    public function polygon($points, $color, $width = null, $style = [], $fill = false)
+    {
         $this->_set_fill_color($color);
         $this->_set_stroke_color($color);
 
@@ -628,15 +567,8 @@ class CPDF implements Canvas
         $this->_set_line_transparency("Normal", $this->_current_opacity);
     }
 
-    public function circle(
-        $x,
-        $y,
-        $r,
-        $color,
-        $width = null,
-        $style = [],
-        $fill = false,
-    ) {
+    public function circle($x, $y, $r, $color, $width = null, $style = [], $fill = false)
+    {
         $this->_set_fill_color($color);
         $this->_set_stroke_color($color);
 
@@ -665,21 +597,16 @@ class CPDF implements Canvas
         if ($filename !== null && file_exists($filename)) {
             return $filename;
         }
-
-        $func_name = "imagecreatefrom$type";
-
+ 
         set_error_handler([Helpers::class, "record_warnings"]);
-
-        if (!function_exists($func_name)) {
-            if (!method_exists(Helpers::class, $func_name)) {
-                throw new Exception(
-                    "Function $func_name() not found.  Cannot convert $type image: $image_url.  Please install the image PHP extension.",
-                );
-            }
-            $func_name = [Helpers::class, $func_name];
-        }
-
         try {
+            $func_name = "imagecreatefrom$type";
+            if (method_exists(Helpers::class, $func_name)) {
+                $func_name = [Helpers::class, $func_name];
+            } elseif (!function_exists($func_name)) {
+                throw new Exception("Function $func_name() not found.  Cannot convert $type image: $image_url.  Please install the image PHP extension.");
+            }
+
             $im = call_user_func($func_name, $image_url);
 
             if ($im) {
@@ -691,7 +618,9 @@ class CPDF implements Canvas
                 $filename = "$tmp_name.png";
 
                 imagepng($im, $filename);
-                imagedestroy($im);
+                if (PHP_MAJOR_VERSION < 8) {
+                    imagedestroy($im);
+                }
             } else {
                 $filename = null;
             }
@@ -708,10 +637,7 @@ class CPDF implements Canvas
 
     public function image($img, $x, $y, $w, $h, $resolution = "normal")
     {
-        [$width, $height, $type] = Helpers::dompdf_getimagesize(
-            $img,
-            $this->get_dompdf()->getHttpContext(),
-        );
+        [$width, $height, $type] = Helpers::dompdf_getimagesize($img, $this->get_dompdf()->getHttpContext());
 
         $debug_png = $this->_dompdf->getOptions()->getDebugPng();
 
@@ -722,15 +648,9 @@ class CPDF implements Canvas
         switch ($type) {
             case "jpeg":
                 if ($debug_png) {
-                    print "!!!jpg!!!";
+                    print '!!!jpg!!!';
                 }
-                $this->_pdf->addJpegFromFile(
-                    $img,
-                    $x,
-                    $this->y($y) - $h,
-                    $w,
-                    $h,
-                );
+                $this->_pdf->addJpegFromFile($img, $x, $this->y($y) - $h, $w, $h);
                 break;
 
             case "webp":
@@ -738,73 +658,35 @@ class CPDF implements Canvas
             case "gif":
             /** @noinspection PhpMissingBreakStatementInspection */
             case "bmp":
-                if ($debug_png) {
-                    print "!!!{$type}!!!";
-                }
+                if ($debug_png) print "!!!{$type}!!!";
                 $img = $this->_convert_to_png($img, $type);
                 if ($img === null) {
-                    if ($debug_png) {
-                        print "!!!conversion to PDF failed!!!";
-                    }
-                    $this->image(
-                        Cache::$broken_image,
-                        $x,
-                        $y,
-                        $w,
-                        $h,
-                        $resolution,
-                    );
+                    if ($debug_png) print '!!!conversion to PDF failed!!!';
+                    $this->image(Cache::$broken_image, $x, $y, $w, $h, $resolution);
                     break;
                 }
 
             case "png":
-                if ($debug_png) {
-                    print "!!!png!!!";
-                }
+                if ($debug_png) print '!!!png!!!';
 
-                $this->_pdf->addPngFromFile(
-                    $img,
-                    $x,
-                    $this->y($y) - $h,
-                    $w,
-                    $h,
-                );
+                $this->_pdf->addPngFromFile($img, $x, $this->y($y) - $h, $w, $h);
                 break;
 
             case "svg":
-                if ($debug_png) {
-                    print "!!!SVG!!!";
-                }
+                if ($debug_png) print '!!!SVG!!!';
 
-                $this->_pdf->addSvgFromFile(
-                    $img,
-                    $x,
-                    $this->y($y) - $h,
-                    $w,
-                    $h,
-                );
+                $this->_pdf->addSvgFromFile($img, $x, $this->y($y) - $h, $w, $h);
                 break;
 
             default:
-                if ($debug_png) {
-                    print "!!!unknown!!!";
-                }
+                if ($debug_png) print '!!!unknown!!!';
         }
     }
 
-    public function select(
-        $x,
-        $y,
-        $w,
-        $h,
-        $font,
-        $size,
-        $color = [0, 0, 0],
-        $opts = [],
-    ) {
+    public function select($x, $y, $w, $h, $font, $size, $color = [0, 0, 0], $opts = [])
+    {
         $pdf = $this->_pdf;
 
-        $font .= ".afm";
         $pdf->selectFont($font);
 
         if (!isset($pdf->acroFormId)) {
@@ -814,17 +696,7 @@ class CPDF implements Canvas
         $ft = \Dompdf\Cpdf::ACROFORM_FIELD_CHOICE;
         $ff = \Dompdf\Cpdf::ACROFORM_FIELD_CHOICE_COMBO;
 
-        $id = $pdf->addFormField(
-            $ft,
-            rand(),
-            $x,
-            $this->y($y) - $h,
-            $x + $w,
-            $this->y($y),
-            $ff,
-            $size,
-            $color,
-        );
+        $id = $pdf->addFormField($ft, rand(), $x, $this->y($y) - $h, $x + $w, $this->y($y), $ff, $size, $color);
         $pdf->setFormFieldOpt($id, $opts);
     }
 
@@ -832,7 +704,6 @@ class CPDF implements Canvas
     {
         $pdf = $this->_pdf;
 
-        $font .= ".afm";
         $pdf->selectFont($font);
 
         if (!isset($pdf->acroFormId)) {
@@ -842,32 +713,13 @@ class CPDF implements Canvas
         $ft = \Dompdf\Cpdf::ACROFORM_FIELD_TEXT;
         $ff = \Dompdf\Cpdf::ACROFORM_FIELD_TEXT_MULTILINE;
 
-        $pdf->addFormField(
-            $ft,
-            rand(),
-            $x,
-            $this->y($y) - $h,
-            $x + $w,
-            $this->y($y),
-            $ff,
-            $size,
-            $color,
-        );
+        $pdf->addFormField($ft, rand(), $x, $this->y($y) - $h, $x + $w, $this->y($y), $ff, $size, $color);
     }
 
-    public function input(
-        $x,
-        $y,
-        $w,
-        $h,
-        $type,
-        $font,
-        $size,
-        $color = [0, 0, 0],
-    ) {
+    public function input($x, $y, $w, $h, $type, $font, $size, $color = [0, 0, 0])
+    {
         $pdf = $this->_pdf;
 
-        $font .= ".afm";
         $pdf->selectFont($font);
 
         if (!isset($pdf->acroFormId)) {
@@ -878,60 +730,31 @@ class CPDF implements Canvas
         $ff = 0;
 
         switch ($type) {
-            case "text":
+            case 'text':
                 $ft = \Dompdf\Cpdf::ACROFORM_FIELD_TEXT;
                 break;
-            case "password":
+            case 'password':
                 $ft = \Dompdf\Cpdf::ACROFORM_FIELD_TEXT;
                 $ff = \Dompdf\Cpdf::ACROFORM_FIELD_TEXT_PASSWORD;
                 break;
-            case "submit":
+            case 'submit':
                 $ft = \Dompdf\Cpdf::ACROFORM_FIELD_BUTTON;
                 break;
         }
 
-        $pdf->addFormField(
-            $ft,
-            rand(),
-            $x,
-            $this->y($y) - $h,
-            $x + $w,
-            $this->y($y),
-            $ff,
-            $size,
-            $color,
-        );
+        $pdf->addFormField($ft, rand(), $x, $this->y($y) - $h, $x + $w, $this->y($y), $ff, $size, $color);
     }
 
-    public function text(
-        $x,
-        $y,
-        $text,
-        $font,
-        $size,
-        $color = [0, 0, 0],
-        $word_space = 0.0,
-        $char_space = 0.0,
-        $angle = 0.0,
-    ) {
+    public function text($x, $y, $text, $font, $size, $color = [0, 0, 0], $word_space = 0.0, $char_space = 0.0, $angle = 0.0)
+    {
         $pdf = $this->_pdf;
 
         $this->_set_fill_color($color);
 
-        $is_font_subsetting = $this->_dompdf
-            ->getOptions()
-            ->getIsFontSubsettingEnabled();
-        $pdf->selectFont($font . ".afm", "", true, $is_font_subsetting);
+        $is_font_subsetting = $this->_dompdf->getOptions()->getIsFontSubsettingEnabled();
+        $pdf->selectFont($font, '', true, $is_font_subsetting);
 
-        $pdf->addText(
-            $x,
-            $this->y($y) - $pdf->getFontHeight($size),
-            $size,
-            $text,
-            $angle,
-            $word_space,
-            $char_space,
-        );
+        $pdf->addText($x, $this->y($y) - $pdf->getFontHeight($size), $size, $text, $angle, $word_space, $char_space);
 
         $this->_set_fill_transparency("Normal", $this->_current_opacity);
     }
@@ -952,45 +775,84 @@ class CPDF implements Canvas
     {
         $y = $this->y($y) - $height;
 
-        if (strpos($url, "#") === 0) {
+        if (strpos($url, '#') === 0) {
             // Local link
             $name = substr($url, 1);
             if ($name) {
-                $this->_pdf->addInternalLink(
-                    $name,
-                    $x,
-                    $y,
-                    $x + $width,
-                    $y + $height,
-                );
+                $this->_pdf->addInternalLink($name, $x, $y, $x + $width, $y + $height);
             }
         } else {
             $this->_pdf->addLink($url, $x, $y, $x + $width, $y + $height);
         }
     }
 
+    public function font_supports_char(string $font, string $char): bool
+    {
+        if ($char === "") {
+            return true;
+        }
+
+        $subsetting = $this->_dompdf->getOptions()->getIsFontSubsettingEnabled();
+        $this->_pdf->selectFont($font, '', false, $subsetting);
+        if (!\array_key_exists($font, $this->_pdf->fonts)) {
+            return false;
+        }
+        $fontInfo = $this->_pdf->fonts[$font];
+        $charCode = Helpers::uniord($char, "UTF-8");
+
+        if (!$fontInfo["isUnicode"]) {
+            // The core fonts use Windows ANSI encoding. The char map uses the
+            // position of the character in the encoding's mapping table in this
+            // case, not the Unicode code point, which is different for the
+            // characters outside ISO-8859-1 (positions 0x80-0x9F)
+            // https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1252.TXT
+            $mapping = [
+                0x20AC => 0x80,
+                0x201A => 0x82,
+                0x0192 => 0x83,
+                0x201E => 0x84,
+                0x2026 => 0x85,
+                0x2020 => 0x86,
+                0x2021 => 0x87,
+                0x02C6 => 0x88,
+                0x2030 => 0x89,
+                0x0160 => 0x8A,
+                0x2039 => 0x8B,
+                0x0152 => 0x8C,
+                0x017D => 0x8E,
+                0x2018 => 0x91,
+                0x2019 => 0x92,
+                0x201C => 0x93,
+                0x201D => 0x94,
+                0x2022 => 0x95,
+                0x2013 => 0x96,
+                0x2014 => 0x97,
+                0x02DC => 0x98,
+                0x2122 => 0x99,
+                0x0161 => 0x9A,
+                0x203A => 0x9B,
+                0x0153 => 0x9C,
+                0x017E => 0x9E,
+                0x0178 => 0x9F
+            ];
+
+            $charCode = $mapping[$charCode] ?? $charCode;
+
+            if ($charCode > 0xFF) {
+                return false;
+            }
+        }
+
+        return \array_key_exists($charCode, $fontInfo["C"]);
+    }
+
     /**
      * @throws FontNotFoundException
      */
-    public function get_text_width(
-        $text,
-        $font,
-        $size,
-        $word_spacing = 0.0,
-        $char_spacing = 0.0,
-    ) {
-        $this->_pdf->selectFont(
-            $font,
-            "",
-            true,
-            $this->_dompdf->getOptions()->getIsFontSubsettingEnabled(),
-        );
-        return $this->_pdf->getTextWidth(
-            $size,
-            $text,
-            $word_spacing,
-            $char_spacing,
-        );
+    public function get_text_width($text, $font, $size, $word_spacing = 0.0, $char_spacing = 0.0)
+    {
+        $this->_pdf->selectFont($font, '', true, $this->_dompdf->getOptions()->getIsFontSubsettingEnabled());
+        return $this->_pdf->getTextWidth($size, $text, $word_spacing, $char_spacing);
     }
 
     /**
@@ -999,15 +861,9 @@ class CPDF implements Canvas
     public function get_font_height($font, $size)
     {
         $options = $this->_dompdf->getOptions();
-        $this->_pdf->selectFont(
-            $font,
-            "",
-            true,
-            $options->getIsFontSubsettingEnabled(),
-        );
+        $this->_pdf->selectFont($font, '', true, $options->getIsFontSubsettingEnabled());
 
-        return $this->_pdf->getFontHeight($size) *
-            $options->getFontHeightRatio();
+        return $this->_pdf->getFontHeight($size) * $options->getFontHeightRatio();
     }
 
     /*function get_font_x_height($font, $size) {
@@ -1046,7 +902,7 @@ class CPDF implements Canvas
                 int $PAGE_NUM,
                 int $PAGE_COUNT,
                 self $pdf,
-                FontMetrics $fontMetrics,
+                FontMetrics $fontMetrics
             ) use ($callback) {
                 eval($callback);
             });
@@ -1056,61 +912,21 @@ class CPDF implements Canvas
         $this->processPageScript($callback);
     }
 
-    public function page_text(
-        $x,
-        $y,
-        $text,
-        $font,
-        $size,
-        $color = [0, 0, 0],
-        $word_space = 0.0,
-        $char_space = 0.0,
-        $angle = 0.0,
-    ) {
-        $this->processPageScript(function (
-            int $pageNumber,
-            int $pageCount,
-        ) use (
-            $x,
-            $y,
-            $text,
-            $font,
-            $size,
-            $color,
-            $word_space,
-            $char_space,
-            $angle,
-        ) {
+    public function page_text($x, $y, $text, $font, $size, $color = [0, 0, 0], $word_space = 0.0, $char_space = 0.0, $angle = 0.0)
+    {
+        $this->processPageScript(function (int $pageNumber, int $pageCount) use ($x, $y, $text, $font, $size, $color, $word_space, $char_space, $angle) {
             $text = str_replace(
                 ["{PAGE_NUM}", "{PAGE_COUNT}"],
                 [$pageNumber, $pageCount],
-                $text,
+                $text
             );
-            $this->text(
-                $x,
-                $y,
-                $text,
-                $font,
-                $size,
-                $color,
-                $word_space,
-                $char_space,
-                $angle,
-            );
+            $this->text($x, $y, $text, $font, $size, $color, $word_space, $char_space, $angle);
         });
     }
 
     public function page_line($x1, $y1, $x2, $y2, $color, $width, $style = [])
     {
-        $this->processPageScript(function () use (
-            $x1,
-            $y1,
-            $x2,
-            $y2,
-            $color,
-            $width,
-            $style,
-        ) {
+        $this->processPageScript(function () use ($x1, $y1, $x2, $y2, $color, $width, $style) {
             $this->line($x1, $y1, $x2, $y2, $color, $width, $style);
         });
     }
@@ -1149,22 +965,16 @@ class CPDF implements Canvas
             die("Unable to stream pdf: headers already sent");
         }
 
-        if (!isset($options["compress"])) {
-            $options["compress"] = true;
-        }
-        if (!isset($options["Attachment"])) {
-            $options["Attachment"] = true;
-        }
+        if (!isset($options["compress"])) $options["compress"] = true;
+        if (!isset($options["Attachment"])) $options["Attachment"] = true;
 
-        $debug = !$options["compress"];
+        $debug = !$options['compress'];
         $tmp = ltrim($this->_pdf->output($debug));
 
-        header("Cache-Control: private");
         header("Content-Type: application/pdf");
         header("Content-Length: " . mb_strlen($tmp, "8bit"));
 
-        $filename =
-            str_replace(["\n", "'"], "", basename($filename, ".pdf")) . ".pdf";
+        $filename = str_replace(["\n", "'"], "", basename($filename, ".pdf")) . ".pdf";
         $attachment = $options["Attachment"] ? "attachment" : "inline";
         header(Helpers::buildContentDispositionHeader($attachment, $filename));
 
@@ -1174,11 +984,9 @@ class CPDF implements Canvas
 
     public function output($options = [])
     {
-        if (!isset($options["compress"])) {
-            $options["compress"] = true;
-        }
+        if (!isset($options["compress"])) $options["compress"] = true;
 
-        $debug = !$options["compress"];
+        $debug = !$options['compress'];
 
         return $this->_pdf->output($debug);
     }

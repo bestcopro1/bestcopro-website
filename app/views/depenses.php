@@ -2,7 +2,6 @@
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
-ensureDepensePaiementFields($connection);
 if (isset($_POST["select"])) {
     $id_rubrique = filter_input(INPUT_POST, "select", FILTER_SANITIZE_STRING);
     if ($id_rubrique != "" || $id_rubrique != null) {

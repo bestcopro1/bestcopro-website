@@ -12,6 +12,8 @@ class Selector
      * regexp for specificity calculations
      *
      * @var string
+     *
+     * @internal
      */
     const NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX = '/
         (\.[\w]+)                   # classes
@@ -36,6 +38,8 @@ class Selector
      * regexp for specificity calculations
      *
      * @var string
+     *
+     * @internal
      */
     const ELEMENTS_AND_PSEUDO_ELEMENTS_RX = '/
         ((^|[\s\+\>\~]+)[\w]+   # elements
@@ -49,6 +53,8 @@ class Selector
      * regexp for specificity calculations
      *
      * @var string
+     *
+     * @internal since 8.5.2
      */
     const SELECTOR_VALIDATION_RX = '/
         ^(
@@ -74,6 +80,8 @@ class Selector
      * @param string $sSelector
      *
      * @return bool
+     *
+     * @internal since V8.8.0
      */
     public static function isValid($sSelector)
     {
@@ -82,7 +90,7 @@ class Selector
 
     /**
      * @param string $sSelector
-     * @param bool $bCalculateSpecificity
+     * @param bool $bCalculateSpecificity @deprecated since V8.8.0, will be removed in V9.0.0
      */
     public function __construct($sSelector, $bCalculateSpecificity = false)
     {
@@ -113,6 +121,8 @@ class Selector
 
     /**
      * @return string
+     *
+     * @deprecated in V8.8.0, will be removed in V9.0.0. Use `render` instead.
      */
     public function __toString()
     {
@@ -128,18 +138,10 @@ class Selector
             $a = 0;
             /// @todo should exclude \# as well as "#"
             $aMatches = null;
-            $b = substr_count($this->sSelector, "#");
-            $c = preg_match_all(
-                self::NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX,
-                $this->sSelector,
-                $aMatches,
-            );
-            $d = preg_match_all(
-                self::ELEMENTS_AND_PSEUDO_ELEMENTS_RX,
-                $this->sSelector,
-                $aMatches,
-            );
-            $this->iSpecificity = $a * 1000 + $b * 100 + $c * 10 + $d;
+            $b = substr_count($this->sSelector, '#');
+            $c = preg_match_all(self::NON_ID_ATTRIBUTES_AND_PSEUDO_CLASSES_RX, $this->sSelector, $aMatches);
+            $d = preg_match_all(self::ELEMENTS_AND_PSEUDO_ELEMENTS_RX, $this->sSelector, $aMatches);
+            $this->iSpecificity = ($a * 1000) + ($b * 100) + ($c * 10) + $d;
         }
         return $this->iSpecificity;
     }

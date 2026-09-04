@@ -8,14 +8,14 @@ function formatSuiviCotisationsCoproprietairesAmount($value)
 function getSuiviCotisationsCoproprietairesRows($id_copropriete, $id_exercice, $connection)
 {
     $rows = [];
-    $previousCondition = getPreviousExerciseRelConditionSql("curr", "r", "prev");
+    $previousCondition = getPreviousExerciseRelConditionSql("curr", "r", "prev", false);
     $request =
         "SELECT l.id, l.code, p.civilite, p.prenom, p.nom, " .
         "COALESCE(prev.solde_anterieur, 0) AS solde_anterieur, " .
         "COALESCE(curr.base_cotisation, 0) AS base_cotisation, " .
         "COALESCE(curr.encaissement, 0) AS encaissement " .
         "FROM lot l " .
-        "INNER JOIN proprietaire p ON p.id = l.id_proprietaire " .
+        "LEFT JOIN proprietaire p ON p.id = l.id_proprietaire " .
         "LEFT JOIN (" .
         "SELECT id_lot, SUM(CASE WHEN COALESCE(partFonct, 0) + COALESCE(partInv, 0) > COALESCE(cotisation, 0) " .
         "THEN COALESCE(partFonct, 0) + COALESCE(partInv, 0) - COALESCE(cotisation, 0) ELSE 0 END) AS solde_anterieur " .

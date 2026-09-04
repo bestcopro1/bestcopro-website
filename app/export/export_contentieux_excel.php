@@ -1,15 +1,13 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("contentieux_excel");
 
 $connection = $GLOBALS["connection"];
-$id_copropriete = isset($_GET["id_copropriete"]) ? $_GET["id_copropriete"] : null;
-if ($id_copropriete === null) {
-    http_response_code(400);
-    exit("Parametres invalides");
-}
+$id_copropriete = bestcopro_export_require_int(
+    isset($_GET["id_copropriete"]) ? $_GET["id_copropriete"] : null,
+    "copropriete"
+);
+bestcopro_export_require_copropriete_access($connection, "contentieux", $id_copropriete);
 
 function contentieuxExcelEscape($value)
 {

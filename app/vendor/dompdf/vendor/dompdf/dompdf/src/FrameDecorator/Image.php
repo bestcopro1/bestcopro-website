@@ -18,6 +18,7 @@ use Dompdf\Image\Cache;
  */
 class Image extends AbstractFrameDecorator
 {
+
     /**
      * The path to the image file (note that remote images are
      * downloaded locally to Options:tempDir).
@@ -42,25 +43,24 @@ class Image extends AbstractFrameDecorator
     function __construct(Frame $frame, Dompdf $dompdf)
     {
         parent::__construct($frame, $dompdf);
-        $url = $frame->get_node()->getAttribute("src");
+
+        $node = $frame->get_node();
+        $url = $node->getAttribute("src");
 
         $debug_png = $dompdf->getOptions()->getDebugPng();
         if ($debug_png) {
-            print "[__construct " . $url . "]";
+            print '[__construct ' . $url . ']';
         }
 
-        [$this->_image_url, /*$type*/, $this->_image_msg] = Cache::resolve_url(
+        list($this->_image_url, /*$type*/, $this->_image_msg) = Cache::resolve_url(
             $url,
             $dompdf->getProtocol(),
             $dompdf->getBaseHost(),
             $dompdf->getBasePath(),
-            $dompdf->getOptions(),
+            $dompdf->getOptions()
         );
 
-        if (
-            Cache::is_broken($this->_image_url) &&
-            ($alt = $frame->get_node()->getAttribute("alt"))
-        ) {
+        if (Cache::is_broken($this->_image_url) && ($alt = $node->getAttribute("alt")) !== "") {
             $fontMetrics = $dompdf->getFontMetrics();
             $style = $frame->get_style();
             $font = $style->font_family;
@@ -68,15 +68,7 @@ class Image extends AbstractFrameDecorator
             $word_spacing = $style->word_spacing;
             $letter_spacing = $style->letter_spacing;
 
-            $style->width =
-                (4 / 3) *
-                $fontMetrics->getTextWidth(
-                    $alt,
-                    $font,
-                    $size,
-                    $word_spacing,
-                    $letter_spacing,
-                );
+            $style->width = $fontMetrics->getTextWidth($alt, $font, $size, $word_spacing, $letter_spacing);
             $style->height = $fontMetrics->getFontHeight($font, $size);
         }
     }
@@ -88,10 +80,7 @@ class Image extends AbstractFrameDecorator
      */
     public function get_intrinsic_dimensions(): array
     {
-        [$width, $height] = Helpers::dompdf_getimagesize(
-            $this->_image_url,
-            $this->_dompdf->getHttpContext(),
-        );
+        [$width, $height] = Helpers::dompdf_getimagesize($this->_image_url, $this->_dompdf->getHttpContext());
 
         return [$width, $height];
     }
@@ -127,4 +116,5 @@ class Image extends AbstractFrameDecorator
     {
         return $this->_image_msg;
     }
+
 }

@@ -1,8 +1,6 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("suivi_cotisations_coproprietaires_excel");
 include_once __DIR__ . "/suivi_cotisations_coproprietaires_data.php";
 
 $connection = $GLOBALS["connection"];
@@ -12,6 +10,12 @@ if ($id_exercice === null) {
     exit("Parametres invalides");
 }
 
+$access = bestcopro_export_require_exercise_access(
+    $connection,
+    "suivi_cotisations_coproprietaires",
+    $id_exercice
+);
+$id_exercice = $access["id_exercice"];
 $exercice = getExercice($id_exercice, null, $connection);
 if (count($exercice) === 0) {
     http_response_code(404);
@@ -21,7 +25,8 @@ if (count($exercice) === 0) {
 $copropriete = getCopropriete($exercice[0]["id_copropriete"], $connection);
 $residenceName = count($copropriete) > 0 ? $copropriete[0]["nom"] : "";
 $nameExercice = getNameexercice($exercice[0]["dateDebut"]);
-$annee = date("Y", strtotime($exercice[0]["dateDebut"]));
+$dateDebutLabel = date("d/m/Y", strtotime($exercice[0]["dateDebut"]));
+$dateFinLabel = date("d/m/Y", strtotime($exercice[0]["dateFin"]));
 $rows = getSuiviCotisationsCoproprietairesRows(
     $exercice[0]["id_copropriete"],
     $id_exercice,
@@ -66,10 +71,10 @@ echo "\xEF\xBB\xBF";
     <tr>
         <th>NOM &amp; PRENOM des coproprietaires</th>
         <th>Ref de la propriete</th>
-        <th>Solde au 01/01/<?= suiviCotisationsExcelEscape($annee) ?></th>
+        <th>Solde au <?= suiviCotisationsExcelEscape($dateDebutLabel) ?></th>
         <th>Montant annuel de la cotisation</th>
         <th>Versements de l'exercice</th>
-        <th>Solde restant au 31/12/<?= suiviCotisationsExcelEscape($annee) ?></th>
+        <th>Solde restant au <?= suiviCotisationsExcelEscape($dateFinLabel) ?></th>
     </tr>
     <?php foreach ($rows as $row): ?>
     <tr>

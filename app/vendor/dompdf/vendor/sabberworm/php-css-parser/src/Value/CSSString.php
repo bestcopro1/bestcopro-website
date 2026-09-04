@@ -8,6 +8,11 @@ use Sabberworm\CSS\Parsing\SourceException;
 use Sabberworm\CSS\Parsing\UnexpectedEOFException;
 use Sabberworm\CSS\Parsing\UnexpectedTokenException;
 
+/**
+ * This class is a wrapper for quoted strings to distinguish them from keywords.
+ *
+ * `CSSString`s always output with double quotes.
+ */
 class CSSString extends PrimitiveValue
 {
     /**
@@ -31,6 +36,8 @@ class CSSString extends PrimitiveValue
      * @throws SourceException
      * @throws UnexpectedEOFException
      * @throws UnexpectedTokenException
+     *
+     * @internal since V8.8.0
      */
     public static function parse(ParserState $oParserState)
     {
@@ -48,9 +55,7 @@ class CSSString extends PrimitiveValue
         $sContent = null;
         if ($sQuote === null) {
             // Unquoted strings end in whitespace or with braces, brackets, parentheses
-            while (
-                !preg_match("/[\\s{}()<>\\[\\]]/isu", $oParserState->peek())
-            ) {
+            while (!preg_match('/[\\s{}()<>\\[\\]]/isu', $oParserState->peek())) {
                 $sResult .= $oParserState->parseCharacter(false);
             }
         } else {
@@ -58,10 +63,8 @@ class CSSString extends PrimitiveValue
                 $sContent = $oParserState->parseCharacter(false);
                 if ($sContent === null) {
                     throw new SourceException(
-                        "Non-well-formed quoted string {$oParserState->peek(
-                            3,
-                        )}",
-                        $oParserState->currentLine(),
+                        "Non-well-formed quoted string {$oParserState->peek(3)}",
+                        $oParserState->currentLine()
                     );
                 }
                 $sResult .= $sContent;
@@ -91,6 +94,8 @@ class CSSString extends PrimitiveValue
 
     /**
      * @return string
+     *
+     * @deprecated in V8.8.0, will be removed in V9.0.0. Use `render` instead.
      */
     public function __toString()
     {
@@ -98,14 +103,14 @@ class CSSString extends PrimitiveValue
     }
 
     /**
+     * @param OutputFormat|null $oOutputFormat
+     *
      * @return string
      */
-    public function render(OutputFormat $oOutputFormat)
+    public function render($oOutputFormat)
     {
         $sString = addslashes($this->sString);
-        $sString = str_replace("\n", "\A", $sString);
-        return $oOutputFormat->getStringQuotingType() .
-            $sString .
-            $oOutputFormat->getStringQuotingType();
+        $sString = str_replace("\n", '\A', $sString);
+        return $oOutputFormat->getStringQuotingType() . $sString . $oOutputFormat->getStringQuotingType();
     }
 }

@@ -19,7 +19,9 @@ class CanvasFactory
     /**
      * Constructor is private: this is a static class
      */
-    private function __construct() {}
+    private function __construct()
+    {
+    }
 
     /**
      * @param Dompdf         $dompdf
@@ -29,24 +31,23 @@ class CanvasFactory
      *
      * @return Canvas
      */
-    static function get_instance(
-        Dompdf $dompdf,
-        $paper,
-        string $orientation,
-        ?string $class = null,
-    ) {
+    static function get_instance(Dompdf $dompdf, $paper, string $orientation, ?string $class = null)
+    {
         $backend = strtolower($dompdf->getOptions()->getPdfBackend());
 
         if (isset($class) && class_exists($class, false)) {
             $class .= "_Adapter";
         } else {
-            if (
-                ($backend === "auto" || $backend === "pdflib") &&
+            if (($backend === "auto" || $backend === "pdflib") &&
                 class_exists("PDFLib", false)
             ) {
                 $class = "Dompdf\\Adapter\\PDFLib";
-            } else {
-                if ($backend === "gd" && extension_loaded("gd")) {
+            }
+
+            else {
+                if (class_exists($backend, false)) {
+                    $class = $backend;
+                } elseif ($backend === "gd" && extension_loaded('gd')) {
                     $class = "Dompdf\\Adapter\\GD";
                 } else {
                     $class = "Dompdf\\Adapter\\CPDF";
@@ -54,6 +55,14 @@ class CanvasFactory
             }
         }
 
-        return new $class($paper, $orientation, $dompdf);
+        $instance = new $class($paper, $orientation, $dompdf);
+
+        $class_interfaces = class_implements($class, false);
+        if (!$class_interfaces || !in_array("Dompdf\\Canvas", $class_interfaces)) {
+            $class = "Dompdf\\Adapter\\CPDF";
+            $instance = new $class($paper, $orientation, $dompdf);
+        }
+
+        return $instance;
     }
 }

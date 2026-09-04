@@ -6,6 +6,7 @@
  */
 namespace Dompdf\FrameReflower;
 
+use Dompdf\Exception;
 use Dompdf\FrameDecorator\Block as BlockFrameDecorator;
 use Dompdf\FrameDecorator\Table as TableFrameDecorator;
 use Dompdf\FrameDecorator\TableRowGroup as TableRowGroupFrameDecorator;
@@ -17,6 +18,7 @@ use Dompdf\FrameDecorator\TableRowGroup as TableRowGroupFrameDecorator;
  */
 class TableRowGroup extends AbstractFrameReflower
 {
+
     /**
      * TableRowGroup constructor.
      * @param TableRowGroupFrameDecorator $frame
@@ -29,11 +31,13 @@ class TableRowGroup extends AbstractFrameReflower
     /**
      * @param BlockFrameDecorator|null $block
      */
-    function reflow(BlockFrameDecorator $block = null)
+    function reflow(?BlockFrameDecorator $block = null)
     {
         /** @var TableRowGroupFrameDecorator */
         $frame = $this->_frame;
         $page = $frame->get_root();
+        $parent = $frame->get_parent();
+        $dompdf_generated = $parent->get_frame()->get_node()->nodeName === "dompdf_generated";
 
         // Counters and generated content
         $this->_set_content();
@@ -42,12 +46,7 @@ class TableRowGroup extends AbstractFrameReflower
         $cb = $frame->get_containing_block();
 
         foreach ($frame->get_children() as $child) {
-            $child->set_containing_block(
-                $cb["x"],
-                $cb["y"],
-                $cb["w"],
-                $cb["h"],
-            );
+            $child->set_containing_block($cb["x"], $cb["y"], $cb["w"], $cb["h"]);
             $child->reflow();
 
             // Check if a split has occurred
@@ -58,7 +57,14 @@ class TableRowGroup extends AbstractFrameReflower
             }
         }
 
+        if ($page->is_full() && $dompdf_generated && $frame->get_parent() === null) {
+            return;
+        }
+
         $table = TableFrameDecorator::find_parent_table($frame);
+        if ($table === null) {
+            throw new Exception("Parent table not found for table row group");
+        }
         $cellmap = $table->get_cellmap();
 
         // Stop reflow if a page break has occurred before the frame, in which

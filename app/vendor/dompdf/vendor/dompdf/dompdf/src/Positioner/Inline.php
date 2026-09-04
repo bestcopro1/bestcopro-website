@@ -18,6 +18,7 @@ use Dompdf\Helpers;
  */
 class Inline extends AbstractPositioner
 {
+
     /**
      * @param AbstractFrameDecorator $frame
      * @throws Exception
@@ -26,18 +27,19 @@ class Inline extends AbstractPositioner
     {
         // Find our nearest block level parent and access its lines property
         $block = $frame->find_block_parent();
+        $cb = $frame->get_containing_block();
 
         if (!$block) {
-            throw new Exception("No block-level parent found.  Not good.");
+            // FIXME: An inline frame without block parent should not be
+            // possible, but this can occur currently when the body is styled
+            // with `display: inline !important;` or `display: inline-block !important;`
+            $frame->set_position($cb["x"], $cb["y"]);
+            return;
         }
 
-        $cb = $frame->get_containing_block();
         $line = $block->get_current_line_box();
 
-        if (
-            !$frame->is_text_node() &&
-            !($frame instanceof InlineFrameDecorator)
-        ) {
+        if (!$frame->is_text_node() && !($frame instanceof InlineFrameDecorator)) {
             // Atomic inline boxes and replaced inline elements
             // (inline-block, inline-table, img etc.)
             $width = $frame->get_margin_width();

@@ -15,6 +15,7 @@ use Dompdf\Exception;
  */
 class ImageException extends Exception
 {
+
     /**
      * Class constructor
      *
@@ -25,4 +26,5 @@ class ImageException extends Exception
     {
         parent::__construct($message, $code);
     }
+
 }

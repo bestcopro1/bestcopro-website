@@ -65,7 +65,7 @@ interface EventHandler
      *
      * @return int one of the Tokenizer::TEXTMODE_* constants
      */
-    public function startTag($name, $attributes = [], $selfClosing = false);
+    public function startTag($name, $attributes = array(), $selfClosing = false);
 
     /**
      * An end-tag.

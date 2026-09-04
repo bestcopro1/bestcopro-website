@@ -1,8 +1,6 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("appel_fonds");
 
 $connection = $GLOBALS["connection"];
 
@@ -211,30 +209,37 @@ function appelFondsApplyTemplateValues($xml, $values)
     return $dom->saveXML();
 }
 
-$id = filter_input(INPUT_GET, "id", FILTER_SANITIZE_STRING);
-$idExercice = filter_input(INPUT_GET, "id_exercice", FILTER_SANITIZE_STRING);
-if ($id == "" || $idExercice == "") {
-    http_response_code(400);
-    exit("Parametres invalides");
-}
+$lotAccess = bestcopro_export_require_lot_access(
+    $connection,
+    "lots",
+    filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT)
+);
+$exerciseAccess = bestcopro_export_require_exercise_access(
+    $connection,
+    "lots",
+    filter_input(INPUT_GET, "id_exercice", FILTER_VALIDATE_INT)
+);
+bestcopro_export_assert_same_copropriete(
+    $lotAccess["id_copropriete"],
+    $exerciseAccess["id_copropriete"]
+);
+$id = $lotAccess["id_lot"];
+$idExercice = $exerciseAccess["id_exercice"];
 
 $lot = getLot($id, null, null, $connection);
 if (count($lot) === 0) {
-    http_response_code(404);
-    exit("Lot introuvable");
+    bestcopro_export_fail(404, "Lot introuvable.");
 }
 
 $exercice = getExercice($idExercice, null, $connection);
 if (count($exercice) === 0) {
-    http_response_code(404);
-    exit("Exercice introuvable");
+    bestcopro_export_fail(404, "Exercice introuvable.");
 }
 
 $copropriete = getCopropriete($lot[0]["id_copropriete"], $connection);
 $proprietaire = getProprietaire($lot[0]["id_proprietaire"], null, $connection);
 if (count($copropriete) === 0 || count($proprietaire) === 0) {
-    http_response_code(404);
-    exit("Informations introuvables");
+    bestcopro_export_fail(404, "Informations introuvables.");
 }
 
 $info = appelFondsGetInfo($lot[0]["id"], $idExercice, $connection);
@@ -246,7 +251,10 @@ $etats = appelFondsGetEtats(
 $relLotExercice = getRel_lot_exercice($lot[0]["id"], $idExercice, $connection);
 
 $annee = date("Y", strtotime($exercice[0]["dateDebut"]));
-$dateSoldeAnterieur = "31/12/" . (intval($annee) - 1);
+$dateSoldeAnterieur = date(
+    "d/m/Y",
+    strtotime($exercice[0]["dateDebut"] . " -1 day")
+);
 $soldeAnterieur = 0;
 foreach ($etats as $etat) {
     if ((string) $etat["id_exercice"] === (string) $idExercice) {
@@ -266,31 +274,26 @@ $montantRestant = max(0, $soldeAnterieur + $baseCotisation - $encaissement);
 
 $template = __DIR__ . "/../templates/appel_fonds_marbella.docx";
 if (!file_exists($template)) {
-    http_response_code(500);
-    exit("Modele d'appel de fonds introuvable");
+    bestcopro_export_fail(500, "Modele d'appel de fonds introuvable.", "Modele Word absent", ["path" => $template]);
 }
 if (!class_exists("ZipArchive")) {
-    http_response_code(500);
-    exit("Extension ZipArchive indisponible");
+    bestcopro_export_fail(500, "Extension ZipArchive indisponible.", "Extension PHP ZipArchive absente");
 }
 
 $output = tempnam(sys_get_temp_dir(), "appel_fonds_");
 if ($output === false || !copy($template, $output)) {
-    http_response_code(500);
-    exit("Impossible de preparer le document");
+    bestcopro_export_fail(500, "Impossible de preparer le document.", "Copie du modele Word impossible");
 }
 
 $zip = new ZipArchive();
 if ($zip->open($output) !== true) {
-    http_response_code(500);
-    exit("Impossible d'ouvrir le document");
+    bestcopro_export_fail(500, "Impossible d'ouvrir le document.", "Ouverture Zip du modele impossible");
 }
 
 $documentXml = $zip->getFromName("word/document.xml");
 if ($documentXml === false) {
     $zip->close();
-    http_response_code(500);
-    exit("Document Word invalide");
+    bestcopro_export_fail(500, "Document Word invalide.", "word/document.xml absent du modele");
 }
 
 $values = [

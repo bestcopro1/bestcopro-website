@@ -267,60 +267,6 @@ function getCopropriete($id = null, $connection)
     }
 }
 // get depense
-function ensureDepensePaiementFields($connection)
-{
-    static $checked = false;
-    if ($checked) {
-        return;
-    }
-    $checked = true;
-
-    $columns = [];
-    $columnInfo = [];
-    if ($result = $connection->query("SHOW COLUMNS FROM depense")) {
-        while ($row = $result->fetch_assoc()) {
-            $columns[] = $row["Field"];
-            $columnInfo[$row["Field"]] = $row;
-        }
-    }
-
-    $alters = [];
-    if (!in_array("situationPaiement", $columns)) {
-        $alters[] = "ADD COLUMN situationPaiement VARCHAR(20) NOT NULL DEFAULT 'paye'";
-    }
-    if (!in_array("datePaiement", $columns)) {
-        $alters[] = "ADD COLUMN datePaiement DATE NULL";
-    }
-    if (!in_array("montantPaye", $columns)) {
-        $alters[] = "ADD COLUMN montantPaye DECIMAL(12,2) NULL";
-    }
-
-    if (!empty($alters)) {
-        $connection->query("ALTER TABLE depense " . implode(", ", $alters));
-        $connection->query(
-            "UPDATE depense SET situationPaiement = 'paye' WHERE situationPaiement IS NULL OR situationPaiement = ''",
-        );
-    }
-
-    $connection->query(
-        "UPDATE depense SET datePaiement = date WHERE situationPaiement = 'paye' AND datePaiement IS NULL",
-    );
-    $connection->query(
-        "UPDATE depense SET montantPaye = montant WHERE situationPaiement = 'paye' AND montantPaye IS NULL",
-    );
-
-    if (
-        isset($columnInfo["id_modePaiement"]) &&
-        strtoupper($columnInfo["id_modePaiement"]["Null"]) === "NO"
-    ) {
-        $connection->query(
-            "ALTER TABLE depense MODIFY id_modePaiement " .
-                $columnInfo["id_modePaiement"]["Type"] .
-                " NULL DEFAULT NULL",
-        );
-    }
-}
-
 function getDepenseMontantPaye($depense)
 {
     if (($depense["situationPaiement"] ?? "paye") == "paye") {
@@ -345,7 +291,6 @@ function getDepenseResteDu($depense)
  */
 function getDepense($id = null, $id_exercice = null, $connection)
 {
-    ensureDepensePaiementFields($connection);
     if ($id != null) {
         $request =
             "SELECT id, id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic, situationPaiement, datePaiement, montantPaye FROM depense WHERE id = ?";
@@ -564,35 +509,8 @@ function getEtat($id = null, $connection)
  * @param mixed $connection
  * @return mixed
  */
-function ensureExerciceClosureColumns($connection)
-{
-    static $checked = false;
-    if ($checked) {
-        return;
-    }
-    $checked = true;
-
-    $columns = [];
-    if ($result = $connection->query("SHOW COLUMNS FROM exercice")) {
-        while ($row = $result->fetch_assoc()) {
-            $columns[$row["Field"]] = true;
-        }
-    }
-
-    if (!isset($columns["cloture"])) {
-        $connection->query("ALTER TABLE exercice ADD cloture TINYINT(1) NOT NULL DEFAULT 0");
-    }
-    if (!isset($columns["dateCloture"])) {
-        $connection->query("ALTER TABLE exercice ADD dateCloture DATETIME NULL");
-    }
-    if (!isset($columns["id_cloture_par"])) {
-        $connection->query("ALTER TABLE exercice ADD id_cloture_par INT(11) NULL");
-    }
-}
-
 function getExercice($id = null, $id_copropriete = null, $connection)
 {
-    ensureExerciceClosureColumns($connection);
     if ($id != null) {
         $request =
             "SELECT id, dateDebut, dateFin, id_periodePaiement, id_repartitionFonct, id_repartitionInvest, montantFonct, montantInvest, id_copropriete, cloture, dateCloture, id_cloture_par FROM exercice WHERE id = ?";

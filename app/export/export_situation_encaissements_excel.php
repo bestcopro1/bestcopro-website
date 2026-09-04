@@ -1,8 +1,6 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("situation_encaissements_excel");
 include_once __DIR__ . "/situation_encaissements_data.php";
 $connection = $GLOBALS["connection"];
 
@@ -27,6 +25,8 @@ if ($id_exercice === null) {
     exit("Paramètres invalides");
 }
 
+$access = bestcopro_export_require_exercise_access($connection, "dashboard", $id_exercice);
+$id_exercice = $access["id_exercice"];
 $exercice = getExercice($id_exercice, null, $connection);
 if (count($exercice) === 0) {
     http_response_code(404);

@@ -46,7 +46,7 @@ function getSituationImmeubleRows($id_copropriete, $id_exercice, $isCurrent, $co
             "WHERE l.id_copropriete = ? AND r.id_exercice = ? " .
             "GROUP BY l.numeroImm ORDER BY l.numeroImm ASC";
     } else {
-        $previousCondition = getPreviousExerciseRelConditionSql("curr", "r", "prev");
+        $previousCondition = getPreviousExerciseRelConditionSql("curr", "r", "prev", false);
         $request =
             "SELECT l.numeroImm, " .
             "SUM(COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0)) AS base_total, " .

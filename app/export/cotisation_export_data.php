@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . "/export_calculations.php";
+
 function getCotisationExportData(
     $id_copropriete,
     $id_exercice,
@@ -28,7 +30,7 @@ function getCotisationExportData(
             $dateLimit,
             $id_exercice
         ),
-        "currentRelSummaries" => getCotisationExportRelSummaries(
+        "periodRowsByLot" => getCotisationExportPeriodRows(
             $id_copropriete,
             $id_exercice,
             $connection,
@@ -51,22 +53,31 @@ function getCotisationExportDateLimit(
     $exerciseEndDate = null;
     $request = "SELECT CAST(dateFin AS DATE) FROM exercice WHERE id = ? LIMIT 1";
 
-    if ($stmt = $connection->prepare($request)) {
-        $stmt->bind_param("s", $id_exercice);
-        $stmt->execute();
-        $stmt->store_result();
-        $stmt->bind_result($dateFin);
-        if ($stmt->fetch() && $dateFin !== null && $dateFin !== "") {
-            $exerciseEndDate = $dateFin;
-        }
-        $stmt->close();
+    $stmt = $connection->prepare($request);
+    if (!$stmt) {
+        throw new RuntimeException("Preparation de la date de situation impossible : " . $connection->error);
     }
+    $stmt->bind_param("s", $id_exercice);
+    if (!$stmt->execute()) {
+        throw new RuntimeException("Lecture de la date de situation impossible : " . $stmt->error);
+    }
+    $stmt->store_result();
+    $stmt->bind_result($dateFin);
+    if ($stmt->fetch() && $dateFin !== null && $dateFin !== "") {
+        $exerciseEndDate = $dateFin;
+    }
+    $stmt->close();
 
     if ($exerciseEndDate === null) {
         return $dateSituation;
     }
 
-    if ($dateSituation === null || $dateSituation > $exerciseEndDate) {
+    $today = date("Y-m-d");
+    if ($dateSituation === null || $dateSituation > $today) {
+        $dateSituation = $today;
+    }
+
+    if ($dateSituation > $exerciseEndDate) {
         return $exerciseEndDate;
     }
 
@@ -77,33 +88,38 @@ function getCotisationExportImmeublesAndLots($id_copropriete, $connection)
 {
     $request =
         "SELECT lot.id, lot.code, lot.numero, lot.numeroImm, proprietaire.prenom, proprietaire.nom " .
-        "FROM lot INNER JOIN proprietaire ON lot.id_proprietaire = proprietaire.id " .
+        "FROM lot LEFT JOIN proprietaire ON lot.id_proprietaire = proprietaire.id " .
         "WHERE lot.id_copropriete = ? ORDER BY lot.numeroImm ASC, lot.code ASC";
     $immeubles = [];
     $lotsByImmeuble = [];
 
-    if ($stmt = $connection->prepare($request)) {
-        $stmt->bind_param("s", $id_copropriete);
-        $stmt->execute();
-        $stmt->store_result();
-        $stmt->bind_result($id, $code, $numero, $numeroImm, $prenom, $nom);
-
-        while ($stmt->fetch()) {
-            $immeubleKey = (string) $numeroImm;
-            if (!isset($immeubles[$immeubleKey])) {
-                $immeubles[$immeubleKey] = ["numeroImm" => $numeroImm];
-                $lotsByImmeuble[$immeubleKey] = [];
-            }
-
-            $lotsByImmeuble[$immeubleKey][] = [
-                "id" => $id,
-                "code" => $code,
-                "numero" => $numero,
-                "prenom" => $prenom,
-                "nom" => $nom,
-            ];
-        }
+    $stmt = $connection->prepare($request);
+    if (!$stmt) {
+        throw new RuntimeException("Preparation des lots impossible : " . $connection->error);
     }
+    $stmt->bind_param("s", $id_copropriete);
+    if (!$stmt->execute()) {
+        throw new RuntimeException("Lecture des lots impossible : " . $stmt->error);
+    }
+    $stmt->store_result();
+    $stmt->bind_result($id, $code, $numero, $numeroImm, $prenom, $nom);
+
+    while ($stmt->fetch()) {
+        $immeubleKey = (string) $numeroImm;
+        if (!isset($immeubles[$immeubleKey])) {
+            $immeubles[$immeubleKey] = ["numeroImm" => $numeroImm];
+            $lotsByImmeuble[$immeubleKey] = [];
+        }
+
+        $lotsByImmeuble[$immeubleKey][] = [
+            "id" => $id,
+            "code" => $code,
+            "numero" => $numero,
+            "prenom" => $prenom,
+            "nom" => $nom,
+        ];
+    }
+    $stmt->close();
 
     return [
         "immeubles" => array_values($immeubles),
@@ -123,7 +139,8 @@ function getCotisationExportRelSummaries(
     $unpaidExpression =
         "SUM(CASE WHEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) > COALESCE(r.cotisation, 0) THEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) - COALESCE(r.cotisation, 0) ELSE 0 END)";
     $joinPaiements = "";
-    if ($dateSituation !== null) {
+    $usePaymentHistory = $dateSituation !== null && $dateSituation < date("Y-m-d");
+    if ($usePaymentHistory) {
         $paidExpression = "SUM(COALESCE(rp.montant_paye, 0))";
         $unpaidExpression =
             "SUM(CASE WHEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) > COALESCE(rp.montant_paye, 0) THEN COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) - COALESCE(rp.montant_paye, 0) ELSE 0 END)";
@@ -169,15 +186,19 @@ function getCotisationExportRelSummaries(
             "WHERE l.id_copropriete = ? AND r.id_exercice = ? GROUP BY r.id_lot";
     }
 
-    if ($stmt = $connection->prepare($request)) {
+    $stmt = $connection->prepare($request);
+    if (!$stmt) {
+        throw new RuntimeException("Preparation du resume des cotisations impossible : " . $connection->error);
+    }
+    if ($stmt) {
         if ($id_exercice === null) {
-            if ($dateSituation === null) {
+            if (!$usePaymentHistory) {
                 $stmt->bind_param("ss", $current_id_exercice, $id_copropriete);
             } else {
                 $stmt->bind_param("sss", $dateSituation, $current_id_exercice, $id_copropriete);
             }
         } else {
-            if ($dateSituation === null) {
+            if (!$usePaymentHistory) {
                 $stmt->bind_param("ss", $id_copropriete, $id_exercice);
             } else {
                 $stmt->bind_param(
@@ -188,7 +209,9 @@ function getCotisationExportRelSummaries(
                 );
             }
         }
-        $stmt->execute();
+        if (!$stmt->execute()) {
+            throw new RuntimeException("Lecture du resume des cotisations impossible : " . $stmt->error);
+        }
         $stmt->store_result();
         $stmt->bind_result($id_lot, $totalPaye, $totalImpaye);
 
@@ -198,9 +221,87 @@ function getCotisationExportRelSummaries(
                 "totalImpaye" => max(0, (float) $totalImpaye),
             ];
         }
+        $stmt->close();
     }
 
     return $summaries;
+}
+
+function getCotisationExportPeriodRows(
+    $id_copropriete,
+    $id_exercice,
+    $connection,
+    $dateSituation
+) {
+    $rowsByLot = [];
+    $request =
+        "SELECT r.id_lot, r.id_rel, r.dateFinPeriode, " .
+        "COALESCE(r.partFonct, 0) + COALESCE(r.partInv, 0) AS montant_du, " .
+        "COALESCE(r.cotisation, 0) AS montant_stocke, " .
+        "COALESCE(SUM(rrp.montant), 0) AS montant_lie, " .
+        "COALESCE(SUM(CASE WHEN CAST(p.date AS date) <= ? THEN rrp.montant ELSE 0 END), 0) AS montant_lie_date " .
+        "FROM rel_lot_exercice r " .
+        "INNER JOIN lot l ON l.id = r.id_lot " .
+        "LEFT JOIN rel_rel_paiement rrp ON rrp.id_rel = r.id_rel " .
+        "LEFT JOIN paiement p ON p.id = rrp.id_paiement " .
+        "WHERE l.id_copropriete = ? AND r.id_exercice = ? " .
+        "GROUP BY r.id_lot, r.id_rel, r.dateFinPeriode, r.partFonct, r.partInv, r.cotisation " .
+        "ORDER BY r.id_lot ASC, r.dateFinPeriode ASC, r.id_rel ASC";
+
+    $stmt = $connection->prepare($request);
+    if (!$stmt) {
+        throw new RuntimeException("Preparation des periodes de cotisation impossible : " . $connection->error);
+    }
+    $stmt->bind_param("sii", $dateSituation, $id_copropriete, $id_exercice);
+    if (!$stmt->execute()) {
+        throw new RuntimeException("Lecture des periodes de cotisation impossible : " . $stmt->error);
+    }
+    $stmt->bind_result(
+        $idLot,
+        $idRel,
+        $dateFin,
+        $montantDu,
+        $montantStocke,
+        $montantLie,
+        $montantLieDate
+    );
+
+    while ($stmt->fetch()) {
+        $montantDu = max(0, (float) $montantDu);
+        $montantStocke = max(0, (float) $montantStocke);
+        $montantLie = max(0, (float) $montantLie);
+        $montantLieDate = max(0, (float) $montantLieDate);
+        $liensComplets = abs($montantLie - $montantStocke) < 0.01;
+        $montantPaye = $liensComplets ? $montantLieDate : $montantStocke;
+
+        if (!$liensComplets && function_exists("bestcopro_export_log")) {
+            bestcopro_export_log("Allocation de paiement incomplete; utilisation du montant de la periode.", [
+                "id_rel" => (int) $idRel,
+                "stored" => $montantStocke,
+                "linked" => $montantLie,
+            ]);
+        }
+
+        $key = (string) $idLot;
+        if (!isset($rowsByLot[$key])) {
+            $rowsByLot[$key] = [];
+        }
+        $rowsByLot[$key][] = [
+            "id_rel" => (int) $idRel,
+            "dateFinPeriode" => $dateFin,
+            "montantDu" => $montantDu,
+            "montantPaye" => min($montantDu, $montantPaye),
+        ];
+    }
+    $stmt->close();
+
+    return $rowsByLot;
+}
+
+function getCotisationExportPeriodRowsForLot($rowsByLot, $idLot)
+{
+    $key = (string) $idLot;
+    return isset($rowsByLot[$key]) ? $rowsByLot[$key] : [];
 }
 
 function getCotisationExportAdvanceTotals(
@@ -210,33 +311,38 @@ function getCotisationExportAdvanceTotals(
 )
 {
     $request =
-        "SELECT p.id_lot, " .
-        "SUM(GREATEST(COALESCE(p.montant, 0) - COALESCE(allocations.montant_affecte, 0), 0)) " .
-        "FROM paiement p INNER JOIN lot l ON l.id = p.id_lot " .
-        "LEFT JOIN (" .
-        "SELECT id_paiement, SUM(COALESCE(montant, 0)) AS montant_affecte " .
-        "FROM rel_rel_paiement GROUP BY id_paiement" .
-        ") allocations ON allocations.id_paiement = p.id " .
-        "WHERE l.id_copropriete = ? ";
-    if ($dateSituation !== null) {
-        $request .= "AND CAST(p.date AS date) <= ? ";
-    }
-    $request .= "GROUP BY p.id_lot";
+        "SELECT l.id, GREATEST(" .
+        "COALESCE(payments.total_paiements, 0) - GREATEST(" .
+        "COALESCE(allocations.total_affecte, 0), COALESCE(stored.total_cotisation, 0)" .
+        "), 0) AS total_avance " .
+        "FROM lot l " .
+        "LEFT JOIN (SELECT id_lot, SUM(COALESCE(montant, 0)) AS total_paiements " .
+        "FROM paiement WHERE CAST(date AS date) <= ? GROUP BY id_lot) payments ON payments.id_lot = l.id " .
+        "LEFT JOIN (SELECT p.id_lot, SUM(COALESCE(rrp.montant, 0)) AS total_affecte " .
+        "FROM rel_rel_paiement rrp INNER JOIN paiement p ON p.id = rrp.id_paiement " .
+        "WHERE CAST(p.date AS date) <= ? GROUP BY p.id_lot) allocations ON allocations.id_lot = l.id " .
+        "LEFT JOIN (SELECT id_lot, SUM(COALESCE(cotisation, 0)) AS total_cotisation " .
+        "FROM rel_lot_exercice GROUP BY id_lot) stored ON stored.id_lot = l.id " .
+        "WHERE l.id_copropriete = ?";
     $totals = [];
 
-    if ($stmt = $connection->prepare($request)) {
-        if ($dateSituation === null) {
-            $stmt->bind_param("s", $id_copropriete);
-        } else {
-            $stmt->bind_param("ss", $id_copropriete, $dateSituation);
+    $stmt = $connection->prepare($request);
+    if (!$stmt) {
+        throw new RuntimeException("Preparation des avances impossible : " . $connection->error);
+    }
+    if ($stmt) {
+        $dateLimit = $dateSituation !== null ? $dateSituation : date("Y-m-d");
+        $stmt->bind_param("ssi", $dateLimit, $dateLimit, $id_copropriete);
+        if (!$stmt->execute()) {
+            throw new RuntimeException("Lecture des avances impossible : " . $stmt->error);
         }
-        $stmt->execute();
         $stmt->store_result();
         $stmt->bind_result($id_lot, $totalAvance);
 
         while ($stmt->fetch()) {
             $totals[(string) $id_lot] = (float) $totalAvance;
         }
+        $stmt->close();
     }
 
     return $totals;

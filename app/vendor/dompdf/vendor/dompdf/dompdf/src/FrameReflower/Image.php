@@ -17,6 +17,7 @@ use Dompdf\FrameDecorator\Image as ImageFrameDecorator;
  */
 class Image extends AbstractFrameReflower
 {
+
     /**
      * Image constructor.
      * @param ImageFrameDecorator $frame
@@ -29,7 +30,7 @@ class Image extends AbstractFrameReflower
     /**
      * @param BlockFrameDecorator|null $block
      */
-    function reflow(BlockFrameDecorator $block = null)
+    function reflow(?BlockFrameDecorator $block = null)
     {
         $this->determine_absolute_containing_block();
 
@@ -65,12 +66,10 @@ class Image extends AbstractFrameReflower
 
         [$width] = $this->calculate_size(null, null);
         $min_width = $this->resolve_min_width(null);
-        $percent_width =
-            Helpers::is_percent($style->width) ||
-            Helpers::is_percent($style->max_width) ||
-            ($style->width === "auto" &&
-                (Helpers::is_percent($style->height) ||
-                    Helpers::is_percent($style->max_height)));
+        $percent_width = Helpers::is_percent($style->width)
+            || Helpers::is_percent($style->max_width)
+            || ($style->width === "auto"
+                && (Helpers::is_percent($style->height) || Helpers::is_percent($style->max_height)));
 
         // Use the specified min width as minimum when width or max width depend
         // on the containing block and cannot be resolved yet. This mimics
@@ -103,14 +102,12 @@ class Image extends AbstractFrameReflower
         $computed_width = $style->width;
         $computed_height = $style->height;
 
-        $width =
-            $cbw === null && Helpers::is_percent($computed_width)
-                ? "auto"
-                : $style->length_in_pt($computed_width, $cbw ?? 0);
-        $height =
-            $cbh === null && Helpers::is_percent($computed_height)
-                ? "auto"
-                : $style->length_in_pt($computed_height, $cbh ?? 0);
+        $width = $cbw === null && Helpers::is_percent($computed_width)
+            ? "auto"
+            : $style->length_in_pt($computed_width, $cbw ?? 0);
+        $height = $cbh === null && Helpers::is_percent($computed_height)
+            ? "auto"
+            : $style->length_in_pt($computed_height, $cbh ?? 0);
         $min_width = $this->resolve_min_width($cbw);
         $max_width = $this->resolve_max_width($cbw);
         $min_height = $this->resolve_min_height($cbh);
@@ -127,15 +124,10 @@ class Image extends AbstractFrameReflower
             $max_width = max($min_width, $max_width);
             $max_height = max($min_height, $max_height);
 
-            if (
-                ($w > $max_width && $h <= $max_height) ||
-                ($w > $max_width &&
-                    $h > $max_height &&
-                    $max_width / $w <= $max_height / $h) ||
-                ($w < $min_width && $h > $min_height) ||
-                ($w < $min_width &&
-                    $h < $min_height &&
-                    $min_width / $w > $min_height / $h)
+            if (($w > $max_width && $h <= $max_height)
+                || ($w > $max_width && $h > $max_height && $max_width / $w <= $max_height / $h)
+                || ($w < $min_width && $h > $min_height)
+                || ($w < $min_width && $h < $min_height && $min_width / $w > $min_height / $h)
             ) {
                 $width = Helpers::clamp($w, $min_width, $max_width);
                 $height = $width * ($img_height / $img_width);
@@ -177,22 +169,14 @@ class Image extends AbstractFrameReflower
         if ($debug_png) {
             [$img_width, $img_height] = $frame->get_intrinsic_dimensions();
             print "resolve_dimensions() " .
-                $frame->get_style()->width .
-                " " .
-                $frame->get_style()->height .
-                ";" .
-                $frame->get_parent()->get_style()->width .
-                " " .
-                $frame->get_parent()->get_style()->height .
-                ";" .
-                $frame->get_parent()->get_parent()->get_style()->width .
-                " " .
-                $frame->get_parent()->get_parent()->get_style()->height .
-                ";" .
-                $img_width .
-                " " .
-                $img_height .
-                "|";
+                $frame->get_style()->width . " " .
+                $frame->get_style()->height . ";" .
+                $frame->get_parent()->get_style()->width . " " .
+                $frame->get_parent()->get_style()->height . ";" .
+                $frame->get_parent()->get_parent()->get_style()->width . " " .
+                $frame->get_parent()->get_parent()->get_style()->height . ";" .
+                $img_width . " " .
+                $img_height . "|";
         }
 
         [, , $cbw, $cbh] = $frame->get_containing_block();

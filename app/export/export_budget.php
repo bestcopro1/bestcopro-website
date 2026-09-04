@@ -1,10 +1,7 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-require_once "../vendor/dompdf/autoload.inc.php";
-
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("budget");
+require_once __DIR__ . "/../vendor/dompdf/autoload.inc.php";
 $connection = $GLOBALS["connection"];
 
 use Dompdf\Dompdf;
@@ -67,15 +64,20 @@ $budgetTypes = [
     ],
 ];
 
-if ($id_exercice === null || !isset($budgetTypes[$type])) {
-    http_response_code(400);
-    exit("Parametres invalides");
+if (!isset($budgetTypes[$type])) {
+    bestcopro_export_fail(400, "Type de budget invalide.");
 }
+
+$access = bestcopro_export_require_exercise_access(
+    $connection,
+    $type === "investissement" ? "investissement" : "fonctionnement",
+    $id_exercice
+);
+$id_exercice = $access["id_exercice"];
 
 $exercice = getExercice($id_exercice, null, $connection);
 if (count($exercice) === 0) {
-    http_response_code(404);
-    exit("Exercice introuvable");
+    bestcopro_export_fail(404, "Exercice introuvable.");
 }
 
 $budgetType = $budgetTypes[$type];
@@ -166,7 +168,7 @@ $htmlContent .=
 $htmlContent .= "</tr>";
 $htmlContent .= "</table>";
 
-$dompdf = new Dompdf();
+$dompdf = bestcopro_export_create_dompdf();
 $dompdf->loadHtml($htmlContent);
 $dompdf->setPaper("A4", "portrait");
 $dompdf->render();

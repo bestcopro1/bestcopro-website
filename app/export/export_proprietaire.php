@@ -1,10 +1,7 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-require_once "../vendor/dompdf/autoload.inc.php";
-
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("proprietaire");
+require_once __DIR__ . "/../vendor/dompdf/autoload.inc.php";
 $connection = $GLOBALS["connection"];
 
 function getInfo($id_lot, $id_exercice, $connection)
@@ -80,14 +77,29 @@ function getEtats($id_lot, $id_periodePaiement, $connection)
 use Dompdf\Dompdf;
 
 // instantiate and use the dompdf class
-$dompdf = new Dompdf();
+$dompdf = bestcopro_export_create_dompdf();
 
-$id = filter_input(INPUT_GET, "id", FILTER_SANITIZE_STRING);
+$lotAccess = bestcopro_export_require_lot_access(
+    $connection,
+    "lots",
+    filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT)
+);
+$exerciseAccess = bestcopro_export_require_exercise_access(
+    $connection,
+    "lots",
+    isset($_GET["id_exercice"]) ? $_GET["id_exercice"] : null
+);
+bestcopro_export_assert_same_copropriete(
+    $lotAccess["id_copropriete"],
+    $exerciseAccess["id_copropriete"]
+);
+$id = $lotAccess["id_lot"];
+$id_exercice = $exerciseAccess["id_exercice"];
 $lot = getLot($id, null, null, $connection);
 $copropriete = getCopropriete($lot[0]["id_copropriete"], $connection);
 $typeLot = getTypelot($lot[0]["id_typeLot"], $connection);
 $proprietaire = getProprietaire($lot[0]["id_proprietaire"], null, $connection);
-$info = getInfo($lot[0]["id"], $_GET["id_exercice"], $connection);
+$info = getInfo($lot[0]["id"], $id_exercice, $connection);
 $etats = getEtats($lot[0]["id"], $info[0]["id_periodePaiement"], $connection);
 $paiements = getPaiement(null, null, $lot[0]["id"], $connection);
 
@@ -230,7 +242,7 @@ $totalEncaissement = 0;
 $totalResteDu = 0;
 foreach ($etats as $etat):
     if (intval($etat["id_exercice"]) < 0):
-        $exercice = getExercice($_GET["id_exercice"], null, $connection);
+        $exercice = getExercice($id_exercice, null, $connection);
         $htmlContent .=
             '<td style="border: 1px solid #000;width: 33%;text-align: center;">' .
             getExercisePeriodLabel(

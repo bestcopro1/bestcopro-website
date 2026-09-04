@@ -135,13 +135,8 @@ class GD implements Canvas
      * @param float          $aa_factor   Anti-aliasing factor, 1 for no AA
      * @param array          $bg_color    Image background color: array(r,g,b,a), 0 <= r,g,b,a <= 1
      */
-    public function __construct(
-        $paper = "letter",
-        string $orientation = "portrait",
-        ?Dompdf $dompdf = null,
-        float $aa_factor = 1.0,
-        array $bg_color = [1, 1, 1, 0],
-    ) {
+    public function __construct($paper = "letter", string $orientation = "portrait", ?Dompdf $dompdf = null, float $aa_factor = 1.0, array $bg_color = [1, 1, 1, 0])
+    {
         if (is_array($paper)) {
             $size = array_map("floatval", $paper);
         } else {
@@ -268,12 +263,12 @@ class GD implements Canvas
             $color = Helpers::cmyk_to_rgb($color);
         }
 
-        [$r, $g, $b] = $color;
+        list($r, $g, $b) = $color;
 
         $r = round($r * 255);
         $g = round($g * 255);
         $b = round($b * 255);
-        $a = round(127 - $a * 127);
+        $a = round(127 - ($a * 127));
 
         // Clip values
         $r = $r > 255 ? 255 : $r;
@@ -293,20 +288,9 @@ class GD implements Canvas
         }
 
         if ($a != 0) {
-            $this->_colors[$key] = imagecolorallocatealpha(
-                $this->get_image(),
-                $r,
-                $g,
-                $b,
-                $a,
-            );
+            $this->_colors[$key] = imagecolorallocatealpha($this->get_image(), $r, $g, $b, $a);
         } else {
-            $this->_colors[$key] = imagecolorallocate(
-                $this->get_image(),
-                $r,
-                $g,
-                $b,
-            );
+            $this->_colors[$key] = imagecolorallocate($this->get_image(), $r, $g, $b);
         }
 
         return $this->_colors[$key];
@@ -320,7 +304,7 @@ class GD implements Canvas
      */
     protected function _upscale($length)
     {
-        return round((($length * $this->dpi) / 72) * $this->_aa_factor);
+        return round(($length * $this->dpi) / 72 * $this->_aa_factor);
     }
 
     /**
@@ -331,7 +315,7 @@ class GD implements Canvas
      */
     protected function _downscale($length)
     {
-        return round((($length / $this->dpi) * 72) / $this->_aa_factor);
+        return round(($length / $this->dpi * 72) / $this->_aa_factor);
     }
 
     protected function convertStyle(array $style, int $color, int $width): array
@@ -347,8 +331,9 @@ class GD implements Canvas
 
             for ($i = 0; $i < $d; $i++) {
                 for ($j = 0; $j < $width; $j++) {
-                    $gdStyle[] =
-                        $index % 2 === 0 ? $color : IMG_COLOR_TRANSPARENT;
+                    $gdStyle[] = $index % 2 === 0
+                        ? $color
+                        : IMG_COLOR_TRANSPARENT;
                 }
             }
         }
@@ -356,16 +341,8 @@ class GD implements Canvas
         return $gdStyle;
     }
 
-    public function line(
-        $x1,
-        $y1,
-        $x2,
-        $y2,
-        $color,
-        $width,
-        $style = [],
-        $cap = "butt",
-    ) {
+    public function line($x1, $y1, $x2, $y2, $color, $width, $style = [], $cap = "butt")
+    {
         // Account for the fact that round and square caps are expected to
         // extend outwards
         if ($cap === "round" || $cap === "square") {
@@ -374,8 +351,8 @@ class GD implements Canvas
             $a = $x2 - $x1;
             $b = $y2 - $y1;
             $c = sqrt($a ** 2 + $b ** 2);
-            $dx = ($a * $w) / $c;
-            $dy = ($b * $w) / $c;
+            $dx = $a * $w / $c;
+            $dy = $b * $w / $c;
 
             $x1 -= $dx;
             $x2 -= $dx;
@@ -414,18 +391,8 @@ class GD implements Canvas
         imageline($this->get_image(), $x1, $y1, $x2, $y2, $c);
     }
 
-    public function arc(
-        $x,
-        $y,
-        $r1,
-        $r2,
-        $astart,
-        $aend,
-        $color,
-        $width,
-        $style = [],
-        $cap = "butt",
-    ) {
+    public function arc($x, $y, $r1, $r2, $astart, $aend, $color, $width, $style = [], $cap = "butt")
+    {
         // Account for the fact that round and square caps are expected to
         // extend outwards
         if ($cap === "round" || $cap === "square") {
@@ -465,16 +432,8 @@ class GD implements Canvas
         imagearc($this->get_image(), $x, $y, $w, $h, $start, $end, $c);
     }
 
-    public function rectangle(
-        $x1,
-        $y1,
-        $w,
-        $h,
-        $color,
-        $width,
-        $style = [],
-        $cap = "butt",
-    ) {
+    public function rectangle($x1, $y1, $w, $h, $color, $width, $style = [], $cap = "butt")
+    {
         // Account for the fact that round and square caps are expected to
         // extend outwards
         if ($cap === "round" || $cap === "square") {
@@ -508,20 +467,19 @@ class GD implements Canvas
         imagesetthickness($this->get_image(), $width);
 
         if ($c === IMG_COLOR_STYLED) {
-            imagepolygon(
-                $this->get_image(),
-                [$x1, $y1, $x1 + $w, $y1, $x1 + $w, $y1 + $h, $x1, $y1 + $h],
-                $c,
-            );
+            $points = [
+                $x1, $y1,
+                $x1 + $w, $y1,
+                $x1 + $w, $y1 + $h,
+                $x1, $y1 + $h
+            ];
+            if (version_compare(PHP_VERSION, "8.1.0", "<")) {
+                imagepolygon($this->get_image(), $points, count($points)/2, $c);
+            } else {
+                imagepolygon($this->get_image(), $points, $c);
+            }
         } else {
-            imagerectangle(
-                $this->get_image(),
-                $x1,
-                $y1,
-                $x1 + $w,
-                $y1 + $h,
-                $c,
-            );
+            imagerectangle($this->get_image(), $x1, $y1, $x1 + $w, $y1 + $h, $c);
         }
     }
 
@@ -535,14 +493,7 @@ class GD implements Canvas
 
         $c = $this->_allocate_color($color);
 
-        imagefilledrectangle(
-            $this->get_image(),
-            $x1,
-            $y1,
-            $x1 + $w,
-            $y1 + $h,
-            $c,
-        );
+        imagefilledrectangle($this->get_image(), $x1, $y1, $x1 + $w, $y1 + $h, $c);
     }
 
     public function clipping_rectangle($x1, $y1, $w, $h)
@@ -550,16 +501,8 @@ class GD implements Canvas
         // @todo
     }
 
-    public function clipping_roundrectangle(
-        $x1,
-        $y1,
-        $w,
-        $h,
-        $rTL,
-        $rTR,
-        $rBR,
-        $rBL,
-    ) {
+    public function clipping_roundrectangle($x1, $y1, $w, $h, $rTL, $rTR, $rBR, $rBL)
+    {
         // @todo
     }
 
@@ -608,13 +551,8 @@ class GD implements Canvas
         // @todo
     }
 
-    public function polygon(
-        $points,
-        $color,
-        $width = null,
-        $style = [],
-        $fill = false,
-    ) {
+    public function polygon($points, $color, $width = null, $style = [], $fill = false)
+    {
         // Scale each point by the AA factor and DPI
         foreach (array_keys($points) as $i) {
             $points[$i] = $this->_upscale($points[$i]);
@@ -637,21 +575,22 @@ class GD implements Canvas
         imagesetthickness($this->get_image(), isset($width) ? $width : 0);
 
         if ($fill) {
-            imagefilledpolygon($this->get_image(), $points, $c);
+            if (version_compare(PHP_VERSION, "8.1.0", "<")) {
+                imagefilledpolygon($this->get_image(), $points, count($points)/2, $c);
+            } else {
+                imagefilledpolygon($this->get_image(), $points, $c);
+            }
         } else {
-            imagepolygon($this->get_image(), $points, $c);
+            if (version_compare(PHP_VERSION, "8.1.0", "<")) {
+                imagepolygon($this->get_image(), $points, count($points)/2, $c);
+            } else {
+                imagepolygon($this->get_image(), $points, $c);
+            }
         }
     }
 
-    public function circle(
-        $x,
-        $y,
-        $r,
-        $color,
-        $width = null,
-        $style = [],
-        $fill = false,
-    ) {
+    public function circle($x, $y, $r, $color, $width = null, $style = [], $fill = false)
+    {
         // Scale by the AA factor and DPI
         $x = $this->_upscale($x);
         $y = $this->_upscale($y);
@@ -684,23 +623,17 @@ class GD implements Canvas
      */
     public function image($img, $x, $y, $w, $h, $resolution = "normal")
     {
-        $img_type = Cache::detect_type(
-            $img,
-            $this->get_dompdf()->getHttpContext(),
-        );
+        $img_type = Cache::detect_type($img, $this->get_dompdf()->getHttpContext());
 
         if (!$img_type) {
             return;
         }
 
         $func_name = "imagecreatefrom$img_type";
-        if (!function_exists($func_name)) {
-            if (!method_exists(Helpers::class, $func_name)) {
-                throw new \Exception(
-                    "Function $func_name() not found.  Cannot convert $img_type image: $img.  Please install the image PHP extension.",
-                );
-            }
+        if (method_exists(Helpers::class, $func_name)) {
             $func_name = [Helpers::class, $func_name];
+        } elseif (!function_exists($func_name)) {
+            throw new \Exception("Function $func_name() not found.  Cannot convert $img_type image: $img.  Please install the image PHP extension.");
         }
         $src = @call_user_func($func_name, $img);
 
@@ -718,31 +651,11 @@ class GD implements Canvas
         $img_w = imagesx($src);
         $img_h = imagesy($src);
 
-        imagecopyresampled(
-            $this->get_image(),
-            $src,
-            $x,
-            $y,
-            0,
-            0,
-            $w,
-            $h,
-            $img_w,
-            $img_h,
-        );
+        imagecopyresampled($this->get_image(), $src, $x, $y, 0, 0, $w, $h, $img_w, $img_h);
     }
 
-    public function text(
-        $x,
-        $y,
-        $text,
-        $font,
-        $size,
-        $color = [0, 0, 0],
-        $word_spacing = 0.0,
-        $char_spacing = 0.0,
-        $angle = 0.0,
-    ) {
+    public function text($x, $y, $text, $font, $size, $color = [0, 0, 0], $word_spacing = 0.0, $char_spacing = 0.0, $angle = 0.0)
+    {
         // Scale by the AA factor and DPI
         $x = $this->_upscale($x);
         $y = $this->_upscale($y);
@@ -755,31 +668,14 @@ class GD implements Canvas
         // character. Preserve any originally double encoded entities to be
         // represented as is.
         // eg: &amp;#160; will render &#160; rather than its character.
-        $text = preg_replace(
-            "/&(#(?:x[a-fA-F0-9]+|[0-9]+);)/",
-            '&#38;\1',
-            $text,
-        );
+        $text = preg_replace('/&(#(?:x[a-fA-F0-9]+|[0-9]+);)/', '&#38;\1', $text);
 
-        $text = mb_encode_numericentity(
-            $text,
-            [0x0080, 0xff, 0, 0xff],
-            "UTF-8",
-        );
+        $text = mb_encode_numericentity($text, [0x0080, 0xff, 0, 0xff], 'UTF-8');
 
         $font = $this->get_ttf_file($font);
 
         // FIXME: word spacing
-        imagettftext(
-            $this->get_image(),
-            $size,
-            $angle,
-            $x,
-            $y + $h,
-            $c,
-            $font,
-            $text,
-        );
+        imagettftext($this->get_image(), $size, $angle, $x, $y + $h, $c, $font, $text);
     }
 
     public function javascript($code)
@@ -807,13 +703,129 @@ class GD implements Canvas
         // N/A
     }
 
-    public function get_text_width(
-        $text,
-        $font,
-        $size,
-        $word_spacing = 0.0,
-        $char_spacing = 0.0,
-    ) {
+    private function getCharMap(string $font)
+    {
+        static $unicodeCharMapTables = [];
+
+        if (isset($unicodeCharMapTables[$font])) {
+            return $unicodeCharMapTables[$font];
+        }
+
+        $metrics_name = "$font.ufm";
+        if (!file_exists($metrics_name)) {
+            $metrics_name = "$font.afm";
+        }
+        if (!file_exists($metrics_name)) {
+            return $unicodeCharMapTables[$font] = [];
+        }
+
+        $cache_name = "$metrics_name.json";
+        if (file_exists($cache_name)) {
+            $cached_font_info = json_decode(file_get_contents($cache_name), true);
+            $char_map = $cached_font_info['C'];
+            return $unicodeCharMapTables[$font] = $char_map;
+        }
+
+        $char_map = [];
+        $file = file("$metrics_name");
+        foreach ($file as $rowA) {
+            $row = trim($rowA);
+            $pos = strpos($row, ' ');
+
+            if ($pos) {
+                // then there must be some keyword
+                $key = substr($row, 0, $pos);
+                switch ($key) {
+                    case 'C': // Found in AFM files
+                        $bits = explode(';', trim($row));
+                        $dtmp = ['C' => null, 'N' => null, 'WX' => null, 'B' => []];
+
+                        foreach ($bits as $bit) {
+                            $bits2 = explode(' ', trim($bit));
+                            if (mb_strlen($bits2[0], '8bit') == 0) {
+                                continue;
+                            }
+
+                            if (count($bits2) > 2) {
+                                $dtmp[$bits2[0]] = [];
+                                for ($i = 1; $i < count($bits2); $i++) {
+                                    $dtmp[$bits2[0]][] = $bits2[$i];
+                                }
+                            } else {
+                                if (count($bits2) == 2) {
+                                    $dtmp[$bits2[0]] = $bits2[1];
+                                }
+                            }
+                        }
+
+                        $c = (int)$dtmp['C'];
+                        $n = $dtmp['N'];
+                        $width = floatval($dtmp['WX']);
+
+                        if ($c >= 0) {
+                            $char_map[$c] = $width;
+                        } elseif (isset($n)) {
+                            $char_map[$n] = $width;
+                        }
+                        break;
+
+                    // U 827 ; WX 0 ; N squaresubnosp ; G 675 ;
+                    case 'U': // Found in UFM files
+                        $bits = explode(';', trim($row));
+                        $dtmp = ['G' => null, 'N' => null, 'U' => null, 'WX' => null];
+
+                        foreach ($bits as $bit) {
+                            $bits2 = explode(' ', trim($bit));
+                            if (mb_strlen($bits2[0], '8bit') === 0) {
+                                continue;
+                            }
+
+                            if (count($bits2) > 2) {
+                                $dtmp[$bits2[0]] = [];
+                                for ($i = 1; $i < count($bits2); $i++) {
+                                    $dtmp[$bits2[0]][] = $bits2[$i];
+                                }
+                            } else {
+                                if (count($bits2) == 2) {
+                                    $dtmp[$bits2[0]] = $bits2[1];
+                                }
+                            }
+                        }
+
+                        $c = (int)$dtmp['U'];
+                        $n = $dtmp['N'];
+                        $glyph = $dtmp['G'];
+                        $width = floatval($dtmp['WX']);
+
+                        if ($c >= 0) {
+                            $char_map[$c] = $width;
+                        } elseif (isset($n)) {
+                            $char_map[$n] = $width;
+                        }
+
+                        break;
+                }
+            }
+        }
+
+        return $unicodeCharMapTables[$font] = $char_map;
+    }
+
+    public function font_supports_char(string $font, string $char): bool
+    {
+        if ($char === "") {
+            return true;
+        }
+
+        $font = $this->get_ttf_file($font);
+        $charMap = $this->getCharMap($font);
+        $charCode = Helpers::uniord($char, "UTF-8");
+
+        return \array_key_exists($charCode, $charMap);
+    }
+
+    public function get_text_width($text, $font, $size, $word_spacing = 0.0, $char_spacing = 0.0)
+    {
         $font = $this->get_ttf_file($font);
         $size = $this->_upscale($size) * self::FONT_SCALE;
 
@@ -821,20 +833,12 @@ class GD implements Canvas
         // character. Preserve any originally double encoded entities to be
         // represented as is.
         // eg: &amp;#160; will render &#160; rather than its character.
-        $text = preg_replace(
-            "/&(#(?:x[a-fA-F0-9]+|[0-9]+);)/",
-            '&#38;\1',
-            $text,
-        );
+        $text = preg_replace('/&(#(?:x[a-fA-F0-9]+|[0-9]+);)/', '&#38;\1', $text);
 
-        $text = mb_encode_numericentity(
-            $text,
-            [0x0080, 0xffff, 0, 0xffff],
-            "UTF-8",
-        );
+        $text = mb_encode_numericentity($text, [0x0080, 0xffff, 0, 0xffff], 'UTF-8');
 
         // FIXME: word spacing
-        [$x1, , $x2] = imagettfbbox($size, 0, $font, $text);
+        list($x1, , $x2) = imagettfbbox($size, 0, $font, $text);
 
         // Add additional 1pt to prevent text overflow issues
         return $this->_downscale($x2 - $x1) + 1;
@@ -850,16 +854,13 @@ class GD implements Canvas
             $font = "";
         }
 
-        if (stripos($font, ".ttf") === false) {
+        if ( stripos($font, ".ttf") === false ) {
             $font .= ".ttf";
         }
 
         if (!file_exists($font)) {
             $font_metrics = $this->_dompdf->getFontMetrics();
-            $font =
-                $font_metrics->getFont(
-                    $this->_dompdf->getOptions()->getDefaultFont(),
-                ) . ".ttf";
+            $font = $font_metrics->getFont($this->_dompdf->getOptions()->getDefaultFont()) . ".ttf";
             if (!file_exists($font)) {
                 if (strpos($font, "mono")) {
                     $font = $font_metrics->getFont("DejaVu Mono") . ".ttf";
@@ -897,7 +898,7 @@ class GD implements Canvas
         $ratio = $this->_dompdf->getOptions()->getFontHeightRatio();
 
         // FIXME: word spacing
-        [, $y2, , , , $y1] = imagettfbbox($size, 0, $font, "MXjpqytfhl"); // Test string with ascenders, descenders and caps
+        list(, $y2, , , , $y1) = imagettfbbox($size, 0, $font, "MXjpqytfhl"); // Test string with ascenders, descenders and caps
         return ($y2 - $y1) * $ratio;
     }
 
@@ -912,10 +913,7 @@ class GD implements Canvas
         $this->_page_number++;
         $this->_page_count++;
 
-        $this->_img = imagecreatetruecolor(
-            $this->_actual_width,
-            $this->_actual_height,
-        );
+        $this->_img = imagecreatetruecolor($this->_actual_width, $this->_actual_height);
 
         $this->_bg_color = $this->_allocate_color($this->_bg_color_array);
         imagealphablending($this->_img, true);
@@ -945,17 +943,8 @@ class GD implements Canvas
         // N/A
     }
 
-    public function page_text(
-        $x,
-        $y,
-        $text,
-        $font,
-        $size,
-        $color = [0, 0, 0],
-        $word_space = 0.0,
-        $char_space = 0.0,
-        $angle = 0.0,
-    ) {
+    public function page_text($x, $y, $text, $font, $size, $color = [0, 0, 0], $word_space = 0.0, $char_space = 0.0, $angle = 0.0)
+    {
         // N/A
     }
 
@@ -977,12 +966,8 @@ class GD implements Canvas
             die("Unable to stream image: headers already sent");
         }
 
-        if (!isset($options["type"])) {
-            $options["type"] = "png";
-        }
-        if (!isset($options["Attachment"])) {
-            $options["Attachment"] = true;
-        }
+        if (!isset($options["type"])) $options["type"] = "png";
+        if (!isset($options["Attachment"])) $options["Attachment"] = true;
         $type = strtolower($options["type"]);
 
         switch ($type) {
@@ -998,12 +983,9 @@ class GD implements Canvas
                 break;
         }
 
-        header("Cache-Control: private");
         header("Content-Type: $contentType");
 
-        $filename =
-            str_replace(["\n", "'"], "", basename($filename, ".$type")) .
-            $extension;
+        $filename = str_replace(["\n", "'"], "", basename($filename, ".$type")) . $extension;
         $attachment = $options["Attachment"] ? "attachment" : "inline";
         header(Helpers::buildContentDispositionHeader($attachment, $filename));
 
@@ -1035,12 +1017,8 @@ class GD implements Canvas
      */
     protected function _output($options = [])
     {
-        if (!isset($options["type"])) {
-            $options["type"] = "png";
-        }
-        if (!isset($options["page"])) {
-            $options["page"] = 1;
-        }
+        if (!isset($options["type"])) $options["type"] = "png";
+        if (!isset($options["page"])) $options["page"] = 1;
         $type = strtolower($options["type"]);
 
         if (isset($this->_imgs[$options["page"] - 1])) {
@@ -1054,18 +1032,9 @@ class GD implements Canvas
             $dst_w = round($this->_actual_width / $this->_aa_factor);
             $dst_h = round($this->_actual_height / $this->_aa_factor);
             $dst = imagecreatetruecolor($dst_w, $dst_h);
-            imagecopyresampled(
-                $dst,
-                $img,
-                0,
-                0,
-                0,
-                0,
-                $dst_w,
-                $dst_h,
-                $this->_actual_width,
-                $this->_actual_height,
-            );
+            imagecopyresampled($dst, $img, 0, 0, 0, 0,
+                $dst_w, $dst_h,
+                $this->_actual_width, $this->_actual_height);
         } else {
             $dst = $img;
         }
@@ -1085,7 +1054,7 @@ class GD implements Canvas
                 break;
         }
 
-        if ($this->_aa_factor != 1) {
+        if ($this->_aa_factor != 1 && PHP_MAJOR_VERSION < 8) {
             imagedestroy($dst);
         }
     }

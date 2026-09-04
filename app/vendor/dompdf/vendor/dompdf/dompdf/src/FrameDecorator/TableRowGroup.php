@@ -18,6 +18,7 @@ use Dompdf\Frame;
  */
 class TableRowGroup extends AbstractFrameDecorator
 {
+
     /**
      * Class constructor
      *
@@ -33,11 +34,8 @@ class TableRowGroup extends AbstractFrameDecorator
      * Split the row group at the given child and remove all subsequent child
      * rows and all subsequent row groups from the cellmap.
      */
-    public function split(
-        ?Frame $child = null,
-        bool $page_break = false,
-        bool $forced = false,
-    ): void {
+    public function split(?Frame $child = null, bool $page_break = false, bool $forced = false): void
+    {
         if (is_null($child)) {
             parent::split($child, $page_break, $forced);
             return;

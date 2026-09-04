@@ -1,28 +1,22 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("recu_paiement");
 require_once __DIR__ . "/../vendor/dompdf/autoload.inc.php";
-
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
 
 use Dompdf\Dompdf;
 
 $connection = $GLOBALS["connection"];
-$id = filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT);
-
-if ($id === null || $id === false) {
-    exit("Paiement introuvable");
-}
+$id = bestcopro_export_require_int(filter_input(INPUT_GET, "id", FILTER_VALIDATE_INT), "paiement");
+bestcopro_export_require_payment_access($connection, "paiements", $id);
 
 $paiement = getPaiement($id, null, null, $connection);
 if (!is_array($paiement) || count($paiement) == 0) {
-    exit("Paiement introuvable");
+    bestcopro_export_fail(404, "Paiement introuvable.");
 }
 
 $lot = getLot($paiement[0]["id_lot"], null, null, $connection);
 if (!is_array($lot) || count($lot) == 0) {
-    exit("Paiement introuvable");
+    bestcopro_export_fail(404, "Paiement introuvable.");
 }
 
 $proprietaire = getProprietaire($lot[0]["id_proprietaire"], null, $connection);
@@ -32,17 +26,17 @@ if (!is_array($proprietaire)) {
 
 $copropriete = getCopropriete($lot[0]["id_copropriete"], $connection);
 if (!is_array($copropriete) || count($copropriete) == 0) {
-    exit("Paiement introuvable");
+    bestcopro_export_fail(404, "Copropriete introuvable.");
 }
 
 $modepaiement = getModepaiement($paiement[0]["id_modePaiement"], $connection);
 if (!is_array($modepaiement) || count($modepaiement) == 0) {
-    exit("Paiement introuvable");
+    bestcopro_export_fail(404, "Mode de paiement introuvable.");
 }
 
 $typeLot = getTypelot($lot[0]["id_typeLot"], $connection);
 if (!is_array($typeLot) || count($typeLot) == 0) {
-    exit("Paiement introuvable");
+    bestcopro_export_fail(404, "Type de lot introuvable.");
 }
 
 $relRelPaiements = getRel_rel_paiement($paiement[0]["id"], $connection);
@@ -196,7 +190,7 @@ if ($avance > 0) {
 $htmlContent .= '<div class="signature">Signature</div>';
 $htmlContent .= "</div></div></body></html>";
 
-$dompdf = new Dompdf();
+$dompdf = bestcopro_export_create_dompdf();
 $dompdf->loadHtml($htmlContent);
 $dompdf->setPaper("A4", "portrait");
 $dompdf->render();

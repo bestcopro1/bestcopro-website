@@ -1,16 +1,15 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-require_once "../vendor/dompdf/autoload.inc.php";
-
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("depense");
+require_once __DIR__ . "/../vendor/dompdf/autoload.inc.php";
+require_once __DIR__ . "/export_calculations.php";
 $connection = $GLOBALS["connection"];
 
 function getDepenseByDates($id_poste, $from, $to, $connection)
 {
     $request =
-        "SELECT id, id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic FROM depense WHERE id_poste = ? AND CAST(date as date) BETWEEN ? AND ?";
+        "SELECT id, id_poste, date, montant, id_fournisseur, id_modePaiement, commentaire, id_exercice, id_syndic " .
+        "FROM depense WHERE id_poste = ? AND CAST(date AS date) >= ? AND CAST(date AS date) < ?";
     if ($stmt = $connection->prepare($request)) {
         $stmt->bind_param("sss", $id_poste, $from, $to);
         $stmt->execute();
@@ -54,20 +53,9 @@ function getPosteMonthlyDepenses($id_poste, $dateDebut, $connection)
     $total = 0;
     $hasDepenses = false;
 
-    for ($i = 0; $i < 12; $i++) {
-        $from = date(
-            "Y-m-d",
-            strtotime(date("Y-m-d", strtotime($dateDebut)) . " + " . $i . " month"),
-        );
-        $to = date(
-            "Y-m-d",
-            strtotime(
-                date("Y-m-d", strtotime($dateDebut)) .
-                    " + " .
-                    ($i + 1) .
-                    " month",
-            ),
-        );
+    foreach (bestcopro_export_month_ranges($dateDebut, 12) as $i => $range) {
+        $from = $range["from"];
+        $to = $range["toExclusive"];
         $montantDepenses = 0;
         $allDepenses = getDepenseByDates($id_poste, $from, $to, $connection);
 
@@ -93,9 +81,14 @@ function getPosteMonthlyDepenses($id_poste, $dateDebut, $connection)
 use Dompdf\Dompdf;
 
 // instantiate and use the dompdf class
-$dompdf = new Dompdf();
+$dompdf = bestcopro_export_create_dompdf();
 
-$exercice = getExercice($_GET["id_exercice"], null, $connection);
+$access = bestcopro_export_require_exercise_access(
+    $connection,
+    "depenses",
+    isset($_GET["id_exercice"]) ? $_GET["id_exercice"] : null
+);
+$exercice = getExercice($access["id_exercice"], null, $connection);
 $nameExercice = getNameexercice($exercice[0]["dateDebut"]);
 $rubriques = getRubrique(null, $exercice[0]["id"], null, $connection);
 

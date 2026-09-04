@@ -12,7 +12,7 @@ function getSituationEncaissementsPaymentStats($id_copropriete, $id_exercice, $f
         "encours" => 0,
         "total" => 0,
     ];
-    $previousCondition = getPreviousExerciseRelConditionSql("curr", "r", "prev");
+    $previousCondition = getPreviousExerciseRelConditionSql("curr", "r", "prev", false);
     $request =
         "SELECT p.id, p.montant, " .
         "COALESCE(SUM(CASE WHEN r.id_exercice = ? THEN rrp.montant ELSE 0 END), 0) AS montant_encours, " .

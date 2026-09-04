@@ -95,7 +95,7 @@ class Block extends AbstractFrameDecorator
     {
         $line_boxes_count = count($this->_line_boxes);
         $cl = max(min($line_number, $line_boxes_count), 0);
-        return $this->_cl = $cl;
+        return ($this->_cl = $cl);
     }
 
     /**
@@ -129,17 +129,12 @@ class Block extends AbstractFrameDecorator
         $this->maximize_line_height($frame->get_margin_height(), $frame);
 
         // Add any dangling list markers to the first line box if it is inline
-        if (
-            $this->_cl === 0 &&
-            $current_line->inline &&
-            $this->dangling_markers !== []
+        if ($this->_cl === 0 && $current_line->inline
+            && $this->dangling_markers !== []
         ) {
             foreach ($this->dangling_markers as $marker) {
                 $current_line->add_list_marker($marker);
-                $this->maximize_line_height(
-                    $marker->get_margin_height(),
-                    $marker,
-                );
+                $this->maximize_line_height($marker->get_margin_height(), $marker);
             }
 
             $this->dangling_markers = [];
@@ -171,7 +166,7 @@ class Block extends AbstractFrameDecorator
         $i = $this->_cl;
         $j = null;
 
-        while ($i > 0) {
+        while ($i >= 0) {
             $line = $this->_line_boxes[$i];
             foreach ($line->get_frames() as $index => $f) {
                 if ($frame === $f) {

@@ -16,6 +16,7 @@ use Dompdf\FrameDecorator\ListBullet as ListBulletFrameDecorator;
  */
 class ListBullet extends AbstractFrameReflower
 {
+
     /**
      * ListBullet constructor.
      * @param ListBulletFrameDecorator $frame
@@ -28,7 +29,7 @@ class ListBullet extends AbstractFrameReflower
     /**
      * @param BlockFrameDecorator|null $block
      */
-    function reflow(BlockFrameDecorator $block = null)
+    function reflow(?BlockFrameDecorator $block = null)
     {
         if ($block === null) {
             return;

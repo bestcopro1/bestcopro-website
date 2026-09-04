@@ -1,19 +1,17 @@
 <?php
-require_once __DIR__ . "/../session.php";
-bestcopro_start_session();
-require_once "../vendor/dompdf/autoload.inc.php";
-
-include_once __DIR__ . "/../config/db.php";
-include_once __DIR__ . "/../controllers/functions.php";
+require_once __DIR__ . "/export_common.php";
+bestcopro_export_bootstrap("factures_non_payees");
+require_once __DIR__ . "/../vendor/dompdf/autoload.inc.php";
 
 use Dompdf\Dompdf;
 
 $connection = $GLOBALS["connection"];
-$id_exercice = isset($_GET["id_exercice"]) ? $_GET["id_exercice"] : null;
-if ($id_exercice === null) {
-    http_response_code(400);
-    exit("Parametres invalides");
-}
+$access = bestcopro_export_require_exercise_access(
+    $connection,
+    "depenses",
+    isset($_GET["id_exercice"]) ? $_GET["id_exercice"] : null
+);
+$id_exercice = $access["id_exercice"];
 
 $exercice = getExercice($id_exercice, null, $connection);
 if (count($exercice) === 0) {
@@ -128,7 +126,7 @@ if (count($depensesNonPayees) === 0) {
 }
 $htmlContent .= "</tbody></table></body></html>";
 
-$dompdf = new Dompdf();
+$dompdf = bestcopro_export_create_dompdf();
 $dompdf->loadHtml($htmlContent);
 $dompdf->setPaper("A4", "landscape");
 $dompdf->render();

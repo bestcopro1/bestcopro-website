@@ -8,7 +8,6 @@ namespace Dompdf\FrameDecorator;
 
 use Dompdf\Dompdf;
 use Dompdf\Frame;
-use Dompdf\Helpers;
 use Dompdf\Image\Cache;
 
 /**
@@ -18,6 +17,7 @@ use Dompdf\Image\Cache;
  */
 class ListBulletImage extends ListBullet
 {
+
     /**
      * The underlying image frame
      *

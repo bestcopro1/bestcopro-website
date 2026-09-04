@@ -61,10 +61,7 @@ class Text extends AbstractRenderer
 
         $font = $style->font_family;
         $size = $style->font_size;
-        $frame_font_size = $frame
-            ->get_dompdf()
-            ->getFontMetrics()
-            ->getFontHeight($font, $size);
+        $frame_font_size = $frame->get_dompdf()->getFontMetrics()->getFontHeight($font, $size);
         $word_spacing = $frame->get_text_spacing() + $style->word_spacing;
         $letter_spacing = $style->letter_spacing;
         $width = (float) $style->width;
@@ -75,16 +72,9 @@ class Text extends AbstractRenderer
           $text
         );*/
 
-        $this->_canvas->text(
-            $x,
-            $y,
-            $text,
-            $font,
-            $size,
-            $style->color,
-            $word_spacing,
-            $letter_spacing,
-        );
+        $this->_canvas->text($x, $y, $text,
+            $font, $size,
+            $style->color, $word_spacing, $letter_spacing);
 
         $line = $frame->get_containing_line();
 
@@ -110,8 +100,7 @@ class Text extends AbstractRenderer
             }
 
             if (isset($cpdf_font["UnderlineThickness"])) {
-                $line_thickness =
-                    $size * ($cpdf_font["UnderlineThickness"] / 1000);
+                $line_thickness = $size * ($cpdf_font["UnderlineThickness"] / 1000);
             }
         }
 
@@ -143,11 +132,7 @@ class Text extends AbstractRenderer
                     continue 2;
 
                 case "underline":
-                    $deco_y +=
-                        $base -
-                        $descent +
-                        $underline_offset +
-                        $line_thickness / 2;
+                    $deco_y += $base - $descent + $underline_offset + $line_thickness / 2;
                     break;
 
                 case "overline":
@@ -162,34 +147,15 @@ class Text extends AbstractRenderer
             $dx = 0;
             $x1 = $x - self::DECO_EXTENSION;
             $x2 = $x + $width + $dx + self::DECO_EXTENSION;
-            $this->_canvas->line(
-                $x1,
-                $deco_y,
-                $x2,
-                $deco_y,
-                $color,
-                $line_thickness,
-            );
+            $this->_canvas->line($x1, $deco_y, $x2, $deco_y, $color, $line_thickness);
         }
 
-        if (
-            $this->_dompdf->getOptions()->getDebugLayout() &&
-            $this->_dompdf->getOptions()->getDebugLayoutLines()
-        ) {
-            $text_width = $this->_dompdf
-                ->getFontMetrics()
-                ->getTextWidth(
-                    $text,
-                    $font,
-                    $size,
-                    $word_spacing,
-                    $letter_spacing,
-                );
-            $this->_debug_layout(
-                [$x, $y, $text_width, $frame_font_size],
-                "orange",
-                [0.5, 0.5],
-            );
+        $options = $this->_dompdf->getOptions();
+
+        if ($options->getDebugLayout() && $options->getDebugLayoutLines()) {
+            $fontMetrics = $this->_dompdf->getFontMetrics();
+            $textWidth = $fontMetrics->getTextWidth($text, $font, $size, $word_spacing, $letter_spacing);
+            $this->debugLayout([$x, $y, $textWidth, $frame_font_size], "orange", [0.5, 0.5]);
         }
     }
 }

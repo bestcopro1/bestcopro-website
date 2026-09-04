@@ -19,30 +19,30 @@ class OutputRules implements RulesInterface
     /**
      * Defined in http://www.w3.org/TR/html51/infrastructure.html#html-namespace-0.
      */
-    const NAMESPACE_HTML = "http://www.w3.org/1999/xhtml";
+    const NAMESPACE_HTML = 'http://www.w3.org/1999/xhtml';
 
-    const NAMESPACE_MATHML = "http://www.w3.org/1998/Math/MathML";
+    const NAMESPACE_MATHML = 'http://www.w3.org/1998/Math/MathML';
 
-    const NAMESPACE_SVG = "http://www.w3.org/2000/svg";
+    const NAMESPACE_SVG = 'http://www.w3.org/2000/svg';
 
-    const NAMESPACE_XLINK = "http://www.w3.org/1999/xlink";
+    const NAMESPACE_XLINK = 'http://www.w3.org/1999/xlink';
 
-    const NAMESPACE_XML = "http://www.w3.org/XML/1998/namespace";
+    const NAMESPACE_XML = 'http://www.w3.org/XML/1998/namespace';
 
-    const NAMESPACE_XMLNS = "http://www.w3.org/2000/xmlns/";
+    const NAMESPACE_XMLNS = 'http://www.w3.org/2000/xmlns/';
 
     /**
      * Holds the HTML5 element names that causes a namespace switch.
      *
      * @var array
      */
-    protected $implicitNamespaces = [
+    protected $implicitNamespaces = array(
         self::NAMESPACE_HTML,
         self::NAMESPACE_SVG,
         self::NAMESPACE_MATHML,
         self::NAMESPACE_XML,
         self::NAMESPACE_XMLNS,
-    ];
+    );
 
     const IM_IN_HTML = 1;
 
@@ -67,7 +67,7 @@ class OutputRules implements RulesInterface
 
     private $xpath;
 
-    protected $nonBooleanAttributes = [
+    protected $nonBooleanAttributes = array(
         /*
         array(
             'nodeNamespace'=>'http://www.w3.org/1999/xhtml',
@@ -77,98 +77,97 @@ class OutputRules implements RulesInterface
             'attrName'=>'alt', 'attrName'=>array('title', 'alt'),
         ),
         */
-        [
-            "nodeNamespace" => "http://www.w3.org/1999/xhtml",
-            "attrName" => [
-                "href",
-                "hreflang",
-                "http-equiv",
-                "icon",
-                "id",
-                "keytype",
-                "kind",
-                "label",
-                "lang",
-                "language",
-                "list",
-                "maxlength",
-                "media",
-                "method",
-                "name",
-                "placeholder",
-                "rel",
-                "rows",
-                "rowspan",
-                "sandbox",
-                "spellcheck",
-                "scope",
-                "seamless",
-                "shape",
-                "size",
-                "sizes",
-                "span",
-                "src",
-                "srcdoc",
-                "srclang",
-                "srcset",
-                "start",
-                "step",
-                "style",
-                "summary",
-                "tabindex",
-                "target",
-                "title",
-                "type",
-                "value",
-                "width",
-                "border",
-                "charset",
-                "cite",
-                "class",
-                "code",
-                "codebase",
-                "color",
-                "cols",
-                "colspan",
-                "content",
-                "coords",
-                "data",
-                "datetime",
-                "default",
-                "dir",
-                "dirname",
-                "enctype",
-                "for",
-                "form",
-                "formaction",
-                "headers",
-                "height",
-                "accept",
-                "accept-charset",
-                "accesskey",
-                "action",
-                "align",
-                "alt",
-                "bgcolor",
-            ],
-        ],
-        [
-            "nodeNamespace" => "http://www.w3.org/1999/xhtml",
-            "xpath" => 'starts-with(local-name(), \'data-\')',
-        ],
-    ];
+        array(
+            'nodeNamespace' => 'http://www.w3.org/1999/xhtml',
+            'attrName' => array('href',
+                'hreflang',
+                'http-equiv',
+                'icon',
+                'id',
+                'keytype',
+                'kind',
+                'label',
+                'lang',
+                'language',
+                'list',
+                'maxlength',
+                'media',
+                'method',
+                'name',
+                'placeholder',
+                'rel',
+                'rows',
+                'rowspan',
+                'sandbox',
+                'spellcheck',
+                'scope',
+                'seamless',
+                'shape',
+                'size',
+                'sizes',
+                'span',
+                'src',
+                'srcdoc',
+                'srclang',
+                'srcset',
+                'start',
+                'step',
+                'style',
+                'summary',
+                'tabindex',
+                'target',
+                'title',
+                'type',
+                'value',
+                'width',
+                'border',
+                'charset',
+                'cite',
+                'class',
+                'code',
+                'codebase',
+                'color',
+                'cols',
+                'colspan',
+                'content',
+                'coords',
+                'data',
+                'datetime',
+                'default',
+                'dir',
+                'dirname',
+                'enctype',
+                'for',
+                'form',
+                'formaction',
+                'headers',
+                'height',
+                'accept',
+                'accept-charset',
+                'accesskey',
+                'action',
+                'align',
+                'alt',
+                'bgcolor',
+            ),
+        ),
+        array(
+            'nodeNamespace' => 'http://www.w3.org/1999/xhtml',
+            'xpath' => 'starts-with(local-name(), \'data-\')',
+        ),
+    );
 
-    const DOCTYPE = "<!DOCTYPE html>";
+    const DOCTYPE = '<!DOCTYPE html>';
 
-    public function __construct($output, $options = [])
+    public function __construct($output, $options = array())
     {
-        if (isset($options["encode_entities"])) {
-            $this->encode = $options["encode_entities"];
+        if (isset($options['encode_entities'])) {
+            $this->encode = $options['encode_entities'];
         }
 
         $this->outputMode = static::IM_IN_HTML;
         $this->out = $output;
-        $this->hasHTML5 = defined("ENT_HTML5");
+        $this->hasHTML5 = defined('ENT_HTML5');
     }
 
     public function addRule(array $rule)
@@ -207,6 +206,9 @@ class OutputRules implements RulesInterface
         $this->nl();
     }
 
+    /**
+     * @param \DOMElement $ele
+     */
     public function element($ele)
     {
         $name = $ele->tagName;
@@ -220,14 +222,17 @@ class OutputRules implements RulesInterface
 
         // If we are in SVG or MathML there is special handling.
         // Using if/elseif instead of switch because it's faster in PHP.
-        if ("svg" == $name) {
+        if ('svg' == $name) {
             $this->outputMode = static::IM_IN_SVG;
             $name = Elements::normalizeSvgElement($name);
-        } elseif ("math" == $name) {
+        } elseif ('math' == $name) {
             $this->outputMode = static::IM_IN_MATHML;
         }
 
         $this->openTag($ele);
+        // The tag is already self-closed (`<svg />` or `<math />`) in `openTag` if there are no child nodes.
+        $handledAsVoidTag = $this->outputMode !== static::IM_IN_HTML && !$ele->hasChildNodes();
+
         if (Elements::isA($name, Elements::TEXT_RAW)) {
             foreach ($ele->childNodes as $child) {
                 if ($child instanceof \DOMCharacterData) {
@@ -243,13 +248,13 @@ class OutputRules implements RulesInterface
             }
 
             // Close out the SVG or MathML special handling.
-            if ("svg" == $name || "math" == $name) {
+            if ('svg' == $name || 'math' == $name) {
                 $this->outputMode = static::IM_IN_HTML;
             }
         }
 
         // If not unary, add a closing tag.
-        if (!Elements::isA($name, Elements::VOID_TAG)) {
+        if (!$handledAsVoidTag && !Elements::isA($name, Elements::VOID_TAG)) {
             $this->closeTag($ele);
         }
     }
@@ -261,11 +266,7 @@ class OutputRules implements RulesInterface
      */
     public function text($ele)
     {
-        if (
-            isset($ele->parentNode) &&
-            isset($ele->parentNode->tagName) &&
-            Elements::isA($ele->parentNode->localName, Elements::TEXT_RAW)
-        ) {
+        if (isset($ele->parentNode) && isset($ele->parentNode->tagName) && Elements::isA($ele->parentNode->localName, Elements::TEXT_RAW)) {
             $this->wr($ele->data);
 
             return;
@@ -290,7 +291,11 @@ class OutputRules implements RulesInterface
 
     public function processorInstruction($ele)
     {
-        $this->wr("<?")->wr($ele->target)->wr(" ")->wr($ele->data)->wr("?>");
+        $this->wr('<?')
+            ->wr($ele->target)
+            ->wr(' ')
+            ->wr($ele->data)
+            ->wr('?>');
     }
 
     /**
@@ -304,16 +309,9 @@ class OutputRules implements RulesInterface
             $this->xpath = new \DOMXPath($ele->ownerDocument);
         }
 
-        foreach (
-            $this->xpath->query("namespace::*[not(.=../../namespace::*)]", $ele)
-            as $nsNode
-        ) {
+        foreach ($this->xpath->query('namespace::*[not(.=../../namespace::*)]', $ele) as $nsNode) {
             if (!in_array($nsNode->nodeValue, $this->implicitNamespaces)) {
-                $this->wr(" ")
-                    ->wr($nsNode->nodeName)
-                    ->wr('="')
-                    ->wr($nsNode->nodeValue)
-                    ->wr('"');
+                $this->wr(' ')->wr($nsNode->nodeName)->wr('="')->wr($nsNode->nodeValue)->wr('"');
             }
         }
     }
@@ -328,26 +326,20 @@ class OutputRules implements RulesInterface
      */
     protected function openTag($ele)
     {
-        $this->wr("<")->wr(
-            $this->traverser->isLocalElement($ele)
-                ? $ele->localName
-                : $ele->tagName,
-        );
+        $this->wr('<')->wr($this->traverser->isLocalElement($ele) ? $ele->localName : $ele->tagName);
 
         $this->attrs($ele);
         $this->namespaceAttrs($ele);
 
         if ($this->outputMode == static::IM_IN_HTML) {
-            $this->wr(">");
-        }
-        // If we are not in html mode we are in SVG, MathML, or XML embedded content.
+            $this->wr('>');
+        }         // If we are not in html mode we are in SVG, MathML, or XML embedded content.
         else {
             if ($ele->hasChildNodes()) {
-                $this->wr(">");
-            }
-            // If there are no children this is self closing.
+                $this->wr('>');
+            }             // If there are no children this is self closing.
             else {
-                $this->wr(" />");
+                $this->wr(' />');
             }
         }
     }
@@ -381,12 +373,9 @@ class OutputRules implements RulesInterface
                 $name = Elements::normalizeMathMlAttribute($name);
             }
 
-            $this->wr(" ")->wr($name);
+            $this->wr(' ')->wr($name);
 
-            if (
-                (isset($val) && "" !== $val) ||
-                $this->nonBooleanAttribute($node)
-            ) {
+            if ((isset($val) && '' !== $val) || $this->nonBooleanAttribute($node)) {
                 $this->wr('="')->wr($val)->wr('"');
             }
         }
@@ -396,54 +385,32 @@ class OutputRules implements RulesInterface
     {
         $ele = $attr->ownerElement;
         foreach ($this->nonBooleanAttributes as $rule) {
-            if (
-                isset($rule["nodeNamespace"]) &&
-                $rule["nodeNamespace"] !== $ele->namespaceURI
-            ) {
+            if (isset($rule['nodeNamespace']) && $rule['nodeNamespace'] !== $ele->namespaceURI) {
                 continue;
             }
-            if (
-                isset($rule["attNamespace"]) &&
-                $rule["attNamespace"] !== $attr->namespaceURI
-            ) {
+            if (isset($rule['attNamespace']) && $rule['attNamespace'] !== $attr->namespaceURI) {
                 continue;
             }
-            if (
-                isset($rule["nodeName"]) &&
-                !is_array($rule["nodeName"]) &&
-                $rule["nodeName"] !== $ele->localName
-            ) {
+            if (isset($rule['nodeName']) && !is_array($rule['nodeName']) && $rule['nodeName'] !== $ele->localName) {
                 continue;
             }
-            if (
-                isset($rule["nodeName"]) &&
-                is_array($rule["nodeName"]) &&
-                !in_array($ele->localName, $rule["nodeName"], true)
-            ) {
+            if (isset($rule['nodeName']) && is_array($rule['nodeName']) && !in_array($ele->localName, $rule['nodeName'], true)) {
                 continue;
             }
-            if (
-                isset($rule["attrName"]) &&
-                !is_array($rule["attrName"]) &&
-                $rule["attrName"] !== $attr->localName
-            ) {
+            if (isset($rule['attrName']) && !is_array($rule['attrName']) && $rule['attrName'] !== $attr->localName) {
                 continue;
             }
-            if (
-                isset($rule["attrName"]) &&
-                is_array($rule["attrName"]) &&
-                !in_array($attr->localName, $rule["attrName"], true)
-            ) {
+            if (isset($rule['attrName']) && is_array($rule['attrName']) && !in_array($attr->localName, $rule['attrName'], true)) {
                 continue;
             }
-            if (isset($rule["xpath"])) {
+            if (isset($rule['xpath'])) {
                 $xp = $this->getXPath($attr);
-                if (isset($rule["prefixes"])) {
-                    foreach ($rule["prefixes"] as $nsPrefix => $ns) {
+                if (isset($rule['prefixes'])) {
+                    foreach ($rule['prefixes'] as $nsPrefix => $ns) {
                         $xp->registerNamespace($nsPrefix, $ns);
                     }
                 }
-                if (!$xp->evaluate($rule["xpath"], $attr)) {
+                if (!$xp->evaluate($rule['xpath'], $attr)) {
                     continue;
                 }
             }
@@ -474,13 +441,7 @@ class OutputRules implements RulesInterface
     protected function closeTag($ele)
     {
         if ($this->outputMode == static::IM_IN_HTML || $ele->hasChildNodes()) {
-            $this->wr("</")
-                ->wr(
-                    $this->traverser->isLocalElement($ele)
-                        ? $ele->localName
-                        : $ele->tagName,
-                )
-                ->wr(">");
+            $this->wr('</')->wr($this->traverser->isLocalElement($ele) ? $ele->localName : $ele->tagName)->wr('>');
         }
     }
 
@@ -493,7 +454,7 @@ class OutputRules implements RulesInterface
      */
     protected function wr($text)
     {
-        fwrite($this->out, $text);
+        fwrite($this->out, (string) $text);
 
         return $this;
     }
@@ -548,14 +509,8 @@ class OutputRules implements RulesInterface
         // convert the named character references.
 
         if ($this->hasHTML5) {
-            return htmlentities(
-                $text,
-                ENT_HTML5 | ENT_SUBSTITUTE | ENT_QUOTES,
-                "UTF-8",
-                false,
-            );
-        }
-        // If a version earlier than 5.4 html5 entities are not entirely handled.
+            return htmlentities($text, ENT_HTML5 | ENT_SUBSTITUTE | ENT_QUOTES, 'UTF-8', false);
+        }         // If a version earlier than 5.4 html5 entities are not entirely handled.
         // This manually handles them.
         else {
             return strtr($text, HTML5Entities::$map);
@@ -585,18 +540,18 @@ class OutputRules implements RulesInterface
         // match the requirements of section 8.5. For example, it doesn't handle
         // non-breaking spaces.
         if ($attribute) {
-            $replace = [
-                '"' => "&quot;",
-                "&" => "&amp;",
-                "\xc2\xa0" => "&nbsp;",
-            ];
+            $replace = array(
+                '"' => '&quot;',
+                '&' => '&amp;',
+                "\xc2\xa0" => '&nbsp;',
+            );
         } else {
-            $replace = [
-                "<" => "&lt;",
-                ">" => "&gt;",
-                "&" => "&amp;",
-                "\xc2\xa0" => "&nbsp;",
-            ];
+            $replace = array(
+                '<' => '&lt;',
+                '>' => '&gt;',
+                '&' => '&amp;',
+                "\xc2\xa0" => '&nbsp;',
+            );
         }
 
         return strtr($text, $replace);

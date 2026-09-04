@@ -9,9 +9,9 @@ use Masterminds\HTML5\Exception;
  */
 class Scanner
 {
-    const CHARS_HEX = "abcdefABCDEF01234567890";
-    const CHARS_ALNUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890";
-    const CHARS_ALPHA = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const CHARS_HEX = 'abcdefABCDEF01234567890';
+    const CHARS_ALNUM = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890';
+    const CHARS_ALPHA = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
     /**
      * The string data we're parsing.
@@ -31,7 +31,7 @@ class Scanner
     /**
      * Parse errors.
      */
-    public $errors = [];
+    public $errors = array();
 
     /**
      * Create a new Scanner.
@@ -41,13 +41,10 @@ class Scanner
      *
      * @throws Exception If the given data cannot be encoded to UTF-8.
      */
-    public function __construct($data, $encoding = "UTF-8")
+    public function __construct($data, $encoding = 'UTF-8')
     {
         if ($data instanceof InputStream) {
-            @trigger_error(
-                "InputStream objects are deprecated since version 2.4 and will be removed in 3.0. Use strings instead.",
-                E_USER_DEPRECATED,
-            );
+            @trigger_error('InputStream objects are deprecated since version 2.4 and will be removed in 3.0. Use strings instead.', E_USER_DEPRECATED);
             $data = (string) $data;
         }
 
@@ -87,9 +84,7 @@ class Scanner
     {
         $portion = substr($this->data, $this->char, strlen($sequence));
 
-        return $caseSensitive
-            ? $portion === $sequence
-            : 0 === strcasecmp($portion, $sequence);
+        return $caseSensitive ? $portion === $sequence : 0 === strcasecmp($portion, $sequence);
     }
 
     /**
@@ -109,7 +104,7 @@ class Scanner
      */
     public function peek()
     {
-        if ($this->char + 1 < $this->EOF) {
+        if (($this->char + 1) < $this->EOF) {
             return $this->data[$this->char + 1];
         }
 
@@ -166,7 +161,7 @@ class Scanner
      */
     public function unconsume($howMany = 1)
     {
-        if ($this->char - $howMany >= 0) {
+        if (($this->char - $howMany) >= 0) {
             $this->char -= $howMany;
         }
     }
@@ -216,7 +211,7 @@ class Scanner
      */
     public function getNumeric()
     {
-        return $this->doCharsWhile("0123456789");
+        return $this->doCharsWhile('0123456789');
     }
 
     /**
@@ -251,12 +246,7 @@ class Scanner
 
         // Add one to $this->char because we want the number for the next
         // byte to be processed.
-        return substr_count(
-            $this->data,
-            "\n",
-            0,
-            min($this->char, $this->EOF),
-        ) + 1;
+        return substr_count($this->data, "\n", 0, min($this->char, $this->EOF)) + 1;
     }
 
     /**
@@ -308,11 +298,7 @@ class Scanner
         // However, for here we want the length up until the next byte to be
         // processed, so add one to the current byte ($this->char).
         if (false !== $lastLine) {
-            $findLengthOf = substr(
-                $this->data,
-                $lastLine + 1,
-                $this->char - 1 - $lastLine,
-            );
+            $findLengthOf = substr($this->data, $lastLine + 1, $this->char - 1 - $lastLine);
         } else {
             // After a newline.
             $findLengthOf = substr($this->data, 0, $this->char);
@@ -337,7 +323,7 @@ class Scanner
             return $data;
         }
 
-        return ""; // false;
+        return ''; // false;
     }
 
     /**
@@ -356,11 +342,11 @@ class Scanner
          * represented by LF characters, and there are never any CR characters in the input to the tokenization
          * stage.
          */
-        $crlfTable = [
+        $crlfTable = array(
             "\0" => "\xEF\xBF\xBD",
             "\r\n" => "\n",
             "\r" => "\n",
-        ];
+        );
 
         return strtr($data, $crlfTable);
     }
