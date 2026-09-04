@@ -653,9 +653,14 @@ function isExerciceCloture($id_exercice, $connection)
     return count($exercice) > 0 && intval($exercice[0]["cloture"] ?? 0) === 1;
 }
 
-function getPreviousExerciseRelConditionSql($currentExerciseAlias = "curr", $relAlias = "r", $previousExerciseAlias = "prev")
+function getPreviousExerciseRelConditionSql(
+    $currentExerciseAlias = "curr",
+    $relAlias = "r",
+    $previousExerciseAlias = "prev",
+    $requireClosed = true
+)
 {
-    return "(" .
+    $condition = "(" .
         $relAlias .
         ".id_exercice <= 0 OR (" .
         $previousExerciseAlias .
@@ -669,9 +674,16 @@ function getPreviousExerciseRelConditionSql($currentExerciseAlias = "curr", $rel
         $previousExerciseAlias .
         ".dateFin < " .
         $currentExerciseAlias .
-        ".dateDebut AND COALESCE(" .
-        $previousExerciseAlias .
-        ".cloture, 0) = 1))";
+        ".dateDebut";
+
+    if ($requireClosed) {
+        $condition .=
+            " AND COALESCE(" .
+            $previousExerciseAlias .
+            ".cloture, 0) = 1";
+    }
+
+    return $condition . "))";
 }
 // get fournisseur
 /**

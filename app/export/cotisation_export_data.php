@@ -138,7 +138,12 @@ function getCotisationExportRelSummaries(
     }
 
     if ($id_exercice === null) {
-        $previousCondition = getPreviousExerciseRelConditionSql("curr", "r", "prev");
+        $previousCondition = getPreviousExerciseRelConditionSql(
+            "curr",
+            "r",
+            "prev",
+            false
+        );
         $request =
             "SELECT r.id_lot, " .
             $paidExpression .
