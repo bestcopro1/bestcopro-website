@@ -2,8 +2,12 @@
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
+$currentCollaborateurId =
+    isset($_SESSION["id"]) && intval($_SESSION["id"]) > 0
+        ? (string) intval($_SESSION["id"])
+        : "1";
 // get Impaye
-function getImpaye($id_lot, $id_paiement = null, $connection)
+function getImpaye($id_lot, $id_paiement, $connection)
 {
     if ($id_paiement != null) {
         $request =
@@ -82,14 +86,36 @@ function getPaymentImpayeLabel($impaye, $connection)
     return "";
 }
 
-function affecterPaiementAuxImpayes($id_lot, $id_paiement, $montant, $connection)
+function affecterPaiementAuxImpayes(
+    $id_lot,
+    $id_paiement,
+    $montant,
+    $id_exercice_courant,
+    $impayes_selectionnes,
+    $connection
+)
 {
     $montantRestant = floatval($montant);
     $impayes = getImpaye($id_lot, null, $connection);
+    $cumulsSelectionnes = [];
+    foreach ($impayes_selectionnes as $idRelSelectionne) {
+        $cumulsSelectionnes[intval($idRelSelectionne)] = true;
+    }
 
     foreach ($impayes as $impaye) {
         if ($montantRestant <= 0.00001) {
             break;
+        }
+
+        $idRel = intval($impaye["id_rel"]);
+        $idExercice = intval($impaye["id_exercice"]);
+        $estCumulSelectionne =
+            $idExercice <= 0 && isset($cumulsSelectionnes[$idRel]);
+        $estPeriodeExerciceCourant =
+            $idExercice > 0 && $idExercice === intval($id_exercice_courant);
+
+        if (!$estCumulSelectionne && !$estPeriodeExerciceCourant) {
+            continue;
         }
 
         $restePeriode =
@@ -102,7 +128,6 @@ function affecterPaiementAuxImpayes($id_lot, $id_paiement, $montant, $connection
 
         $montantAffecte = min($restePeriode, $montantRestant);
         $nouvelleCotisation = floatval($impaye["cotisation"]) + $montantAffecte;
-        $idRel = intval($impaye["id_rel"]);
         $idPaiement = intval($id_paiement);
 
         $request = "UPDATE rel_lot_exercice SET cotisation=? WHERE id_rel=?";
@@ -441,7 +466,7 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                 "sss",
                 $date,
                 $action,
-                $_SESSION["id"],
+                $currentCollaborateurId,
             );
             // Execute the prepared query.
             if (!$insert_stmt_history->execute()) {
@@ -462,10 +487,10 @@ if (isset($_POST["id"], $_POST["printZone"])) {
     if ($id_lot != "" || $id_lot != null) {
         if ($action == "add") {
             $impayes = getImpaye($id_lot, null, $connection);
-            $checked = "checked disabled";
+            $checked = "";
         } elseif ($action == "update") {
             $impayes = getImpaye($id_lot, $id_paiement, $connection);
-            $checked = "checked disabled";
+            $checked = "checked";
             /*if ($impayes[0]["id_lot"] != $id_lot) {
 				$impayes = getImpaye($id_lot, null, $connection);
 				$checked = "";
@@ -512,10 +537,16 @@ if (isset($_POST["id"], $_POST["printZone"])) {
 ) {
     $error_msg = "";
     $paymentProcessingStage = "validation";
+    $paymentTransactionStarted = false;
 
     try {
 
     $id_lot = filter_input(INPUT_POST, "id_lot", FILTER_SANITIZE_STRING);
+    $id_exercice_courant = filter_input(
+        INPUT_POST,
+        "id_exercice",
+        FILTER_SANITIZE_STRING,
+    );
     $date = filter_input(INPUT_POST, "date", FILTER_SANITIZE_STRING);
     $montant = filter_input(INPUT_POST, "montant", FILTER_SANITIZE_STRING);
     $id_modePaiement = filter_input(
@@ -537,10 +568,14 @@ if (isset($_POST["id"], $_POST["printZone"])) {
     if (!$isCheque) {
         $dateEcheance = null;
     }
-    if (isset($_SESSION["id"])) {
-        $id_syndic = $_SESSION["id"];
-    } else {
-        $id_syndic = 1;
+    $id_syndic = $currentCollaborateurId;
+    $impayesAtraiter = [];
+    if (!empty($_POST["impayes"]) && is_array($_POST["impayes"])) {
+        foreach ($_POST["impayes"] as $idRelImpaye) {
+            if (is_numeric($idRelImpaye) && intval($idRelImpaye) > 0) {
+                $impayesAtraiter[] = intval($idRelImpaye);
+            }
+        }
     }
     if ($id_lot == "") {
         $error_msg .= "Veuillez sélectionner un lot";
@@ -549,6 +584,11 @@ if (isset($_POST["id"], $_POST["printZone"])) {
     }
     if ($date == "") {
         $error_msg .= "Veuillez entrer la date";
+        echo $error_msg;
+        exit();
+    }
+    if ($id_exercice_courant == "" || intval($id_exercice_courant) <= 0) {
+        $error_msg .= "Veuillez sélectionner un exercice valide";
         echo $error_msg;
         exit();
     }
@@ -572,6 +612,8 @@ if (isset($_POST["id"], $_POST["printZone"])) {
         echo $error_msg;
         exit();
     }
+    $connection->begin_transaction();
+    $paymentTransactionStarted = true;
     if (empty($error_msg) && isset($_POST["id"], $_POST["update"])) {
         $paymentProcessingStage = "modification du paiement";
         $id = filter_input(INPUT_POST, "id", FILTER_SANITIZE_STRING);
@@ -621,6 +663,7 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                     exit();
                 }
             }
+            $paymentProcessingStage = "historique du paiement";
             if (
                 $insert_stmt_history = $connection->prepare(
                     "INSERT INTO historique (date, action, id_collaborateur) VALUES (?, ?, ?)",
@@ -632,7 +675,7 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                     "sss",
                     $date,
                     $action,
-                    $_SESSION["id"],
+                    $currentCollaborateurId,
                 );
                 // Execute the prepared query.
                 if (!$insert_stmt_history->execute()) {
@@ -676,8 +719,12 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                 $id_lot,
                 $id,
                 $montant,
+                $id_exercice_courant,
+                $impayesAtraiter,
                 $connection,
             );
+            $connection->commit();
+            $paymentTransactionStarted = false;
             echo "done|" . $id . "|" . $linkFile;
             exit();
         } else {
@@ -709,6 +756,7 @@ if (isset($_POST["id"], $_POST["printZone"])) {
             }
         }
         $insert_id = $connection->insert_id;
+        $paymentProcessingStage = "historique du paiement";
         if (
             $insert_stmt_history = $connection->prepare(
                 "INSERT INTO historique (date, action, id_collaborateur) VALUES (?, ?, ?)",
@@ -720,7 +768,7 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                 "sss",
                 $date,
                 $action,
-                $_SESSION["id"],
+                $currentCollaborateurId,
             );
             // Execute the prepared query.
             if (!$insert_stmt_history->execute()) {
@@ -756,9 +804,13 @@ if (isset($_POST["id"], $_POST["printZone"])) {
             $id_lot,
             $insert_id,
             $montant,
+            $id_exercice_courant,
+            $impayesAtraiter,
             $connection,
         );
 
+        $connection->commit();
+        $paymentTransactionStarted = false;
         echo "done|" . $insert_id . "|" . $linkFile;
         exit();
     } else {
@@ -766,6 +818,9 @@ if (isset($_POST["id"], $_POST["printZone"])) {
         exit();
     }
     } catch (Throwable $exception) {
+        if ($paymentTransactionStarted) {
+            $connection->rollback();
+        }
         error_log(
             "Erreur paiement [" .
                 $paymentProcessingStage .
@@ -829,8 +884,9 @@ if (isset($_GET["action"], $_GET["id"])):
                                             <div class="row">
 											<div class="col-6 mb-2">
                                                 <div class="form-group">
-													<input type="hidden" name="id" value="<?= $paiement[0]["id"] ?>">
-													<input type="hidden" name="update" value="true">
+											<input type="hidden" name="id" value="<?= $paiement[0]["id"] ?>">
+											<input type="hidden" name="update" value="true">
+											<input type="hidden" name="id_exercice" value="<?= $GLOBALS["id_exercice"] ?>">
                                                     <label class="text-label">Lot*</label>
                                                     <select name="id_lot" id="id_lot" data-paiement="<?= $paiement[0][
                                                         "id"
@@ -924,7 +980,7 @@ if (isset($_GET["action"], $_GET["id"])):
                                             </div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
-                                                    <label class="text-label">Affectation automatique aux impayés les plus anciens</label><br>
+                                                    <label class="text-label">Cumuls antérieurs à régler</label><br>
 													<span id="lesImpayes">
 														<?php
               $impayes = getImpaye(
@@ -938,7 +994,7 @@ if (isset($_GET["action"], $_GET["id"])):
 															<label class="form-check-label">
 																<input type="checkbox" class="form-check-input" name="impayes[]" value="<?= $impaye[
                     "id_rel"
-                ] ?>" checked disabled><?= getPaymentImpayeLabel($impaye, $connection) ?>
+                ] ?>" checked><?= getPaymentImpayeLabel($impaye, $connection) ?>
 															</label>
 														</div>
 														<?php elseif (intval($impaye["id_exercice"]) == 0): ?>
@@ -946,7 +1002,7 @@ if (isset($_GET["action"], $_GET["id"])):
 															<label class="form-check-label">
 																<input type="checkbox" class="form-check-input" name="impayes[]" value="<?= $impaye[
                     "id_rel"
-                ] ?>" checked disabled>Impayé promoteur
+                ] ?>" checked>Impayé promoteur
 															</label>
 														</div>
 														<?php endif;
@@ -1111,7 +1167,7 @@ elseif (isset($_GET["action"])):
                                             </div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
-                                                    <label class="text-label">Affectation automatique aux impayés les plus anciens</label><br>
+                                                    <label class="text-label">Cumuls antérieurs à régler</label><br>
 													<span id="lesImpayes">
 														<?php
               $impayes = getImpaye($lots[0]["id"], null, $connection);
@@ -1121,7 +1177,7 @@ elseif (isset($_GET["action"])):
 															<label class="form-check-label">
 																<input type="checkbox" class="form-check-input" name="impayes[]" value="<?= $impaye[
                     "id_rel"
-                ] ?>" checked disabled><?= getPaymentImpayeLabel($impaye, $connection) ?>
+                ] ?>"><?= getPaymentImpayeLabel($impaye, $connection) ?>
 															</label>
 														</div>
 														<?php elseif (intval($impaye["id_exercice"]) == 0): ?>
@@ -1129,7 +1185,7 @@ elseif (isset($_GET["action"])):
 															<label class="form-check-label">
 																<input type="checkbox" class="form-check-input" name="impayes[]" value="<?= $impaye[
                     "id_rel"
-                ] ?>" checked disabled>Impayé promoteur
+                ] ?>">Impayé promoteur
 															</label>
 														</div>
 														<?php endif;
