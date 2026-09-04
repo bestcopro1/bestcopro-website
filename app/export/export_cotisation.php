@@ -320,11 +320,10 @@ foreach ($immeubles as $immeuble):
             ($totalPayeCotisation + $totalImpayeCotisation) /
             $cotisationPeriodCount;
         $tmpCotisation = $totalPayeCotisation;
-        $totalPaiement = getCotisationExportPaymentTotal(
-            $exportData["paymentTotals"],
+        $avance = getCotisationExportAdvanceTotal(
+            $exportData["advanceTotals"],
             $lotbyimmeuble["id"],
         );
-        $avance = $totalPaiement - $totalPaye - $totalPayeCotisation;
         $avanceAffichee = getCotisationExportDisplayAdvance($avance);
         $htmlContent .= "<tr>";
         $htmlContent .=

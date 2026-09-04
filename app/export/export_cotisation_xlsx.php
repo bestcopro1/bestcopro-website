@@ -442,11 +442,10 @@ function buildCotisationRows(
             $cotisation =
                 ($totalPayeCotisation + $totalImpayeCotisation) / $periodCount;
             $tmpCotisation = $totalPayeCotisation;
-            $totalPaiement = getCotisationExportPaymentTotal(
-                $exportData["paymentTotals"],
+            $avance = getCotisationExportAdvanceTotal(
+                $exportData["advanceTotals"],
                 $lot["id"],
             );
-            $avance = $totalPaiement - $totalPaye - $totalPayeCotisation;
             $avanceAffichee = getCotisationExportDisplayAdvance($avance);
             $resteAPayer = 0;
 

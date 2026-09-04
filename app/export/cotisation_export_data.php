@@ -28,7 +28,7 @@ function getCotisationExportData(
             $connection,
             $dateSituation
         ),
-        "paymentTotals" => getCotisationExportPaymentTotals(
+        "advanceTotals" => getCotisationExportAdvanceTotals(
             $id_copropriete,
             $connection,
             $dateSituation
@@ -161,15 +161,20 @@ function getCotisationExportRelSummaries(
     return $summaries;
 }
 
-function getCotisationExportPaymentTotals(
+function getCotisationExportAdvanceTotals(
     $id_copropriete,
     $connection,
     $dateSituation = null
 )
 {
     $request =
-        "SELECT p.id_lot, SUM(COALESCE(p.montant, 0)) " .
+        "SELECT p.id_lot, " .
+        "SUM(GREATEST(COALESCE(p.montant, 0) - COALESCE(allocations.montant_affecte, 0), 0)) " .
         "FROM paiement p INNER JOIN lot l ON l.id = p.id_lot " .
+        "LEFT JOIN (" .
+        "SELECT id_paiement, SUM(COALESCE(montant, 0)) AS montant_affecte " .
+        "FROM rel_rel_paiement GROUP BY id_paiement" .
+        ") allocations ON allocations.id_paiement = p.id " .
         "WHERE l.id_copropriete = ? ";
     if ($dateSituation !== null) {
         $request .= "AND CAST(p.date AS date) <= ? ";
@@ -185,10 +190,10 @@ function getCotisationExportPaymentTotals(
         }
         $stmt->execute();
         $stmt->store_result();
-        $stmt->bind_result($id_lot, $totalPaiement);
+        $stmt->bind_result($id_lot, $totalAvance);
 
         while ($stmt->fetch()) {
-            $totals[(string) $id_lot] = (float) $totalPaiement;
+            $totals[(string) $id_lot] = (float) $totalAvance;
         }
     }
 
@@ -208,7 +213,7 @@ function getCotisationExportSummary($summaries, $id_lot)
     ];
 }
 
-function getCotisationExportPaymentTotal($totals, $id_lot)
+function getCotisationExportAdvanceTotal($totals, $id_lot)
 {
     $key = (string) $id_lot;
     return isset($totals[$key]) ? $totals[$key] : 0;
