@@ -695,6 +695,7 @@ foreach ($echeances as $echeance) {
 						return false;
 					} else {
 						if (response.includes('done|0')) $('#erreurMessage').text('Une erreur est survenue');
+						else if (response.indexOf('error|') === 0) $('#erreurMessage').text(response.split('|').slice(1).join('|'));
 						else $('#erreurMessage').html(response);
 						$('.waitModal').css('display', 'none');
 						$('.successModal').css('display', 'none');

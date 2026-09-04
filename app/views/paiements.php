@@ -108,21 +108,18 @@ function affecterPaiementAuxImpayes($id_lot, $id_paiement, $montant, $connection
         $request = "UPDATE rel_lot_exercice SET cotisation=? WHERE id_rel=?";
         $insert_stmt = $connection->prepare($request);
         if (!$insert_stmt) {
-            echo $connection->error;
-            exit();
+            throw new RuntimeException($connection->error ?: "Préparation de la mise à jour impossible");
         }
         $insert_stmt->bind_param("di", $nouvelleCotisation, $idRel);
         if (!$insert_stmt->execute()) {
-            echo $connection->error;
-            exit();
+            throw new RuntimeException($connection->error ?: "Mise à jour de la cotisation impossible");
         }
 
         $request =
             "INSERT INTO rel_rel_paiement (id_rel, id_paiement, montant) VALUES (?, ?, ?)";
         $insert_stmt = $connection->prepare($request);
         if (!$insert_stmt) {
-            echo $connection->error;
-            exit();
+            throw new RuntimeException($connection->error ?: "Préparation de l'affectation impossible");
         }
         $insert_stmt->bind_param(
             "iid",
@@ -131,8 +128,7 @@ function affecterPaiementAuxImpayes($id_lot, $id_paiement, $montant, $connection
             $montantAffecte,
         );
         if (!$insert_stmt->execute()) {
-            echo $connection->error;
-            exit();
+            throw new RuntimeException($connection->error ?: "Enregistrement de l'affectation impossible");
         }
 
         $montantRestant -= $montantAffecte;
@@ -515,6 +511,9 @@ if (isset($_POST["id"], $_POST["printZone"])) {
     )
 ) {
     $error_msg = "";
+    $paymentProcessingStage = "validation";
+
+    try {
 
     $id_lot = filter_input(INPUT_POST, "id_lot", FILTER_SANITIZE_STRING);
     $date = filter_input(INPUT_POST, "date", FILTER_SANITIZE_STRING);
@@ -574,6 +573,7 @@ if (isset($_POST["id"], $_POST["printZone"])) {
         exit();
     }
     if (empty($error_msg) && isset($_POST["id"], $_POST["update"])) {
+        $paymentProcessingStage = "modification du paiement";
         $id = filter_input(INPUT_POST, "id", FILTER_SANITIZE_STRING);
         $update = filter_input(INPUT_POST, "update", FILTER_SANITIZE_STRING);
         if ($id != "" && $update == "true") {
@@ -671,6 +671,7 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                         $fileType;
                 }
             }
+            $paymentProcessingStage = "affectation aux impayés";
             affecterPaiementAuxImpayes(
                 $id_lot,
                 $id,
@@ -684,6 +685,7 @@ if (isset($_POST["id"], $_POST["printZone"])) {
             exit();
         }
     } elseif (empty($error_msg)) {
+        $paymentProcessingStage = "enregistrement du paiement";
         $request = "INSERT INTO paiement (id_lot, date, dateEcheance, montant, id_modePaiement, commentaire, id_syndic)
 		VALUES (?, ?, ?, ?, ?, ?, ?)";
 
@@ -749,6 +751,7 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                     $fileType;
             }
         }
+        $paymentProcessingStage = "affectation aux impayés";
         affecterPaiementAuxImpayes(
             $id_lot,
             $insert_id,
@@ -760,6 +763,20 @@ if (isset($_POST["id"], $_POST["printZone"])) {
         exit();
     } else {
         echo $error_msg;
+        exit();
+    }
+    } catch (Throwable $exception) {
+        error_log(
+            "Erreur paiement [" .
+                $paymentProcessingStage .
+                "] : " .
+                $exception->getMessage(),
+        );
+        http_response_code(200);
+        echo "error|Erreur pendant " .
+            htmlspecialchars($paymentProcessingStage, ENT_QUOTES, "UTF-8") .
+            " : " .
+            htmlspecialchars($exception->getMessage(), ENT_QUOTES, "UTF-8");
         exit();
     }
 }
