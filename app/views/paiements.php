@@ -82,6 +82,91 @@ function getPaymentImpayeLabel($impaye, $connection)
     return "";
 }
 
+function affecterPaiementAuxImpayes($id_lot, $id_paiement, $montant, $datePaiement, $connection)
+{
+    $montantRestant = floatval($montant);
+    $datePaiementTimestamp = strtotime($datePaiement);
+    $impayes = getImpaye($id_lot, null, $connection);
+    $exercices = [];
+
+    foreach ($impayes as $impaye) {
+        if ($montantRestant <= 0.00001) {
+            break;
+        }
+
+        $idExercice = intval($impaye["id_exercice"]);
+        if ($idExercice > 0) {
+            if (!isset($exercices[$idExercice])) {
+                $exercice = getExercice($idExercice, null, $connection);
+                $exercices[$idExercice] = count($exercice) > 0 ? $exercice[0] : null;
+            }
+
+            $exercice = $exercices[$idExercice];
+            if ($exercice === null) {
+                continue;
+            }
+
+            $monthsByPeriod = ["1" => 1, "2" => 3, "3" => 6, "4" => 12];
+            $monthsPerPeriod = $monthsByPeriod[(string) $exercice["id_periodePaiement"]] ?? 1;
+            $periodStartTimestamp = strtotime(
+                date("Y-m-d", strtotime($impaye["dateFinPeriode"])) .
+                    " - " .
+                    $monthsPerPeriod .
+                    " month",
+            );
+
+            if ($datePaiementTimestamp < $periodStartTimestamp) {
+                continue;
+            }
+        }
+
+        $restePeriode =
+            floatval($impaye["partFonct"]) +
+            floatval($impaye["partInv"]) -
+            floatval($impaye["cotisation"]);
+        if ($restePeriode <= 0.00001) {
+            continue;
+        }
+
+        $montantAffecte = min($restePeriode, $montantRestant);
+        $nouvelleCotisation = floatval($impaye["cotisation"]) + $montantAffecte;
+
+        $request = "UPDATE rel_lot_exercice SET cotisation=? WHERE id_rel=?";
+        $insert_stmt = $connection->prepare($request);
+        if (!$insert_stmt) {
+            echo $connection->error;
+            exit();
+        }
+        $insert_stmt->bind_param("ss", $nouvelleCotisation, $impaye["id_rel"]);
+        if (!$insert_stmt->execute()) {
+            echo $connection->error;
+            exit();
+        }
+
+        $request =
+            "INSERT INTO rel_rel_paiement (id_rel, id_paiement, montant) VALUES (?, ?, ?)";
+        $insert_stmt = $connection->prepare($request);
+        if (!$insert_stmt) {
+            echo $connection->error;
+            exit();
+        }
+        $insert_stmt->bind_param(
+            "sss",
+            $impaye["id_rel"],
+            $id_paiement,
+            $montantAffecte,
+        );
+        if (!$insert_stmt->execute()) {
+            echo $connection->error;
+            exit();
+        }
+
+        $montantRestant -= $montantAffecte;
+    }
+
+    return max(0, $montantRestant);
+}
+
 function isChequePaymentMode($id_modePaiement, $connection)
 {
     $modepaiement = getModepaiement($id_modePaiement, $connection);
@@ -407,10 +492,10 @@ if (isset($_POST["id"], $_POST["printZone"])) {
     if ($id_lot != "" || $id_lot != null) {
         if ($action == "add") {
             $impayes = getImpaye($id_lot, null, $connection);
-            $checked = "";
+            $checked = "checked disabled";
         } elseif ($action == "update") {
             $impayes = getImpaye($id_lot, $id_paiement, $connection);
-            $checked = "checked";
+            $checked = "checked disabled";
             /*if ($impayes[0]["id_lot"] != $id_lot) {
 				$impayes = getImpaye($id_lot, null, $connection);
 				$checked = "";
@@ -484,8 +569,6 @@ if (isset($_POST["id"], $_POST["printZone"])) {
     } else {
         $id_syndic = 1;
     }
-    $impayesAtraiter = [];
-
     if ($id_lot == "") {
         $error_msg .= "Veuillez sélectionner un lot";
         echo $error_msg;
@@ -516,11 +599,7 @@ if (isset($_POST["id"], $_POST["printZone"])) {
         echo $error_msg;
         exit();
     }
-    if (!empty($_POST["impayes"])) {
-        foreach ($_POST["impayes"] as $value) {
-            $impayesAtraiter[] = $value;
-        }
-    }
+    $datePaiementAffectation = $date;
     if (empty($error_msg) && isset($_POST["id"], $_POST["update"])) {
         $id = filter_input(INPUT_POST, "id", FILTER_SANITIZE_STRING);
         $update = filter_input(INPUT_POST, "update", FILTER_SANITIZE_STRING);
@@ -619,91 +698,13 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                         $fileType;
                 }
             }
-            $impayes = getImpaye($id_lot, null, $connection);
-            foreach ($impayes as $impaye) {
-                if ($montant == 0) {
-                    break;
-                }
-                $tmpCotisation =
-                    floatval($impaye["partFonct"]) +
-                    floatval($impaye["partInv"]) -
-                    floatval($impaye["cotisation"]);
-                $tmpCotisation =
-                    $tmpCotisation < $montant ? $tmpCotisation : $montant;
-                if (intval($impaye["id_exercice"]) <= 0) {
-                    if (in_array($impaye["id_rel"], $impayesAtraiter)) {
-                        $cotisation =
-                            $tmpCotisation + floatval($impaye["cotisation"]);
-                        $request =
-                            "UPDATE rel_lot_exercice SET cotisation=? WHERE id_rel=?";
-                        if ($insert_stmt = $connection->prepare($request)) {
-                            $insert_stmt->bind_param(
-                                "ss",
-                                $cotisation,
-                                $impaye["id_rel"],
-                            );
-                            if (!$insert_stmt->execute()) {
-                                echo $connection->error;
-                                exit();
-                            } else {
-                                $request =
-                                    "INSERT INTO rel_rel_paiement (id_rel, id_paiement, montant) VALUES (?, ?, ?)";
-                                if (
-                                    $insert_stmt = $connection->prepare(
-                                        $request,
-                                    )
-                                ) {
-                                    $insert_stmt->bind_param(
-                                        "sss",
-                                        $impaye["id_rel"],
-                                        $id,
-                                        $tmpCotisation,
-                                    );
-                                    // Execute the prepared query.
-                                    if (!$insert_stmt->execute()) {
-                                        echo $connection->error;
-                                        exit();
-                                    }
-                                }
-                                $montant -= $tmpCotisation;
-                            }
-                        }
-                    }
-                } else {
-                    $cotisation =
-                        $tmpCotisation + floatval($impaye["cotisation"]);
-                    $request =
-                        "UPDATE rel_lot_exercice SET cotisation=? WHERE id_rel=?";
-                    if ($insert_stmt = $connection->prepare($request)) {
-                        $insert_stmt->bind_param(
-                            "ss",
-                            $cotisation,
-                            $impaye["id_rel"],
-                        );
-                        if (!$insert_stmt->execute()) {
-                            echo $connection->error;
-                            exit();
-                        } else {
-                            $request =
-                                "INSERT INTO rel_rel_paiement (id_rel, id_paiement, montant) VALUES (?, ?, ?)";
-                            if ($insert_stmt = $connection->prepare($request)) {
-                                $insert_stmt->bind_param(
-                                    "sss",
-                                    $impaye["id_rel"],
-                                    $id,
-                                    $tmpCotisation,
-                                );
-                                // Execute the prepared query.
-                                if (!$insert_stmt->execute()) {
-                                    echo $connection->error;
-                                    exit();
-                                }
-                            }
-                            $montant -= $tmpCotisation;
-                        }
-                    }
-                }
-            }
+            affecterPaiementAuxImpayes(
+                $id_lot,
+                $id,
+                $montant,
+                $datePaiementAffectation,
+                $connection,
+            );
             echo "done|" . $id . "|" . $linkFile;
             exit();
         } else {
@@ -776,86 +777,13 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                     $fileType;
             }
         }
-        $impayes = getImpaye($id_lot, null, $connection);
-        foreach ($impayes as $impaye) {
-            if ($montant == 0) {
-                break;
-            }
-            $tmpCotisation =
-                floatval($impaye["partFonct"]) +
-                floatval($impaye["partInv"]) -
-                floatval($impaye["cotisation"]);
-            $tmpCotisation =
-                $tmpCotisation < $montant ? $tmpCotisation : $montant;
-            if (intval($impaye["id_exercice"]) <= 0) {
-                if (in_array($impaye["id_rel"], $impayesAtraiter)) {
-                    $cotisation =
-                        $tmpCotisation + floatval($impaye["cotisation"]);
-                    $request =
-                        "UPDATE rel_lot_exercice SET cotisation=? WHERE id_rel=?";
-                    if ($insert_stmt = $connection->prepare($request)) {
-                        $insert_stmt->bind_param(
-                            "ss",
-                            $cotisation,
-                            $impaye["id_rel"],
-                        );
-                        if (!$insert_stmt->execute()) {
-                            echo $connection->error;
-                            exit();
-                        } else {
-                            $request =
-                                "INSERT INTO rel_rel_paiement (id_rel, id_paiement, montant) VALUES (?, ?, ?)";
-                            if ($insert_stmt = $connection->prepare($request)) {
-                                $insert_stmt->bind_param(
-                                    "sss",
-                                    $impaye["id_rel"],
-                                    $insert_id,
-                                    $tmpCotisation,
-                                );
-                                // Execute the prepared query.
-                                if (!$insert_stmt->execute()) {
-                                    echo $connection->error;
-                                    exit();
-                                }
-                            }
-                            $montant -= $tmpCotisation;
-                        }
-                    }
-                }
-            } else {
-                $cotisation = $tmpCotisation + floatval($impaye["cotisation"]);
-                $request =
-                    "UPDATE rel_lot_exercice SET cotisation=? WHERE id_rel=?";
-                if ($insert_stmt = $connection->prepare($request)) {
-                    $insert_stmt->bind_param(
-                        "ss",
-                        $cotisation,
-                        $impaye["id_rel"],
-                    );
-                    if (!$insert_stmt->execute()) {
-                        echo $connection->error;
-                        exit();
-                    } else {
-                        $request =
-                            "INSERT INTO rel_rel_paiement (id_rel, id_paiement, montant) VALUES (?, ?, ?)";
-                        if ($insert_stmt = $connection->prepare($request)) {
-                            $insert_stmt->bind_param(
-                                "sss",
-                                $impaye["id_rel"],
-                                $insert_id,
-                                $tmpCotisation,
-                            );
-                            // Execute the prepared query.
-                            if (!$insert_stmt->execute()) {
-                                echo $connection->error;
-                                exit();
-                            }
-                        }
-                        $montant -= $tmpCotisation;
-                    }
-                }
-            }
-        }
+        affecterPaiementAuxImpayes(
+            $id_lot,
+            $insert_id,
+            $montant,
+            $datePaiementAffectation,
+            $connection,
+        );
 
         echo "done|" . $insert_id . "|" . $linkFile;
         exit();
@@ -1008,7 +936,7 @@ if (isset($_GET["action"], $_GET["id"])):
                                             </div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
-                                                    <label class="text-label">Les impayés</label><br>
+                                                    <label class="text-label">Affectation automatique aux impayés les plus anciens</label><br>
 													<span id="lesImpayes">
 														<?php
               $impayes = getImpaye(
@@ -1022,7 +950,7 @@ if (isset($_GET["action"], $_GET["id"])):
 															<label class="form-check-label">
 																<input type="checkbox" class="form-check-input" name="impayes[]" value="<?= $impaye[
                     "id_rel"
-                ] ?>" checked><?= getPaymentImpayeLabel($impaye, $connection) ?>
+                ] ?>" checked disabled><?= getPaymentImpayeLabel($impaye, $connection) ?>
 															</label>
 														</div>
 														<?php elseif (intval($impaye["id_exercice"]) == 0): ?>
@@ -1030,7 +958,7 @@ if (isset($_GET["action"], $_GET["id"])):
 															<label class="form-check-label">
 																<input type="checkbox" class="form-check-input" name="impayes[]" value="<?= $impaye[
                     "id_rel"
-                ] ?>" checked>Impayé promoteur
+                ] ?>" checked disabled>Impayé promoteur
 															</label>
 														</div>
 														<?php endif;
@@ -1195,7 +1123,7 @@ elseif (isset($_GET["action"])):
                                             </div>
 											<div class="col-6 mb-2">
 												<div class="form-group">
-                                                    <label class="text-label">Les impayés</label><br>
+                                                    <label class="text-label">Affectation automatique aux impayés les plus anciens</label><br>
 													<span id="lesImpayes">
 														<?php
               $impayes = getImpaye($lots[0]["id"], null, $connection);
@@ -1205,7 +1133,7 @@ elseif (isset($_GET["action"])):
 															<label class="form-check-label">
 																<input type="checkbox" class="form-check-input" name="impayes[]" value="<?= $impaye[
                     "id_rel"
-                ] ?>"><?= getPaymentImpayeLabel($impaye, $connection) ?>
+                ] ?>" checked disabled><?= getPaymentImpayeLabel($impaye, $connection) ?>
 															</label>
 														</div>
 														<?php elseif (intval($impaye["id_exercice"]) == 0): ?>
@@ -1213,7 +1141,7 @@ elseif (isset($_GET["action"])):
 															<label class="form-check-label">
 																<input type="checkbox" class="form-check-input" name="impayes[]" value="<?= $impaye[
                     "id_rel"
-                ] ?>">Impayé promoteur
+                ] ?>" checked disabled>Impayé promoteur
 															</label>
 														</div>
 														<?php endif;
