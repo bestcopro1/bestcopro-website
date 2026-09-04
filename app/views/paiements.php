@@ -82,42 +82,14 @@ function getPaymentImpayeLabel($impaye, $connection)
     return "";
 }
 
-function affecterPaiementAuxImpayes($id_lot, $id_paiement, $montant, $datePaiement, $connection)
+function affecterPaiementAuxImpayes($id_lot, $id_paiement, $montant, $connection)
 {
     $montantRestant = floatval($montant);
-    $datePaiementTimestamp = strtotime($datePaiement);
     $impayes = getImpaye($id_lot, null, $connection);
-    $exercices = [];
 
     foreach ($impayes as $impaye) {
         if ($montantRestant <= 0.00001) {
             break;
-        }
-
-        $idExercice = intval($impaye["id_exercice"]);
-        if ($idExercice > 0) {
-            if (!isset($exercices[$idExercice])) {
-                $exercice = getExercice($idExercice, null, $connection);
-                $exercices[$idExercice] = count($exercice) > 0 ? $exercice[0] : null;
-            }
-
-            $exercice = $exercices[$idExercice];
-            if ($exercice === null) {
-                continue;
-            }
-
-            $monthsByPeriod = ["1" => 1, "2" => 3, "3" => 6, "4" => 12];
-            $monthsPerPeriod = $monthsByPeriod[(string) $exercice["id_periodePaiement"]] ?? 1;
-            $periodStartTimestamp = strtotime(
-                date("Y-m-d", strtotime($impaye["dateFinPeriode"])) .
-                    " - " .
-                    $monthsPerPeriod .
-                    " month",
-            );
-
-            if ($datePaiementTimestamp < $periodStartTimestamp) {
-                continue;
-            }
         }
 
         $restePeriode =
@@ -130,6 +102,8 @@ function affecterPaiementAuxImpayes($id_lot, $id_paiement, $montant, $datePaieme
 
         $montantAffecte = min($restePeriode, $montantRestant);
         $nouvelleCotisation = floatval($impaye["cotisation"]) + $montantAffecte;
+        $idRel = intval($impaye["id_rel"]);
+        $idPaiement = intval($id_paiement);
 
         $request = "UPDATE rel_lot_exercice SET cotisation=? WHERE id_rel=?";
         $insert_stmt = $connection->prepare($request);
@@ -137,7 +111,7 @@ function affecterPaiementAuxImpayes($id_lot, $id_paiement, $montant, $datePaieme
             echo $connection->error;
             exit();
         }
-        $insert_stmt->bind_param("ss", $nouvelleCotisation, $impaye["id_rel"]);
+        $insert_stmt->bind_param("di", $nouvelleCotisation, $idRel);
         if (!$insert_stmt->execute()) {
             echo $connection->error;
             exit();
@@ -151,9 +125,9 @@ function affecterPaiementAuxImpayes($id_lot, $id_paiement, $montant, $datePaieme
             exit();
         }
         $insert_stmt->bind_param(
-            "sss",
-            $impaye["id_rel"],
-            $id_paiement,
+            "iid",
+            $idRel,
+            $idPaiement,
             $montantAffecte,
         );
         if (!$insert_stmt->execute()) {
@@ -599,7 +573,6 @@ if (isset($_POST["id"], $_POST["printZone"])) {
         echo $error_msg;
         exit();
     }
-    $datePaiementAffectation = $date;
     if (empty($error_msg) && isset($_POST["id"], $_POST["update"])) {
         $id = filter_input(INPUT_POST, "id", FILTER_SANITIZE_STRING);
         $update = filter_input(INPUT_POST, "update", FILTER_SANITIZE_STRING);
@@ -702,7 +675,6 @@ if (isset($_POST["id"], $_POST["printZone"])) {
                 $id_lot,
                 $id,
                 $montant,
-                $datePaiementAffectation,
                 $connection,
             );
             echo "done|" . $id . "|" . $linkFile;
@@ -781,7 +753,6 @@ if (isset($_POST["id"], $_POST["printZone"])) {
             $id_lot,
             $insert_id,
             $montant,
-            $datePaiementAffectation,
             $connection,
         );
 
