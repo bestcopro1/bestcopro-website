@@ -203,6 +203,7 @@ $exportData = getCotisationExportData(
     $connection,
     $dateSituation
 );
+$dateSituation = $exportData["dateLimit"];
 $copropriete = getCopropriete($_GET["id_copropriete"], $connection);
 $residenceName = count($copropriete) > 0 ? $copropriete[0]["nom"] : "";
 $immeubles = $exportData["immeubles"];

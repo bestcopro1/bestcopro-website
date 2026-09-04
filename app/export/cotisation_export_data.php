@@ -7,33 +7,70 @@ function getCotisationExportData(
     $dateSituation = null
 )
 {
+    $dateLimit = getCotisationExportDateLimit(
+        $id_exercice,
+        $dateSituation,
+        $connection
+    );
     $immeubleData = getCotisationExportImmeublesAndLots(
         $id_copropriete,
         $connection,
     );
 
     return [
+        "dateLimit" => $dateLimit,
         "immeubles" => $immeubleData["immeubles"],
         "lotsByImmeuble" => $immeubleData["lotsByImmeuble"],
         "previousRelSummaries" => getCotisationExportRelSummaries(
             $id_copropriete,
             null,
             $connection,
-            $dateSituation,
+            $dateLimit,
             $id_exercice
         ),
         "currentRelSummaries" => getCotisationExportRelSummaries(
             $id_copropriete,
             $id_exercice,
             $connection,
-            $dateSituation
+            $dateLimit
         ),
         "advanceTotals" => getCotisationExportAdvanceTotals(
             $id_copropriete,
             $connection,
-            $dateSituation
+            $dateLimit
         ),
     ];
+}
+
+function getCotisationExportDateLimit(
+    $id_exercice,
+    $dateSituation,
+    $connection
+)
+{
+    $exerciseEndDate = null;
+    $request = "SELECT CAST(dateFin AS DATE) FROM exercice WHERE id = ? LIMIT 1";
+
+    if ($stmt = $connection->prepare($request)) {
+        $stmt->bind_param("s", $id_exercice);
+        $stmt->execute();
+        $stmt->store_result();
+        $stmt->bind_result($dateFin);
+        if ($stmt->fetch() && $dateFin !== null && $dateFin !== "") {
+            $exerciseEndDate = $dateFin;
+        }
+        $stmt->close();
+    }
+
+    if ($exerciseEndDate === null) {
+        return $dateSituation;
+    }
+
+    if ($dateSituation === null || $dateSituation > $exerciseEndDate) {
+        return $exerciseEndDate;
+    }
+
+    return $dateSituation;
 }
 
 function getCotisationExportImmeublesAndLots($id_copropriete, $connection)
