@@ -962,14 +962,24 @@ if (isset($_GET["action"], $_GET["id"])):
 													<th class="text-center"><strong><?= $periodStart ?> - <?= $periodEnd ?></strong></th>
 												<?php elseif ($exercice[0]["id_periodePaiement"] == "3"): ?>
 													<th class="text-center"><strong>S<?= $semestre++ ?></strong></th>
-												<?php elseif ($exercice[0]["id_periodePaiement"] == "4"): ?>
-													<th class="text-center"><strong><?= date(
-                 "Y",
+										<?php elseif ($exercice[0]["id_periodePaiement"] == "4"): ?>
+											<?php
+             $periodStart = date(
+                 "m/Y",
                  strtotime(
                      date("Y-m-d", strtotime($periode["dateFinPeriode"])) .
-                         " - 1 year",
+                         " - 12 month",
                  ),
-             ) ?></strong></th>
+             );
+             $periodEnd = date(
+                 "m/Y",
+                 strtotime(
+                     date("Y-m-d", strtotime($periode["dateFinPeriode"])) .
+                         " - 1 day",
+                 ),
+             );
+             ?>
+											<th class="text-center"><strong><?= $periodStart ?> - <?= $periodEnd ?></strong></th>
 												<?php endif; ?>
 												<?php
             endforeach;

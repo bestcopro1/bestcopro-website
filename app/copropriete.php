@@ -1200,11 +1200,15 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 				lang: { // Language variables for button
 					next: 'Suivant',
 					previous: 'Précédent'
+				},
+				keyboardSettings: {
+					keyNavigation: false
 				}
 			}); 
 			$("#smartwizard").on("leaveStep", function(e, anchorObject, currentStepIndex, nextStepIndex, stepDirection) {
 				var isStepValid = true;
-				if(currentStepIndex == 0){
+				var isMovingForward = nextStepIndex > currentStepIndex;
+				if(isMovingForward && currentStepIndex == 0){
 					if($('input[name="nom"]').val() == ""){
 						$('#erreurMessage').text("Le champs \"Nom de la copropriété\" est obligatoire");
 						$('#SuccessErreurAlert').modal('toggle');
@@ -1272,7 +1276,7 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 							}
 						});
 					}
-				} else if(currentStepIndex == 1){
+				} else if(isMovingForward && currentStepIndex == 1){
 					if($('#id_exercice').val() == ""){
 						$('#erreurMessage').text("Veuillez d'abord enregistrer les informations de la copropriété.");
 						$('#SuccessErreurAlert').modal('toggle');
@@ -1323,7 +1327,7 @@ $budgetReferences = coproBudgetLoadReferences($connection);
 							isStepValid = false;
 						}
 					});
-				} else if(currentStepIndex == 2){
+				} else if(isMovingForward && currentStepIndex == 2){
 					if(parseInt($('#lotCounter').text()) !== parseInt($('#nbrLot').text())){
 						$('#erreurMessage').text("Le nombre de lots ajoutés doit correspondre au nombre de lots de la copropriété.");
 						$('#SuccessErreurAlert').modal('toggle');
