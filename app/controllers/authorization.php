@@ -156,6 +156,13 @@ function bestcopro_role_has_permission($roleId, $permissionCode, $connection = n
         return bestcopro_is_access_admin($roleId);
     }
 
+    // Administrators must always be able to open the document library. A
+    // stored role override must not lock them out and trigger the hosting
+    // provider's external 403 redirect before document files are resolved.
+    if (in_array($permissionCode, ["documents", "documents.view"], true) && bestcopro_is_access_admin($roleId)) {
+        return true;
+    }
+
     $catalog = bestcopro_access_catalog();
     if (!array_key_exists($permissionCode, $catalog)) {
         $viewPermission = $permissionCode . ".view";
