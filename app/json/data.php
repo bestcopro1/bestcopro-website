@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 include_once __DIR__ . "/_mobile.php";
+include_once __DIR__ . "/../controllers/document_storage.php";
 
 $token = input_value("token");
 $lotRow = mobile_token_lot($connection, $token);
@@ -137,13 +138,13 @@ foreach ($paiements as $paiement) {
 $documentsData = [];
 foreach ($documents as $document) {
     $typedocument = getTypedocument($document["id_typedocument"], $connection);
-    $preuves = glob(__DIR__ . "/../justificatifs/documents/" . $document["id"] . ".*");
+    $preuves = bestcoproDocumentFiles($document["id"]);
     $documentsData[] = [
         "titre" => $document["titre"],
         "date" => date("d/m/Y", strtotime($document["date"])),
         "id" => $document["id"],
         "type" => $typedocument[0]["libelle"] ?? "",
-        "lien" => count($preuves) > 0 ? mobile_public_url("justificatifs/documents/" . basename($preuves[0])) : "#",
+        "lien" => count($preuves) > 0 ? bestcoproDocumentPublicUrl($preuves[0]) : "#",
     ];
 }
 

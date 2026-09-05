@@ -1,40 +1,8 @@
 <?php
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
+include_once __DIR__ . "/../controllers/document_storage.php";
 $connection = $GLOBALS["connection"];
-
-function bestcoproDocumentsDirectory()
-{
-    return dirname(__DIR__) . DIRECTORY_SEPARATOR . "justificatifs" . DIRECTORY_SEPARATOR . "documents";
-}
-
-function bestcoproDocumentFiles($documentId)
-{
-    $documentId = filter_var($documentId, FILTER_VALIDATE_INT);
-    if ($documentId === false || $documentId <= 0) {
-        return [];
-    }
-
-    $files = glob(bestcoproDocumentsDirectory() . DIRECTORY_SEPARATOR . $documentId . ".*");
-    if (!is_array($files)) {
-        return [];
-    }
-    sort($files, SORT_NATURAL | SORT_FLAG_CASE);
-    return array_values(array_filter($files, "is_file"));
-}
-
-function bestcoproDocumentPublicUrl($file)
-{
-    $scriptName = isset($_SERVER["SCRIPT_NAME"]) ? str_replace("\\", "/", (string) $_SERVER["SCRIPT_NAME"]) : "";
-    $basePath = rtrim(str_replace("\\", "/", dirname($scriptName)), "/");
-    if (substr($basePath, -6) === "/views") {
-        $basePath = substr($basePath, 0, -6);
-    }
-    if ($basePath === ".") {
-        $basePath = "";
-    }
-    return $basePath . "/justificatifs/documents/" . rawurlencode(basename((string) $file));
-}
 
 if (isset($_POST["typedocument"], $_POST["update_typedocument"])) {
     $error_msg = "";
