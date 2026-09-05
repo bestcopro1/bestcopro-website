@@ -3,6 +3,9 @@
 require_once __DIR__ . "/session.php";
 bestcopro_start_session();
 
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+
 if (!isset($_SESSION["loggedin"], $_SESSION["id"], $_SESSION["id_usertype"]) || $_SESSION["loggedin"] !== "ImIn") {
     header("Location: ./login.php");
     exit();
@@ -32,8 +35,10 @@ $mode = "";
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $csrfValid = isset($_POST["csrf_token"]) && hash_equals($_SESSION["export_refactor_csrf"], (string) $_POST["csrf_token"]);
     $mode = isset($_POST["mode"]) ? (string) $_POST["mode"] : "";
-    if (!$csrfValid || !in_array($mode, ["simulate", "apply"], true)) {
-        $error = "Requête de maintenance invalide.";
+    if (!in_array($mode, ["simulate", "apply"], true)) {
+        $error = "Action de maintenance invalide. Rechargez cette page puis réessayez.";
+    } elseif (!$csrfValid) {
+        $error = "Votre session a changé. Rechargez cette page puis relancez la simulation.";
     } elseif ($mode === "apply" && (!isset($_POST["confirm_apply"]) || $_POST["confirm_apply"] !== "1")) {
         $error = "Cochez la confirmation après avoir sauvegardé la base de données.";
     } else {
@@ -92,16 +97,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <?php endif; ?>
             <form method="post" class="border-top pt-4">
                 <input type="hidden" name="csrf_token" value="<?= exportRefactorEscape($_SESSION["export_refactor_csrf"]) ?>">
-                <button type="submit" name="mode" value="simulate" class="btn btn-primary">Lancer la simulation</button>
+                <input type="hidden" name="mode" value="simulate">
+                <button type="submit" class="btn btn-primary">Lancer la simulation</button>
             </form>
             <?php if ($output !== "" && $mode === "simulate" && $error === ""): ?>
                 <form method="post" class="border-top mt-4 pt-4">
                     <input type="hidden" name="csrf_token" value="<?= exportRefactorEscape($_SESSION["export_refactor_csrf"]) ?>">
+                    <input type="hidden" name="mode" value="apply">
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" value="1" id="confirm_apply" name="confirm_apply">
                         <label class="form-check-label" for="confirm_apply">J’ai sauvegardé la base de données et je confirme l’application.</label>
                     </div>
-                    <button type="submit" name="mode" value="apply" class="btn btn-danger">Appliquer la migration</button>
+                    <button type="submit" class="btn btn-danger">Appliquer la migration</button>
                 </form>
             <?php endif; ?>
         </div>
