@@ -2,6 +2,40 @@
 include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
 $connection = $GLOBALS["connection"];
+
+function bestcoproDocumentsDirectory()
+{
+    return dirname(__DIR__) . DIRECTORY_SEPARATOR . "justificatifs" . DIRECTORY_SEPARATOR . "documents";
+}
+
+function bestcoproDocumentFiles($documentId)
+{
+    $documentId = filter_var($documentId, FILTER_VALIDATE_INT);
+    if ($documentId === false || $documentId <= 0) {
+        return [];
+    }
+
+    $files = glob(bestcoproDocumentsDirectory() . DIRECTORY_SEPARATOR . $documentId . ".*");
+    if (!is_array($files)) {
+        return [];
+    }
+    sort($files, SORT_NATURAL | SORT_FLAG_CASE);
+    return array_values(array_filter($files, "is_file"));
+}
+
+function bestcoproDocumentPublicUrl($file)
+{
+    $scriptName = isset($_SERVER["SCRIPT_NAME"]) ? str_replace("\\", "/", (string) $_SERVER["SCRIPT_NAME"]) : "";
+    $basePath = rtrim(str_replace("\\", "/", dirname($scriptName)), "/");
+    if (substr($basePath, -6) === "/views") {
+        $basePath = substr($basePath, 0, -6);
+    }
+    if ($basePath === ".") {
+        $basePath = "";
+    }
+    return $basePath . "/justificatifs/documents/" . rawurlencode(basename((string) $file));
+}
+
 if (isset($_POST["typedocument"], $_POST["update_typedocument"])) {
     $error_msg = "";
 
@@ -151,27 +185,18 @@ if (isset($_POST["typedocument"], $_POST["update_typedocument"])) {
                         PATHINFO_EXTENSION,
                     );
                     $fileType = strtolower($fileType);
-                    $location =
-                        __DIR__ .
-                        "/../justificatifs/documents/" .
-                        $id .
-                        "." .
-                        $fileType;
-                    $oldFiles = glob(
-                        "../justificatifs/documents/" . $id . ".*",
-                    );
+                    $location = bestcoproDocumentsDirectory() . DIRECTORY_SEPARATOR . $id . "." . $fileType;
+                    $oldFiles = bestcoproDocumentFiles($id);
+                    if (!move_uploaded_file($_FILES["file"]["tmp_name"], $location)) {
+                        echo "error|Impossible d'enregistrer le fichier dans le dossier des documents.";
+                        exit();
+                    }
                     foreach ($oldFiles as $oldFile) {
-                        if (is_file($oldFile)) {
+                        if ($oldFile !== $location && is_file($oldFile)) {
                             unlink($oldFile);
                         }
                     }
-                    move_uploaded_file($_FILES["file"]["tmp_name"], $location);
-                    $linkFile =
-                        getURL() .
-                        "/../justificatifs/documents/" .
-                        $id .
-                        "." .
-                        $fileType;
+                    $linkFile = bestcoproDocumentPublicUrl($location);
                 }
             }
             echo "done|" . $id . "|" . $linkFile;
@@ -240,19 +265,12 @@ if (isset($_POST["typedocument"], $_POST["update_typedocument"])) {
                     PATHINFO_EXTENSION,
                 );
                 $fileType = strtolower($fileType);
-                $location =
-                    __DIR__ .
-                    "/../justificatifs/documents/" .
-                    $insert_id .
-                    "." .
-                    $fileType;
-                move_uploaded_file($_FILES["file"]["tmp_name"], $location);
-                $linkFile =
-                    getURL() .
-                    "/../justificatifs/documents/" .
-                    $insert_id .
-                    "." .
-                    $fileType;
+                $location = bestcoproDocumentsDirectory() . DIRECTORY_SEPARATOR . $insert_id . "." . $fileType;
+                if (!move_uploaded_file($_FILES["file"]["tmp_name"], $location)) {
+                    echo "error|Impossible d'enregistrer le fichier dans le dossier des documents.";
+                    exit();
+                }
+                $linkFile = bestcoproDocumentPublicUrl($location);
             }
         }
         echo "done|" . $insert_id . "|" . $linkFile;
@@ -386,9 +404,7 @@ if (isset($_GET["action"], $_GET["id"])):
                         </div>
                     </div>
                 </div>
-				<?php $preuves = glob(
-        "./justificatifs/documents/" . $document[0]["id"] . ".*",
-    ); ?>
+				<?php $preuves = bestcoproDocumentFiles($document[0]["id"]); ?>
 				<div class="row" id="blockOFjustificatif" <?php if (count($preuves) == 0) {
         echo 'style="display: none;"';
     } ?>>
@@ -402,7 +418,7 @@ if (isset($_GET["action"], $_GET["id"])):
 									<div class="col-12">
 										<?php if (count($preuves) > 0) {
               echo '<iframe src="' .
-                  $preuves[0] .
+                  bestcoproDocumentPublicUrl($preuves[0]) .
                   "?" .
                   uniqid() .
                   '" width="100%" height="500px"></iframe>';
@@ -570,7 +586,8 @@ else:
                                                         "id_typedocument"
                                                     ],
                                                     $connection,
-                                                ); ?>
+                                                );
+                                                $documentFiles = bestcoproDocumentFiles($document["id"]); ?>
 											<tr>
                                                 <td><?= date(
                                                     "d/m/Y",
@@ -585,7 +602,10 @@ else:
                                                     "libelle"
                                                 ] ?></td>
                                                 <td class="text-center">
-													<?php if (
+												<?php if (count($documentFiles) > 0): ?>
+												<a href="<?= bestcoproDocumentPublicUrl($documentFiles[0]) ?>" target="_blank" rel="noopener" class="btn btn-secondary shadow btn-xs sharp me-1" title="Ouvrir le document" aria-label="Ouvrir le document"><i class="fas fa-file-pdf"></i></a>
+												<?php endif; ?>
+											<?php if (
                  $_SESSION["id_usertype"] === "1" ||
                  $_SESSION["id_usertype"] === "2" ||
                  $_SESSION["id_usertype"] === "3"
