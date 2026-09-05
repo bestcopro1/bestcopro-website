@@ -19,8 +19,20 @@ if (!bestcopro_is_access_admin()) {
     exit("Accès refusé.");
 }
 
-if (empty($_SESSION["export_refactor_csrf"])) {
-    $_SESSION["export_refactor_csrf"] = bin2hex(random_bytes(32));
+list(, $exportRefactorCookiePath) = bestcopro_session_context();
+$exportRefactorCookieName = "BESTCOPRO_EXPORT_REFACTOR_CSRF";
+$exportRefactorToken = isset($_COOKIE[$exportRefactorCookieName]) ? (string) $_COOKIE[$exportRefactorCookieName] : "";
+if (!preg_match('/^[a-f0-9]{64}$/', $exportRefactorToken)) {
+    $exportRefactorToken = bin2hex(random_bytes(32));
+    setcookie(
+        $exportRefactorCookieName,
+        $exportRefactorToken,
+        0,
+        $exportRefactorCookiePath,
+        "",
+        bestcopro_is_https(),
+        true
+    );
 }
 
 function exportRefactorEscape($value)
@@ -33,7 +45,7 @@ $error = "";
 $mode = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $csrfValid = isset($_POST["csrf_token"]) && hash_equals($_SESSION["export_refactor_csrf"], (string) $_POST["csrf_token"]);
+    $csrfValid = isset($_POST["csrf_token"]) && hash_equals($exportRefactorToken, (string) $_POST["csrf_token"]);
     $mode = isset($_POST["mode"]) ? (string) $_POST["mode"] : "";
     if (!in_array($mode, ["simulate", "apply"], true)) {
         $error = "Action de maintenance invalide. Rechargez cette page puis réessayez.";
@@ -53,7 +65,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             require __DIR__ . "/migrations/20260904_export_refactor.php";
             $output = trim(ob_get_clean());
             error_log("[BestCopro maintenance] export refactor " . $mode . " by syndic " . (int) $_SESSION["id"]);
-            $_SESSION["export_refactor_csrf"] = bin2hex(random_bytes(32));
         } catch (Throwable $exception) {
             while (ob_get_level() > 0) {
                 ob_end_clean();
@@ -96,13 +107,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <pre class="bg-light border rounded p-3 mb-4" style="white-space: pre-wrap;"><?= exportRefactorEscape($output) ?></pre>
             <?php endif; ?>
             <form method="post" class="border-top pt-4">
-                <input type="hidden" name="csrf_token" value="<?= exportRefactorEscape($_SESSION["export_refactor_csrf"]) ?>">
+                <input type="hidden" name="csrf_token" value="<?= exportRefactorEscape($exportRefactorToken) ?>">
                 <input type="hidden" name="mode" value="simulate">
                 <button type="submit" class="btn btn-primary">Lancer la simulation</button>
             </form>
             <?php if ($output !== "" && $mode === "simulate" && $error === ""): ?>
                 <form method="post" class="border-top mt-4 pt-4">
-                    <input type="hidden" name="csrf_token" value="<?= exportRefactorEscape($_SESSION["export_refactor_csrf"]) ?>">
+                    <input type="hidden" name="csrf_token" value="<?= exportRefactorEscape($exportRefactorToken) ?>">
                     <input type="hidden" name="mode" value="apply">
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" value="1" id="confirm_apply" name="confirm_apply">
