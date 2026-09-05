@@ -1,6 +1,6 @@
 <?php
 
-if (PHP_SAPI !== "cli") {
+if (PHP_SAPI !== "cli" && !defined("BESTCOPRO_WEB_MIGRATION")) {
     http_response_code(403);
     exit("Cette migration doit être exécutée depuis le terminal.\n");
 }
@@ -12,6 +12,10 @@ $apply = in_array("--apply", isset($argv) ? $argv : [], true);
 
 function migrationOut($message)
 {
+    if (defined("BESTCOPRO_WEB_MIGRATION")) {
+        echo $message . "\n";
+        return;
+    }
     fwrite(STDOUT, $message . PHP_EOL);
 }
 
@@ -267,6 +271,9 @@ try {
 } catch (Throwable $exception) {
     if ($transactionStarted) {
         $connection->rollback();
+    }
+    if (defined("BESTCOPRO_WEB_MIGRATION")) {
+        throw $exception;
     }
     fwrite(STDERR, "Migration échouée : " . $exception->getMessage() . PHP_EOL);
     exit(1);
