@@ -19,6 +19,14 @@ if (!bestcopro_is_access_admin()) {
     exit("Accès refusé.");
 }
 
+// A vendor update can leave a shared-hosting OPCache serving an old Composer
+// class map. This temporary administrator page is the controlled place to
+// refresh it when the host provides no Terminal or OPCache panel.
+$exportRefactorOpcacheReset = false;
+if (function_exists("opcache_reset")) {
+    $exportRefactorOpcacheReset = @opcache_reset();
+}
+
 list(, $exportRefactorCookiePath) = bestcopro_session_context();
 $exportRefactorCookieName = "BESTCOPRO_EXPORT_REFACTOR_CSRF";
 $exportRefactorToken = isset($_COOKIE[$exportRefactorCookieName]) ? (string) $_COOKIE[$exportRefactorCookieName] : "";
@@ -111,6 +119,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <div class="alert alert-warning" role="alert">
                 Sauvegardez la base dans phpMyAdmin avant l’application. La simulation ne modifie aucune donnée.
             </div>
+            <?php if ($exportRefactorOpcacheReset): ?>
+                <div class="alert alert-info" role="status">Le cache PHP a été rafraîchi pour charger la version actuelle du moteur PDF.</div>
+            <?php endif; ?>
             <?php if ($error !== ""): ?>
                 <div class="alert alert-danger" role="alert"><?= exportRefactorEscape($error) ?></div>
             <?php endif; ?>
