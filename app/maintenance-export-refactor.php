@@ -40,9 +40,23 @@ function exportRefactorEscape($value)
     return htmlspecialchars((string) $value, ENT_QUOTES, "UTF-8");
 }
 
+function exportRefactorRecentDiagnostics()
+{
+    $logFile = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . "bestcopro_export_logs" . DIRECTORY_SEPARATOR . "export-errors.log";
+    if (!is_readable($logFile)) {
+        return "";
+    }
+    $lines = @file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!is_array($lines)) {
+        return "";
+    }
+    return implode("\n", array_slice($lines, -12));
+}
+
 $output = "";
 $error = "";
 $mode = "";
+$diagnostics = exportRefactorRecentDiagnostics();
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $csrfValid = isset($_POST["csrf_token"]) && hash_equals($exportRefactorToken, (string) $_POST["csrf_token"]);
@@ -105,6 +119,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <?= $mode === "apply" ? "Migration appliquée." : "Simulation terminée : aucune donnée n’a été modifiée." ?>
                 </div>
                 <pre class="bg-light border rounded p-3 mb-4" style="white-space: pre-wrap;"><?= exportRefactorEscape($output) ?></pre>
+            <?php endif; ?>
+            <?php if ($diagnostics !== ""): ?>
+                <section class="border-top mt-4 pt-4">
+                    <h4 class="h5">Derniers diagnostics d’export</h4>
+                    <p class="text-muted small">Visible uniquement aux administrateurs. Réessaie l’export puis actualise cette page.</p>
+                    <pre class="bg-dark text-white rounded p-3 mb-0" style="white-space: pre-wrap;"><?= exportRefactorEscape($diagnostics) ?></pre>
+                </section>
             <?php endif; ?>
             <form method="post" class="border-top pt-4">
                 <input type="hidden" name="csrf_token" value="<?= exportRefactorEscape($exportRefactorToken) ?>">

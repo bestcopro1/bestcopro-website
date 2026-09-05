@@ -18,7 +18,23 @@ function bestcopro_export_log($message, $context = [])
         $encoded = json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         $details = $encoded !== false ? " " . $encoded : "";
     }
-    error_log("[BestCopro export:" . $name . "] " . $message . $details);
+    $line = "[" . date("Y-m-d H:i:s") . "][BestCopro export:" . $name . "] " . $message . $details;
+    error_log($line);
+
+    // cPanel error logs are not available on every shared-hosting plan.
+    // Keep a short, private diagnostic trail outside the public application tree.
+    $logDirectory = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . "bestcopro_export_logs";
+    if ((!is_dir($logDirectory) && !@mkdir($logDirectory, 0770, true) && !is_dir($logDirectory)) || !is_writable($logDirectory)) {
+        return;
+    }
+    $logFile = $logDirectory . DIRECTORY_SEPARATOR . "export-errors.log";
+    @file_put_contents($logFile, $line . PHP_EOL, FILE_APPEND | LOCK_EX);
+    if (is_file($logFile) && @filesize($logFile) > 262144) {
+        $recent = @file_get_contents($logFile, false, null, -131072);
+        if ($recent !== false) {
+            @file_put_contents($logFile, ltrim($recent));
+        }
+    }
 }
 
 function bestcopro_export_fail($status, $message, $logMessage = null, $context = [])
