@@ -647,11 +647,12 @@ foreach ($echeances as $echeance) {
 			if($('#justificatif').length > 0){
 				if($("#justificatif").prop("files")[0]){
 					file_data = $("#justificatif").prop("files")[0];
-					if (file_data.size > 5206301) {
+					if (file_data.size > 5 * 1024 * 1024) {
 						$('#erreurMessage').text('La taille du fichier doit être inférieure à 5 Mo');
 						$('.waitModal').css('display', 'none');
 						$('.successModal').css('display', 'none');
 						$('.errorModal').css('display', 'flex');
+						return false;
 					}
 					form_data.append("file", file_data);
 				}

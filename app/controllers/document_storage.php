@@ -55,6 +55,77 @@ if (!function_exists("bestcoproDocumentsDirectory")) {
     }
 }
 
+if (!function_exists("bestcoproDocumentUploadError")) {
+    function bestcoproDocumentUploadError($upload)
+    {
+        if (!is_array($upload) || !array_key_exists("error", $upload)) {
+            return "Veuillez choisir un fichier.";
+        }
+
+        $error = (int) $upload["error"];
+        if ($error === UPLOAD_ERR_NO_FILE) {
+            return "Veuillez choisir un fichier.";
+        }
+        if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
+            return "Le fichier dépasse la taille maximale autorisée par le serveur.";
+        }
+        if ($error === UPLOAD_ERR_PARTIAL) {
+            return "Le fichier n'a été que partiellement téléversé. Veuillez réessayer.";
+        }
+        if ($error !== UPLOAD_ERR_OK) {
+            return "Le téléversement du fichier a échoué (code " . $error . ").";
+        }
+
+        $size = isset($upload["size"]) ? (int) $upload["size"] : 0;
+        if ($size <= 0) {
+            return "Le fichier sélectionné est vide.";
+        }
+        if ($size > 5 * 1024 * 1024) {
+            return "La taille du fichier doit être inférieure ou égale à 5 Mo.";
+        }
+
+        $extension = strtolower(pathinfo((string) ($upload["name"] ?? ""), PATHINFO_EXTENSION));
+        if (!in_array($extension, ["jpg", "jpeg", "png", "pdf"], true)) {
+            return "Format non autorisé. Utilisez un fichier PDF, JPG, JPEG ou PNG.";
+        }
+
+        if (empty($upload["tmp_name"]) || !is_file($upload["tmp_name"])) {
+            return "Le fichier téléversé est introuvable. Veuillez réessayer.";
+        }
+
+        return "";
+    }
+}
+
+if (!function_exists("bestcoproStoreDocumentUpload")) {
+    function bestcoproStoreDocumentUpload($upload, $documentId, &$errorMessage = "")
+    {
+        $errorMessage = bestcoproDocumentUploadError($upload);
+        if ($errorMessage !== "") {
+            return false;
+        }
+
+        $directory = bestcoproDocumentsDirectory();
+        if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
+            $errorMessage = "Le dossier des documents n'existe pas et n'a pas pu être créé.";
+            return false;
+        }
+        if (!is_writable($directory)) {
+            $errorMessage = "Le dossier des documents n'est pas accessible en écriture.";
+            return false;
+        }
+
+        $extension = strtolower(pathinfo((string) $upload["name"], PATHINFO_EXTENSION));
+        $location = $directory . DIRECTORY_SEPARATOR . (int) $documentId . "." . $extension;
+        if (!@move_uploaded_file($upload["tmp_name"], $location)) {
+            $errorMessage = "Impossible d'enregistrer le fichier dans le dossier des documents.";
+            return false;
+        }
+
+        return $location;
+    }
+}
+
 if (!function_exists("bestcoproDocumentFiles")) {
     function bestcoproDocumentFiles($documentId)
     {

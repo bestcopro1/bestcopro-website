@@ -4,6 +4,18 @@ include_once __DIR__ . "/../controllers/functions.php";
 include_once __DIR__ . "/../controllers/document_storage.php";
 $connection = $GLOBALS["connection"];
 
+// PHP clears both arrays when the complete request exceeds post_max_size.
+// Return a useful AJAX error instead of rendering the documents page again.
+if (
+    ($_SERVER["REQUEST_METHOD"] ?? "") === "POST" &&
+    empty($_POST) &&
+    empty($_FILES) &&
+    (int) ($_SERVER["CONTENT_LENGTH"] ?? 0) > 0
+) {
+    echo "error|Le fichier dépasse la taille maximale autorisée par le serveur.";
+    exit();
+}
+
 if (isset($_POST["typedocument"], $_POST["update_typedocument"])) {
     $error_msg = "";
 
@@ -104,6 +116,17 @@ if (isset($_POST["typedocument"], $_POST["update_typedocument"])) {
         exit();
     }
 
+    $isUpdate = isset($_POST["id"], $_POST["update"]) && $_POST["update"] === "true";
+    $hasUpload = isset($_FILES["file"]) &&
+        (int) ($_FILES["file"]["error"] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+    if (!$isUpdate || $hasUpload) {
+        $uploadError = bestcoproDocumentUploadError($_FILES["file"] ?? null);
+        if ($uploadError !== "") {
+            echo "error|" . $uploadError;
+            exit();
+        }
+    }
+
     if (empty($error_msg) && isset($_POST["id"], $_POST["update"])) {
         $id = filter_input(INPUT_POST, "id", FILTER_SANITIZE_STRING);
         $update = filter_input(INPUT_POST, "update", FILTER_SANITIZE_STRING);
@@ -146,26 +169,20 @@ if (isset($_POST["typedocument"], $_POST["update_typedocument"])) {
                 }
             }
             $linkFile = "";
-            if (isset($_FILES["file"]["name"])) {
-                if ($_FILES["file"]["name"] != "") {
-                    $fileType = pathinfo(
-                        $_FILES["file"]["name"],
-                        PATHINFO_EXTENSION,
-                    );
-                    $fileType = strtolower($fileType);
-                    $location = bestcoproDocumentsDirectory() . DIRECTORY_SEPARATOR . $id . "." . $fileType;
-                    $oldFiles = bestcoproDocumentFiles($id);
-                    if (!move_uploaded_file($_FILES["file"]["tmp_name"], $location)) {
-                        echo "error|Impossible d'enregistrer le fichier dans le dossier des documents.";
-                        exit();
-                    }
-                    foreach ($oldFiles as $oldFile) {
-                        if ($oldFile !== $location && is_file($oldFile)) {
-                            unlink($oldFile);
-                        }
-                    }
-                    $linkFile = bestcoproDocumentPublicUrl($location);
+            if ($hasUpload) {
+                $oldFiles = bestcoproDocumentFiles($id);
+                $uploadError = "";
+                $location = bestcoproStoreDocumentUpload($_FILES["file"], $id, $uploadError);
+                if ($location === false) {
+                    echo "error|" . $uploadError;
+                    exit();
                 }
+                foreach ($oldFiles as $oldFile) {
+                    if ($oldFile !== $location && is_file($oldFile)) {
+                        @unlink($oldFile);
+                    }
+                }
+                $linkFile = bestcoproDocumentPublicUrl($location);
             }
             echo "done|" . $id . "|" . $linkFile;
             exit();
@@ -174,17 +191,6 @@ if (isset($_POST["typedocument"], $_POST["update_typedocument"])) {
             exit();
         }
     } elseif (empty($error_msg)) {
-        if (!isset($_FILES["file"]["name"])) {
-            $error_msg .= "Veuillez choisir un fichier";
-            echo $error_msg;
-            exit();
-        }
-        if ($_FILES["file"]["name"] == "") {
-            $error_msg .= "Veuillez choisir un fichier";
-            echo $error_msg;
-            exit();
-        }
-
         $request = "INSERT INTO document (titre, date, id_typedocument, id_copropriete, public) 
 		VALUES (?, ?, ?, ?, ?)";
 
@@ -226,21 +232,18 @@ if (isset($_POST["typedocument"], $_POST["update_typedocument"])) {
             }
         }
         $linkFile = "";
-        if (isset($_FILES["file"]["name"])) {
-            if ($_FILES["file"]["name"] != "") {
-                $fileType = pathinfo(
-                    $_FILES["file"]["name"],
-                    PATHINFO_EXTENSION,
-                );
-                $fileType = strtolower($fileType);
-                $location = bestcoproDocumentsDirectory() . DIRECTORY_SEPARATOR . $insert_id . "." . $fileType;
-                if (!move_uploaded_file($_FILES["file"]["tmp_name"], $location)) {
-                    echo "error|Impossible d'enregistrer le fichier dans le dossier des documents.";
-                    exit();
-                }
-                $linkFile = bestcoproDocumentPublicUrl($location);
+        $uploadError = "";
+        $location = bestcoproStoreDocumentUpload($_FILES["file"], $insert_id, $uploadError);
+        if ($location === false) {
+            // Do not leave a document without its required attachment.
+            if ($delete_stmt = $connection->prepare("DELETE FROM document WHERE id = ?")) {
+                $delete_stmt->bind_param("s", $insert_id);
+                $delete_stmt->execute();
             }
+            echo "error|" . $uploadError;
+            exit();
         }
+        $linkFile = bestcoproDocumentPublicUrl($location);
         echo "done|" . $insert_id . "|" . $linkFile;
         exit();
     } else {
