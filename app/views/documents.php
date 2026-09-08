@@ -3,6 +3,11 @@ include_once __DIR__ . "/../config/db.php";
 include_once __DIR__ . "/../controllers/functions.php";
 include_once __DIR__ . "/../controllers/document_storage.php";
 $connection = $GLOBALS["connection"];
+// Keep this AJAX endpoint from turning a recoverable database error into a
+// blank HTTP 500 response on PHP versions with strict MySQLi reporting.
+if (function_exists("mysqli_report")) {
+    mysqli_report(MYSQLI_REPORT_OFF);
+}
 
 // PHP clears both arrays when the complete request exceeds post_max_size.
 // Return a useful AJAX error instead of rendering the documents page again.
@@ -134,20 +139,22 @@ if (isset($_POST["typedocument"], $_POST["update_typedocument"])) {
             $request =
                 "UPDATE document SET titre=?, date=?, id_typedocument=?, public=? WHERE id=?";
 
-            if ($insert_stmt = $connection->prepare($request)) {
-                $insert_stmt->bind_param(
-                    "sssss",
-                    $titre,
-                    $date,
-                    $id_typedocument,
-                    $public,
-                    $id,
-                );
-                // Execute the prepared query.
-                if (!$insert_stmt->execute()) {
-                    echo $connection->error;
-                    exit();
-                }
+            $insert_stmt = $connection->prepare($request);
+            if (!$insert_stmt) {
+                echo "error|Impossible de préparer la mise à jour du document.";
+                exit();
+            }
+            $insert_stmt->bind_param(
+                "sssss",
+                $titre,
+                $date,
+                $id_typedocument,
+                $public,
+                $id,
+            );
+            if (!$insert_stmt->execute()) {
+                echo "error|Impossible de mettre à jour le document.";
+                exit();
             }
             if (
                 $insert_stmt_history = $connection->prepare(
@@ -196,20 +203,22 @@ if (isset($_POST["typedocument"], $_POST["update_typedocument"])) {
 
         $insert_id = "";
 
-        if ($insert_stmt = $connection->prepare($request)) {
-            $insert_stmt->bind_param(
-                "sssss",
-                $titre,
-                $date,
-                $id_typedocument,
-                $id_copropriete,
-                $public,
-            );
-            // Execute the prepared query.
-            if (!$insert_stmt->execute()) {
-                echo $connection->error;
-                exit();
-            }
+        $insert_stmt = $connection->prepare($request);
+        if (!$insert_stmt) {
+            echo "error|Impossible de préparer l'enregistrement du document.";
+            exit();
+        }
+        $insert_stmt->bind_param(
+            "sssss",
+            $titre,
+            $date,
+            $id_typedocument,
+            $id_copropriete,
+            $public,
+        );
+        if (!$insert_stmt->execute()) {
+            echo "error|Impossible d'enregistrer les informations du document.";
+            exit();
         }
         $insert_id = $connection->insert_id;
         if (
