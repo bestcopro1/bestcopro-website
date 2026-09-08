@@ -107,7 +107,7 @@ if (!function_exists("bestcoproStoreDocumentUpload")) {
 
         $directory = bestcoproDocumentsDirectory();
         if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
-            error_log("BestCopro document upload: unable to create " . $directory);
+            error_log("BestCopro document upload: unable to create storage directory " . $directory);
             $errorMessage = "Le dossier des documents n'existe pas et n'a pas pu être créé.";
             return false;
         }

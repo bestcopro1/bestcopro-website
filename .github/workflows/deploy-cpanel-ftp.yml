@@ -80,12 +80,18 @@ jobs:
           FTP_TARGET_DIR="${FTP_TARGET_DIR:-}"
           if [ -n "$FTP_TARGET_DIR" ]; then
             target_candidates=("$FTP_TARGET_DIR")
+            create_configured_target="yes"
           else
             target_candidates=("public_html/app" "app" ".")
+            create_configured_target="no"
           fi
 
           selected_target=""
           for target_dir in "${target_candidates[@]}"; do
+            create_target_command=""
+            if [ "$create_configured_target" = "yes" ]; then
+              create_target_command="mkdir -p \"$(quote_lftp "$target_dir")\""
+            fi
             cat > /tmp/check-target.lftp <<LFTP
           set ftp:ssl-allow no
           set ftp:passive-mode yes
@@ -94,6 +100,7 @@ jobs:
           set cmd:fail-exit yes
           set net:max-retries 1
           set net:timeout 10
+          $create_target_command
           cd "$(quote_lftp "$target_dir")"
           pwd
           bye
