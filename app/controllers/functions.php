@@ -1122,7 +1122,7 @@ function getReclamation(
             "SELECT id, date, objet, id_lot, id_statutReclamation, dateFermeture FROM reclamation WHERE id = ?";
     } elseif ($id_lot != null) {
         $request =
-            "SELECT id, date, objet, id_lot, id_statutReclamation, dateFermeture FROM reclamation WHERE id_lot = ?";
+            "SELECT id, date, objet, id_lot, id_statutReclamation, dateFermeture FROM reclamation WHERE id_lot = ? ORDER BY id DESC";
     } elseif ($id_copropriete != null) {
         $request =
             "SELECT id, date, objet, id_lot, id_statutReclamation, dateFermeture FROM reclamation WHERE id_lot IN (SELECT id FROM lot WHERE id_copropriete = ?) ORDER BY id DESC";
@@ -1204,13 +1204,13 @@ function getRel_lot_exercice($id_lot = null, $id_exercice = null, $connection)
 {
     if ($id_lot != null && $id_exercice != null) {
         $request =
-            "SELECT id_rel, id_lot, id_exercice, partFonct, partInv, dateFinPeriode, cotisation FROM rel_lot_exercice WHERE id_lot= ? AND id_exercice= ?";
+            "SELECT id_rel, id_lot, id_exercice, partFonct, partInv, dateFinPeriode, cotisation FROM rel_lot_exercice WHERE id_lot= ? AND id_exercice= ? ORDER BY dateFinPeriode ASC, id_rel ASC";
     } elseif ($id_lot != null) {
         $request =
-            "SELECT id_rel, id_lot, id_exercice, partFonct, partInv, dateFinPeriode, cotisation FROM rel_lot_exercice WHERE id_lot= ?";
+            "SELECT id_rel, id_lot, id_exercice, partFonct, partInv, dateFinPeriode, cotisation FROM rel_lot_exercice WHERE id_lot= ? ORDER BY dateFinPeriode ASC, id_rel ASC";
     } elseif ($id_exercice != null) {
         $request =
-            "SELECT id_rel, id_lot, id_exercice, partFonct, partInv, dateFinPeriode, cotisation FROM rel_lot_exercice WHERE id_exercice= ?";
+            "SELECT id_rel, id_lot, id_exercice, partFonct, partInv, dateFinPeriode, cotisation FROM rel_lot_exercice WHERE id_exercice= ? ORDER BY dateFinPeriode ASC, id_rel ASC";
     }
     if ($stmt = $connection->prepare($request)) {
         if ($id_lot != null && $id_exercice != null) {
