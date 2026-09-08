@@ -112,7 +112,7 @@ if (!function_exists("bestcoproStoreDocumentUpload")) {
             return false;
         }
         if (!is_writable($directory)) {
-            error_log("BestCopro document upload: directory is not writable: " . $directory);
+            error_log("BestCopro document upload: storage directory is not writable: " . $directory);
             $errorMessage = "Le dossier des documents n'est pas accessible en écriture.";
             return false;
         }
