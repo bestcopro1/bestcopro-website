@@ -107,10 +107,12 @@ if (!function_exists("bestcoproStoreDocumentUpload")) {
 
         $directory = bestcoproDocumentsDirectory();
         if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
+            error_log("BestCopro document upload: unable to create " . $directory);
             $errorMessage = "Le dossier des documents n'existe pas et n'a pas pu être créé.";
             return false;
         }
         if (!is_writable($directory)) {
+            error_log("BestCopro document upload: directory is not writable: " . $directory);
             $errorMessage = "Le dossier des documents n'est pas accessible en écriture.";
             return false;
         }
@@ -118,6 +120,7 @@ if (!function_exists("bestcoproStoreDocumentUpload")) {
         $extension = strtolower(pathinfo((string) $upload["name"], PATHINFO_EXTENSION));
         $location = $directory . DIRECTORY_SEPARATOR . (int) $documentId . "." . $extension;
         if (!@move_uploaded_file($upload["tmp_name"], $location)) {
+            error_log("BestCopro document upload: move_uploaded_file failed for " . $location);
             $errorMessage = "Impossible d'enregistrer le fichier dans le dossier des documents.";
             return false;
         }

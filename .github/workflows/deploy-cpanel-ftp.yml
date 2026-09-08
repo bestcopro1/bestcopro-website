@@ -113,6 +113,16 @@ jobs:
           printf 'cd "%s"\n' "$(quote_lftp "$selected_target")" >> /tmp/deploy.lftp
           printf 'pwd\n' >> /tmp/deploy.lftp
 
+          # Runtime uploads are intentionally excluded from Git. Create their
+          # directories in the staging release so they still exist after the
+          # staging -> app rename performed in cPanel.
+          printf 'set cmd:fail-exit no\n' >> /tmp/deploy.lftp
+          printf 'mkdir -p "justificatifs"\n' >> /tmp/deploy.lftp
+          printf 'mkdir -p "justificatifs/documents"\n' >> /tmp/deploy.lftp
+          printf 'chmod 775 "justificatifs"\n' >> /tmp/deploy.lftp
+          printf 'chmod 775 "justificatifs/documents"\n' >> /tmp/deploy.lftp
+          printf 'set cmd:fail-exit yes\n' >> /tmp/deploy.lftp
+
           add_upload() {
             local local_path="$1"
             local remote_path="${local_path#app/}"

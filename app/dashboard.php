@@ -706,10 +706,16 @@ foreach ($echeances as $echeance) {
 				},
 				error:function(xhr) {
 					var message = 'Une erreur est survenue pendant le traitement.';
-					if (xhr.responseText) {
+					if (xhr.status === 413) {
+						message = 'Le fichier dépasse la taille maximale acceptée par le serveur.';
+					} else if (xhr.status === 500) {
+						message = "Le serveur n'a pas pu enregistrer le document (erreur HTTP 500). Vérifiez les droits du dossier justificatifs/documents.";
+					} else if (xhr.responseText && xhr.responseText.indexOf('<html') === -1 && xhr.responseText.indexOf('<!DOCTYPE') === -1) {
 						message = xhr.responseText;
+					} else if (xhr.status) {
+						message += ' (erreur HTTP ' + xhr.status + ')';
 					}
-					$('#erreurMessage').html(message);
+					$('#erreurMessage').text(message);
 					$('.waitModal').css('display', 'none');
 					$('.successModal').css('display', 'none');
 					$('.errorModal').css('display', 'flex');
