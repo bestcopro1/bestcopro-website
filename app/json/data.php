@@ -161,6 +161,7 @@ $solde += $totalImpayeChecker - $totalPayeChecker;
 $situation = [];
 $trimestre = 1;
 $semestre = 1;
+$lastDuePeriodStart = null;
 $lastDuePeriodEnd = null;
 foreach ($relCurrent as $periode) {
     $periodEndBoundary = strtotime($periode["dateFinPeriode"]);
@@ -168,6 +169,7 @@ foreach ($relCurrent as $periode) {
     $periodEnd = date("Y-m-d", strtotime("-1 day", $periodEndBoundary));
     $isDue = $today >= $periodStart;
     if ($isDue) {
+        $lastDuePeriodStart = $periodStart;
         $lastDuePeriodEnd = $periodEnd;
     }
     // Keep the same headings as the annual contribution statement: each
@@ -188,6 +190,21 @@ foreach ($relCurrent as $periode) {
         "reste" => mobile_money(max(0, $due - $paid)),
         "statut" => $paid >= $due ? "paye" : ($isDue ? "nonpaye" : "nonechue"),
     ];
+}
+
+$situationArreteeLibelle = "arrêté à la dernière échéance";
+if ($lastDuePeriodStart && $lastDuePeriodEnd) {
+    $startMonth = date("m/Y", strtotime($lastDuePeriodStart));
+    $endMonth = date("m/Y", strtotime($lastDuePeriodEnd));
+    if ($nbrMonth === 1) {
+        $situationArreteeLibelle = "arrêté au mois de " . $endMonth;
+    } elseif ($nbrMonth === 3) {
+        $situationArreteeLibelle = "arrêté au trimestre du " . $startMonth . " au " . $endMonth;
+    } elseif ($nbrMonth === 6) {
+        $situationArreteeLibelle = "arrêté au semestre du " . $startMonth . " au " . $endMonth;
+    } else {
+        $situationArreteeLibelle = "arrêté à la période du " . $startMonth . " au " . $endMonth;
+    }
 }
 
 $paiementsData = [];
@@ -242,6 +259,7 @@ $data = [
     "RIB" => $copropriete["rib"],
     "RIBResidence" => $copropriete["rib"] ?: "N/A",
     "SituationArreteeAu" => $lastDuePeriodEnd ? $formatDate($lastDuePeriodEnd) : "N/A",
+    "SituationArreteeLibelle" => $situationArreteeLibelle,
     "impayes" => $impayes,
     "situation" => $situation,
     "Paiements" => $paiementsData,
